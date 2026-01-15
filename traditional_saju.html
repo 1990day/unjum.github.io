@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>운점 - 정통 사주 정밀 분석</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lunar-javascript/1.6.12/lunar.js"></script>
+    <style>
+        @font-face {
+            font-family: 'ThinRounded';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2511-1@1.0/ThinDungGeunMo.woff2') format('woff2');
+            font-weight: normal; font-style: normal; font-display: swap;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); }
+        ::-webkit-scrollbar-thumb { background: #b8860b; border-radius: 10px; }
+
+        body {
+            font-family: 'ThinRounded', sans-serif;
+            background-color: #1a0509; /* 딥 버건디 블랙 */
+            color: #e6dace; /* 한지 색상 */
+            line-height: 2.0; overflow-x: hidden; font-size: 18px;
+        }
+
+        header {
+            position: fixed; top: 0; left: 0; width: 100%; height: 80px;
+            background-color: #2c0b15; display: flex; justify-content: space-between;
+            align-items: center; padding: 0 30px; z-index: 1000;
+            border-bottom: 1px solid #8b6c4e;
+        }
+        .logo { font-size: 2.2rem; color: #ffd700; text-decoration: none; font-weight: bold; }
+        .top-menu { display: flex; gap: 20px; }
+        .top-menu a { color: #e6dace; text-decoration: none; font-size: 1.1rem; cursor: pointer; }
+
+        .sidebar {
+            position: fixed; top: 80px; left: 0; width: 280px;
+            height: calc(100vh - 80px); background-color: #22080f;
+            padding: 25px; overflow-y: auto; border-right: 1px solid #5c2836;
+        }
+        .category-title { font-size: 1.3rem; color: #ffd700; margin-bottom: 12px; display: block; border-bottom: 1px solid #5c2836; padding-bottom: 5px; }
+        .sub-menu { list-style: none; padding-left: 10px; }
+        .sub-menu li { margin: 10px 0; }
+        .sub-menu a { color: #ccb7b7; text-decoration: none; font-size: 1.1rem; cursor: pointer; transition: 0.2s; }
+        .sub-menu a:hover { color: #ffd700; padding-left: 5px; }
+
+        main {
+            margin-top: 80px; margin-left: 280px;
+            padding: 60px 40px; display: flex; justify-content: center;
+        }
+        .fortune-page { width: 100%; max-width: 1000px; text-align: center; }
+        .page-title { font-size: 2.8rem; color: #ffd700; margin-bottom: 35px; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); }
+
+        .input-card {
+            background: rgba(20, 5, 8, 0.95); padding: 40px; border-radius: 15px;
+            border: 2px solid #8b6c4e; text-align: left; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .input-row { margin-bottom: 25px; }
+        .input-row label { display: block; margin-bottom: 10px; color: #ffd700; font-size: 1.2rem; }
+        
+        .select-group { display: flex; gap: 10px; width: 100%; }
+        select, input[type="text"] {
+            flex: 1; padding: 12px; 
+            background-color: #2c0b15; color: #e6dace;
+            border: 1px solid #8b6c4e; border-radius: 8px; 
+            font-family: 'ThinRounded'; font-size: 1.1rem;
+            height: 55px; 
+            cursor: pointer;
+        }
+        option { background-color: #22080f; color: #e6dace; }
+
+        .type-toggle { display: flex; gap: 10px; margin-top: 10px; }
+        .type-btn { flex: 1; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid #8b6c4e; color: #ccb7b7; border-radius: 8px; cursor: pointer; text-align: center; font-size: 1.1rem; }
+        .type-btn.active { background: #b8860b; color: #1a0509; border-color: #ffd700; font-weight: bold; }
+
+        .gender-group { display: flex; gap: 20px; margin-bottom: 10px; }
+        .radio-label { 
+            flex: 1; padding: 15px; background: #2c0b15; border: 1px solid #8b6c4e; 
+            border-radius: 8px; cursor: pointer; text-align: center; font-size: 1.2rem; display: flex; align-items: center; justify-content: center;
+        }
+        input[type="radio"] { margin-right: 10px; accent-color: #ffd700; transform: scale(1.3); }
+        input[type="radio"]:checked + span { color: #ffd700; font-weight: bold; }
+
+        .submit-btn {
+            width: 100%; padding: 20px; background: linear-gradient(45deg, #b8860b, #e0c097); color: #2a0a12;
+            border: none; border-radius: 8px; font-size: 1.6rem; font-weight: bold;
+            cursor: pointer; font-family: 'ThinRounded'; margin-top: 25px;
+            box-shadow: 0 5px 15px rgba(184, 134, 11, 0.3); transition: 0.3s;
+        }
+        .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(184, 134, 11, 0.5); }
+
+        #result-area { margin-top: 60px; display: none; text-align: left; animation: fadeIn 0.8s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .saju-table {
+            width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 30px;
+            border: 2px solid #8b6c4e; background: #2c0b15; border-radius: 10px; overflow: hidden;
+        }
+        .saju-table th { background: #3d0e1e; color: #ffd700; padding: 15px; border-bottom: 2px solid #8b6c4e; font-size: 1.2rem; }
+        .saju-table td { padding: 25px 10px; text-align: center; border-right: 1px solid #5c2836; vertical-align: middle; position: relative; }
+        .saju-table td:last-child { border-right: none; }
+        
+        .pillar-char { font-size: 3rem; font-weight: bold; display: block; margin: 10px 0; text-shadow: 2px 2px 4px #000; font-family: serif; }
+        .ten-god { font-size: 0.9rem; color: #a89f91; display: block; margin-bottom: 5px; }
+        .wuxing-label { font-size: 0.9rem; font-weight: bold; padding: 3px 8px; border-radius: 4px; color: #1a0509; display: inline-block; }
+
+        .wood { color: #4ade80; } .fire { color: #ff6b6b; } .earth { color: #facc15; } .metal { color: #e5e7eb; } .water { color: #60a5fa; }
+        .bg-wood { background: #4ade80; } .bg-fire { background: #ff6b6b; } .bg-earth { background: #facc15; } .bg-metal { background: #e5e7eb; } .bg-water { background: #60a5fa; }
+
+        .analysis-section { 
+            margin-bottom: 50px; background: rgba(30, 10, 15, 0.85); padding: 40px; border-radius: 15px; 
+            border: 1px solid #5c2836; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .section-header { 
+            font-size: 1.8rem; color: #ffd700; margin-bottom: 25px; border-bottom: 2px solid #8b6c4e; 
+            padding-bottom: 10px; font-weight:bold; display: flex; align-items: center; gap: 10px;
+        }
+        .detail-text { 
+            font-size: 1.15rem; line-height: 2.1; white-space: pre-wrap; color: #e6dace; text-align: justify; letter-spacing: 0.5px;
+        }
+        .detail-text strong { color: #ffd700; font-weight: bold; }
+
+        .daewoon-grid {
+            display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px;
+            background: #2c0b15; padding: 20px; border-radius: 10px; border: 1px solid #8b6c4e; text-align: center;
+        }
+        .daewoon-item { padding: 10px 0; border-right: 1px dashed #5c2836; }
+        .daewoon-item:last-child { border-right: none; }
+        .dw-age { display: block; font-size: 0.9rem; color: #ccb7b7; margin-bottom: 5px; }
+        .dw-ganzhi { display: block; font-size: 1.4rem; font-weight: bold; color: #ffd700; font-family: serif; }
+
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            main { margin-left: 0; padding: 20px; }
+            .daewoon-grid { grid-template-columns: repeat(5, 1fr); gap: 15px; }
+            .daewoon-item { border-bottom: 1px dashed #5c2836; border-right: none; padding: 15px 0; }
+            .saju-table th, .saju-table td { padding: 15px 5px; }
+            .pillar-char { font-size: 2.2rem; }
+            .page-title { font-size: 2.2rem; }
+            .section-header { font-size: 1.5rem; }
+            .detail-text { font-size: 1.1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="index.html" class="logo">운점</a>
+        <nav class="top-menu">
+            <a>운세</a><a>사주</a><a>연애</a>
+        </nav>
+    </header>
+
+    <aside class="sidebar">
+        <div class="menu-category">
+            <span class="category-title">사주 풀이</span>
+            <ul class="sub-menu">
+                <li><a href="#" style="color:#ffd700; font-weight:bold;">정통 사주</a></li>
+                <li><a>내 사주 풀이</a></li>
+            </ul>
+        </div>
+    </aside>
+
+    <main>
+        <div class="fortune-page">
+            <h2 class="page-title">정통 사주 정밀 분석</h2>
+            <div class="input-card">
+                <div class="input-row">
+                    <label>이름</label>
+                    <input type="text" id="userName" placeholder="성함을 입력해주세요">
+                </div>
+                <div class="input-row">
+                    <label>성별 (대운 흐름 결정)</label>
+                    <div class="gender-group">
+                        <label class="radio-label">
+                            <input type="radio" name="gender" value="m" checked> <span>남성</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="gender" value="f"> <span>여성</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="input-row">
+                    <label>생년월일</label>
+                    <div class="select-group">
+                        <select id="yearSelect"></select>
+                        <select id="monthSelect"></select>
+                        <select id="daySelect"></select>
+                    </div>
+                    <div class="type-toggle">
+                        <div id="solarBtn" class="type-btn active" onclick="setCalendar('solar')">양력</div>
+                        <div id="lunarBtn" class="type-btn" onclick="setCalendar('lunar')">음력</div>
+                    </div>
+                </div>
+                <div class="input-row">
+                    <label>태어난 시간 (시주 결정)</label>
+                    <select id="hourSelect">
+                        <option value="12">모름 (정확도 낮아짐)</option>
+                        <option value="0">자시 (23:30 ~ 01:29)</option><option value="2">축시 (01:30 ~ 03:29)</option>
+                        <option value="4">인시 (03:30 ~ 05:29)</option><option value="6">묘시 (05:30 ~ 07:29)</option>
+                        <option value="8">진시 (07:30 ~ 09:29)</option><option value="10">사시 (09:30 ~ 11:29)</option>
+                        <option value="12">오시 (11:30 ~ 13:29)</option><option value="14">미시 (13:30 ~ 15:29)</option>
+                        <option value="16">신시 (15:30 ~ 17:29)</option><option value="18">유시 (17:30 ~ 19:29)</option>
+                        <option value="20">술시 (19:30 ~ 21:29)</option><option value="22">해시 (21:30 ~ 23:29)</option>
+                    </select>
+                </div>
+                <button class="submit-btn" onclick="analyzeSaju()">사주 전체 풀이 보기</button>
+            </div>
+
+            <div id="result-area">
+                <div class="analysis-section">
+                    <h3 class="section-header">📜 사주 원국 (Destiny Chart)</h3>
+                    <table class="saju-table">
+                        <thead>
+                            <tr><th>시주</th><th>일주 (본인)</th><th>월주</th><th>년주</th></tr>
+                        </thead>
+                        <tbody id="sajuBody"></tbody>
+                    </table>
+                </div>
+
+                <div class="analysis-section">
+                    <h3 class="section-header">🌊 대운의 흐름 (10년 주기)</h3>
+                    <div id="daewoonDisplay" class="daewoon-grid"></div>
+                    <p style="margin-top:20px; color:#ccb7b7;">* 귀하의 대운은 <span style="color:#ffd700" id="directionText"></span> 흐름입니다.</p>
+                </div>
+
+                <div class="analysis-section">
+                    <h3 class="section-header">🔍 제 1장 : 타고난 기질과 본성</h3>
+                    <div id="iljuAnalysis" class="detail-text"></div>
+                </div>
+
+                <div class="analysis-section">
+                    <h3 class="section-header">⚖️ 제 2장 : 오행의 조화와 건강</h3>
+                    <div id="balanceAnalysis" class="detail-text"></div>
+                </div>
+
+                <div class="analysis-section">
+                    <h3 class="section-header">💼 제 3장 : 사회적 성공과 재물운</h3>
+                    <div id="careerAnalysis" class="detail-text"></div>
+                </div>
+                
+                <div class="analysis-section">
+                    <h3 class="section-header">✨ 제 4장 : 평생 총운 및 인생 조언</h3>
+                    <div id="totalAdvice" class="detail-text"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // [수정1] 날짜 초기화를 window.onload로 감싸서 페이지가 다 뜬 뒤 무조건 실행되게 함
+        window.onload = function() {
+            const ys = document.getElementById('yearSelect');
+            const ms = document.getElementById('monthSelect');
+            const ds = document.getElementById('daySelect');
+            
+            // 기존 옵션 제거
+            ys.innerHTML = ""; ms.innerHTML = ""; ds.innerHTML = "";
+            
+            // 년도 채우기
+            for(let i=2026; i>=1930; i--) { 
+                let opt = document.createElement("option");
+                opt.value = i; opt.innerText = i + "년";
+                ys.appendChild(opt);
+            }
+            // 월 채우기
+            for(let i=1; i<=12; i++) { 
+                let opt = document.createElement("option");
+                opt.value = i; opt.innerText = i + "월";
+                ms.appendChild(opt);
+            }
+            // 일 채우기
+            for(let i=1; i<=31; i++) { 
+                let opt = document.createElement("option");
+                opt.value = i; opt.innerText = i + "일";
+                ds.appendChild(opt);
+            }
+        };
+
+        let calendarType = 'solar';
+        function setCalendar(type) {
+            calendarType = type;
+            document.getElementById('solarBtn').classList.toggle('active', type === 'solar');
+            document.getElementById('lunarBtn').classList.toggle('active', type === 'lunar');
+        }
+
+        const GAN = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"];
+        const ZHI = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"];
+        const WUXING = {
+            "甲":"목", "乙":"목", "寅":"목", "卯":"목",
+            "丙":"화", "丁":"화", "巳":"화", "午":"화",
+            "戊":"토", "己":"토", "辰":"토", "戌":"토", "丑":"토", "未":"토",
+            "庚":"금", "辛":"금", "申":"금", "酉":"금",
+            "壬":"수", "癸":"수", "亥":"수", "子":"수"
+        };
+        const COLOR_CLASS = {"목":"wood", "화":"fire", "토":"earth", "금":"metal", "수":"water"};
+        const BG_CLASS = {"목":"bg-wood", "화":"bg-fire", "토":"bg-earth", "금":"bg-metal", "수":"bg-water"};
+
+        const ganTraits = {
+            "甲": "곧게 뻗은 거목처럼 자존심이 강하고 추진력이 있으며 굽히기 싫어하는 강직한 성품",
+            "乙": "유연한 화초처럼 환경 적응력이 뛰어나고 부드러움 속에 강인한 생명력을 감춘 외유내강형",
+            "丙": "태양처럼 만물을 비추는 밝고 정열적인 에너지로 예의를 중시하며 숨김없이 자신을 드러내는 성향",
+            "丁": "밤하늘의 별이나 촛불처럼 은은하고 섬세하며 내면에 뜨거운 열정과 헌신을 품은 집중력",
+            "戊": "넓은 대지나 산처럼 모든 것을 포용하는 중후함과 신용을 중시하며 묵직하게 중심을 잡는 리더십",
+            "己": "비옥한 밭흙처럼 실속을 챙기고 타인을 기르는 어머니 같은 마음으로 다재다능하고 현실적인 감각",
+            "庚": "제련되지 않은 원석처럼 단단한 의리와 결단력이 있으며 맺고 끊음이 확실한 혁명가의 기질",
+            "辛": "잘 세공된 보석처럼 예리하고 섬세하며 깔끔하고 정확한 것을 추구하는 완벽주의 성향",
+            "壬": "깊은 바다처럼 지혜가 넓고 유연하게 흐르며 포용력이 크고 임기응변에 능한 스케일",
+            "癸": "만물을 적시는 시냇물처럼 부드럽고 총명하며 타인을 배려하고 조용히 스며드는 지적인 탐구심"
+        };
+
+        const zhiTraits = {
+            "子": "생명의 씨앗을 품은 깊은 지혜와 조용함", "丑": "묵묵히 일하며 결과를 쌓아가는 끈기와 인내",
+            "寅": "새로운 시작을 알리는 호랑이의 기상과 추진력", "卯": "생동감 넘치고 부지런하며 꾸미기를 좋아하는 심미안",
+            "辰": "이상을 꿈꾸며 변화를 주도하는 용의 스케일", "巳": "화려한 언변과 사교성으로 대중을 사로잡는 매력",
+            "午": "열정적이고 활동적이며 앞만 보고 달리는 직진성", "未": "겉은 부드러우나 속은 강한 고집을 가진 외유내강",
+            "申": "다재다능하고 재주가 많아 임기응변에 능한 모습", "酉": "날카로운 직관력과 분석력으로 핵심을 찌르는 능력",
+            "戌": "신의를 지키며 맡은 바 책임을 다하는 충직함", "亥": "풍부한 상상력과 인정 그리고 여유로운 낙천성"
+        };
+
+        function analyzeSaju() {
+            const name = document.getElementById('userName').value;
+            const yearVal = document.getElementById('yearSelect').value;
+            const monthVal = document.getElementById('monthSelect').value;
+            const dayVal = document.getElementById('daySelect').value;
+
+            if(!name || !yearVal || !monthVal || !dayVal) { 
+                alert("이름과 생년월일을 모두 선택해주세요."); return; 
+            }
+            
+            const h = parseInt(document.getElementById('hourSelect').value);
+            const gender = document.querySelector('input[name="gender"]:checked').value;
+
+            let lunarObj;
+            try {
+                if(calendarType === 'solar') {
+                    lunarObj = Solar.fromYmdHms(parseInt(yearVal), parseInt(monthVal), parseInt(dayVal), h, 0, 0).getLunar();
+                } else {
+                    lunarObj = Lunar.fromYmdHms(parseInt(yearVal), parseInt(monthVal), parseInt(dayVal), h, 0, 0);
+                }
+            } catch(e) { alert("날짜 정보가 올바르지 않습니다."); return; }
+
+            const eightChar = lunarObj.getEightChar();
+            const pillars = [
+                { gan: eightChar.getTimeGan(), zhi: eightChar.getTimeZhi() },
+                { gan: eightChar.getDayGan(), zhi: eightChar.getDayZhi() }, 
+                { gan: eightChar.getMonthGan(), zhi: eightChar.getMonthZhi() },
+                { gan: eightChar.getYearGan(), zhi: eightChar.getYearZhi() }
+            ];
+            const me = pillars[1].gan;
+            const myIlju = me + pillars[1].zhi;
+
+            let html = `<tr>`;
+            const getTenGod = (target) => {
+                if(target === me) return "본원";
+                const meIdx = GAN.indexOf(me);
+                const tIdx = GAN.indexOf(target);
+                if(meIdx === -1 || tIdx === -1) return "";
+                const gods = ["비견","겁재","식신","상관","편재","정재","편관","정관","편인","정인"];
+                return gods[(tIdx - meIdx + 10) % 10];
+            };
+
+            for(let p of pillars) {
+                let ganWu = WUXING[p.gan];
+                let zhiWu = WUXING[p.zhi];
+                html += `
+                    <td>
+                        <span class="ten-god">${getTenGod(p.gan)}</span>
+                        <span class="pillar-char ${COLOR_CLASS[ganWu]}">${p.gan}</span>
+                        <span class="wuxing-label ${BG_CLASS[ganWu]}">${ganWu}</span>
+                        <hr style="border:0; border-top:1px dashed #5c2836; margin:15px 0;">
+                        <span class="pillar-char ${COLOR_CLASS[zhiWu]}">${p.zhi}</span>
+                        <span class="wuxing-label ${BG_CLASS[zhiWu]}">${zhiWu}</span>
+                    </td>`;
+            }
+            html += `</tr>`;
+            document.getElementById('sajuBody').innerHTML = html;
+
+            const yearGanIndex = GAN.indexOf(pillars[3].gan);
+            const isYearYang = yearGanIndex % 2 === 0;
+            const isMale = gender === 'm';
+            let isForward = (isYearYang && isMale) || (!isYearYang && !isMale);
+            
+            document.getElementById('directionText').innerText = isForward ? "순행(미래지향적)" : "역행(내면성찰적)";
+
+            let daewoonHtml = "";
+            let startIdxGan = GAN.indexOf(pillars[2].gan);
+            let startIdxZhi = ZHI.indexOf(pillars[2].zhi);
+
+            for(let i=1; i<=10; i++) {
+                if(isForward) {
+                    startIdxGan = (startIdxGan + 1) % 10;
+                    startIdxZhi = (startIdxZhi + 1) % 12;
+                } else {
+                    startIdxGan = (startIdxGan - 1 + 10) % 10;
+                    startIdxZhi = (startIdxZhi - 1 + 12) % 12;
+                }
+                let dGan = GAN[startIdxGan];
+                let dZhi = ZHI[startIdxZhi];
+                daewoonHtml += `<div class="daewoon-item"><span class="dw-age">${i*10}대운</span><span class="dw-ganzhi"><span class="${COLOR_CLASS[WUXING[dGan]]}">${dGan}</span><span class="${COLOR_CLASS[WUXING[dZhi]]}">${dZhi}</span></span></div>`;
+            }
+            document.getElementById('daewoonDisplay').innerHTML = daewoonHtml;
+
+            const iljuNarrative = 
+                `귀하의 일주는 [${myIlju}]입니다. 하늘의 기운인 천간 [${me}]은 ${ganTraits[me]}을(를) 의미하며, 땅의 기운인 지지 [${pillars[1].zhi}]는 ${zhiTraits[pillars[1].zhi]}의 환경을 나타냅니다.\n\n` +
+                `이 두 기운의 결합으로 인해, 귀하는 겉으로는 [${WUXING[me]}]의 성질을 띠어 ${ganTraits[me].split(' ')[0]} 같은 면모를 보이지만, ` +
+                `내면에는 [${WUXING[pillars[1].zhi]}]의 실리를 품고 있어 결정적인 순간에는 ${zhiTraits[pillars[1].zhi].split(' ')[0]} 처럼 행동하는 경향이 있습니다.\n\n` +
+                `특히 본원인 [${me}]은 인생의 선장과도 같아서, 어떠한 파도 앞에서도 본인만의 주관을 잃지 않으려는 강력한 에너지를 발산합니다. ` +
+                `이러한 기질은 사회적으로 본인을 돋보이게 하는 강력한 무기가 되며, 특히 중년 이후 본인의 정체성이 확립되면서 더욱 빛을 발하게 될 것입니다.`;
+            
+            document.getElementById('iljuAnalysis').innerHTML = iljuNarrative;
+
+            let counts = {"목":0, "화":0, "토":0, "금":0, "수":0};
+            pillars.forEach(p => { counts[WUXING[p.gan]]++; counts[WUXING[p.zhi]]++; });
+            let maxEl = Object.keys(counts).reduce((a,b) => counts[a] > counts[b] ? a : b);
+            let minEl = Object.keys(counts).reduce((a,b) => counts[a] < counts[b] ? a : b);
+            
+            const healthMap = {
+                "목": "간장, 담낭, 신경계통의 피로 누적", "화": "심장, 소장, 혈압 및 시력 저하",
+                "토": "위장, 비장, 소화기 계통의 장애", "금": "폐, 대장, 호흡기 및 피부 트러블",
+                "수": "신장, 방광, 생식기 계통의 냉증"
+            };
+            
+            const luckyItems = {
+                "목": "초록색 소품이나 동쪽 방향",
+                "화": "붉은색 계열이나 남쪽",
+                "토": "황토색이나 중앙/낮은 곳",
+                "금": "흰색/메탈 소재나 서쪽",
+                "수": "검정색/물가나 북쪽"
+            };
+
+            const wuxingNarrative = 
+                `사주 원국 내 오행 분포는 [목(${counts.목}) 화(${counts.화}) 토(${counts.토}) 금(${counts.금}) 수(${counts.수})]입니다.\n\n` +
+                `가장 강력한 주도 세력은 [${maxEl}]이며, 보완이 필요한 기운은 [${minEl}]입니다. ` +
+                `사주에서 [${maxEl}] 기운이 강하다는 것은 해당 성질(추진력, 열정, 포용, 결단, 지혜 중 해당)이 귀하의 가장 큰 장점임을 의미하지만, 지나칠 경우 독단적이 되거나 건강의 불균형을 초래할 수 있습니다.\n\n` +
+                `[건강 및 개운법]: 선천적으로 [${healthMap[minEl]}]에 주의가 필요합니다. ` +
+                `이를 보완하기 위해 평소 [${luckyItems[minEl]}]을 가까이 하는 것이 좋습니다. ` +
+                `균형 잡힌 식단과 해당 오행의 기운을 돋우는 취미 생활이 운을 트이게 하는 지름길입니다.`;
+
+            document.getElementById('balanceAnalysis').innerHTML = wuxingNarrative;
+
+            const mZhiWu = WUXING[pillars[2].zhi];
+            const meWu = WUXING[me];
+            let socialType = "";
+            let detailJob = "";
+            let jobDesc = ""; // [수정3] 각 유형에 맞는 맞춤형 멘트를 저장할 변수
+
+            if (mZhiWu === meWu) { 
+                socialType = "비겁형(전문가/독립형)"; 
+                detailJob = "자유 전문직, 프리랜서, 예체능, 혹은 조직 내에서도 독립적인 권한을 가진 위치";
+                jobDesc = "조직의 부속품이 되기보다는, 본인의 이름과 실력을 걸고 주체적으로 일할 수 있는";
+            } else if ((meWu === '목' && mZhiWu === '화') || (meWu === '화' && mZhiWu === '토') || (meWu === '토' && mZhiWu === '금') || (meWu === '금' && mZhiWu === '수') || (meWu === '수' && mZhiWu === '목')) {
+                socialType = "식상형(연구/기술형)";
+                detailJob = "교육, 연구 개발, IT/기술직, 요식업, 예술 창작, 언론/방송";
+                jobDesc = "단순 반복적인 업무보다는, 타고난 끼와 창의성 그리고 기술을 마음껏 발휘할 수 있는";
+            } else if ((meWu === '목' && mZhiWu === '토') || (meWu === '화' && mZhiWu === '금') || (meWu === '토' && mZhiWu === '수') || (meWu === '금' && mZhiWu === '목') || (meWu === '수' && mZhiWu === '화')) {
+                socialType = "재성형(사업/경영형)";
+                detailJob = "금융, 무역, 유통, 사업 경영, 재무 회계, 자산 관리";
+                jobDesc = "고정된 월급보다는 성과에 따른 보상이 확실하며, 현실적인 수치 감각을 활용할 수 있는";
+            } else if ((meWu === '목' && mZhiWu === '금') || (meWu === '화' && mZhiWu === '수') || (meWu === '토' && mZhiWu === '목') || (meWu === '금' && mZhiWu === '화') || (meWu === '수' && mZhiWu === '토')) {
+                socialType = "관성형(공직/관리형)";
+                detailJob = "공무원, 대기업 조직, 행정, 법조계, 의료 행정, 관리직";
+                jobDesc = "체계적인 시스템과 규율이 갖춰진 조직 내에서, 명예와 안정을 추구할 수 있는";
+            } else {
+                socialType = "인성형(학문/기획형)";
+                detailJob = "교수, 학자, 작가, 기획자, 라이센스 전문직, 부동산 임대업";
+                jobDesc = "활동적인 육체노동보다는, 깊은 사고력과 자격증 그리고 지적 재산을 활용하는";
+            }
+
+            const careerNarrative = 
+                `사회적 활동 무대를 나타내는 월지의 기운을 분석한 결과, 귀하는 [${socialType}]에 해당합니다.\n\n` +
+                `이는 귀하가 ${jobDesc} [${detailJob}] 분야에서 두각을 나타낼 가능성이 큼을 시사합니다. ` +
+                `특히 재물운은 성실한 노력과 비례하여 상승하는 구조를 가지고 있으며, 투기적인 이득보다는 본인의 전문성을 바탕으로 한 소득이 훨씬 안정적이고 큽니다.\n\n` +
+                `직업적으로 성공하기 위해서는 [${pillars[2].zhi}]가 상징하는 계절의 기운을 잘 활용하여, 변화를 두려워하지 않고 끊임없이 자기 가치를 높이는 노력이 필요합니다.`;
+
+            document.getElementById('careerAnalysis').innerHTML = careerNarrative;
+
+            const totalNarrative = 
+                `정통 사주 분석을 종합해 볼 때, [${name}]님의 운명은 초년의 [${pillars[3].gan}] 기운에서 시작하여 중년 이후 [${pillars[1].zhi}]의 영향력이 커지며 완성되는 흐름입니다.\n\n` +
+                `대운이 [${isForward ? '순행' : '역행'}]한다는 것은 인생의 전개가 ${isForward ? '예측 가능한 순서대로 차근차근' : '변화무쌍하고 역동적으로'} 펼쳐짐을 의미합니다. ` +
+                `현재 귀하는 본인이 가진 가장 강력한 무기인 [${maxEl}]의 장점을 극대화하고, 부족한 [${minEl}]을 지혜롭게 보완해야 할 시점입니다.\n\n` +
+                `사주는 정해진 운명이 아니라, 내가 가진 재료를 어떻게 요리할 것인가에 대한 레시피입니다. 오늘 확인한 분석 결과를 바탕으로, 강점은 살리고 약점은 보완하여 주체적이고 행복한 삶을 개척해 나가시길 진심으로 응원합니다.`;
+
+            document.getElementById('totalAdvice').innerHTML = totalNarrative;
+
+            document.getElementById('result-area').style.display = 'block';
+            window.scrollTo({ top: document.getElementById('result-area').offsetTop - 100, behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>

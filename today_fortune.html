@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>운점 - 오늘의 운세</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lunar-javascript/1.6.12/lunar.js"></script>
+    <style>
+        @font-face {
+            font-family: 'ThinRounded';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2511-1@1.0/ThinDungGeunMo.woff2') format('woff2');
+            font-weight: normal; font-style: normal; font-display: swap;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        /* 스크롤바 커스텀 */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 215, 0, 0.3); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 215, 0, 0.5); }
+
+        body {
+            font-family: 'ThinRounded', sans-serif;
+            background-color: #1a1a2e; color: #ffffff;
+            line-height: 1.8; overflow-x: hidden; font-size: 19px;
+        }
+
+        /* 헤더 스타일 */
+        header {
+            position: fixed; top: 0; left: 0; width: 100%; height: 80px;
+            background-color: #16213e; display: flex; justify-content: space-between;
+            align-items: center; padding: 0 30px; z-index: 1000;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+        }
+        .logo { font-size: 2.2rem; color: #ffd700; text-decoration: none; font-weight: bold; }
+        .top-menu { display: flex; gap: 20px; }
+        .top-menu a { color: #fff; text-decoration: none; font-size: 1.1rem; cursor: pointer; }
+
+        /* 사이드바 스타일 (PC 기본) */
+        .sidebar {
+            position: fixed; top: 80px; left: 0; width: 280px;
+            height: calc(100vh - 80px); background-color: #0f3460;
+            padding: 25px; overflow-y: auto; border-right: 1px solid rgba(255, 215, 0, 0.2);
+            transition: transform 0.3s ease; /* 부드러운 전환 효과 */
+        }
+        .menu-category { margin-bottom: 30px; }
+        .category-title { font-size: 1.3rem; color: #ffd700; margin-bottom: 12px; display: block; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 5px; }
+        .sub-menu { list-style: none; padding-left: 10px; }
+        .sub-menu li { margin: 10px 0; }
+        .sub-menu a { color: #e0e0e0; text-decoration: none; font-size: 1.1rem; cursor: pointer; transition: 0.2s; }
+        .sub-menu a:hover { color: #ffd700; padding-left: 5px; }
+
+        /* 메인 콘텐츠 영역 (PC 기본) */
+        main {
+            margin-top: 80px; margin-left: 280px; /* 사이드바 너비만큼 여백 */
+            padding: 50px 30px; display: flex; justify-content: center;
+            transition: all 0.3s ease;
+        }
+        .fortune-page { width: 100%; max-width: 800px; text-align: center; }
+        .page-title { font-size: 2.8rem; color: #ffd700; margin-bottom: 35px; }
+
+        /* 입력 카드 스타일 */
+        .input-card {
+            background: rgba(255, 255, 255, 0.05); padding: 35px; border-radius: 20px;
+            border: 1px solid rgba(255, 215, 0, 0.2); text-align: left;
+        }
+        .input-row { margin-bottom: 25px; }
+        .input-row label { display: block; margin-bottom: 12px; color: #ffd700; font-size: 1.2rem; }
+        
+        .select-group { display: flex; gap: 10px; }
+        select, input[type="text"] {
+            flex: 1; padding: 14px; background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.2); color: white;
+            border-radius: 10px; font-family: 'ThinRounded'; font-size: 1.1rem;
+        }
+
+        .type-toggle { display: flex; gap: 10px; margin-top: 10px; }
+        .type-btn { flex: 1; padding: 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px; cursor: pointer; text-align: center; }
+        .type-btn.active { background: #ffd700; color: #1a1a2e; border-color: #ffd700; font-weight: bold; }
+
+        .submit-btn {
+            width: 100%; padding: 18px; background: #ffd700; color: #1a1a2e;
+            border: none; border-radius: 10px; font-size: 1.4rem; font-weight: bold;
+            cursor: pointer; font-family: 'ThinRounded'; margin-top: 15px;
+        }
+
+        /* 결과 영역 스타일 */
+        #result-area { margin-top: 50px; display: none; text-align: left; }
+        .score-box { background: rgba(255, 215, 0, 0.1); border-radius: 20px; padding: 25px; text-align: center; margin-bottom: 25px; border: 1px solid #ffd700; }
+        .lucky-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; }
+        .lucky-item { background: rgba(255,255,255,0.07); padding: 18px 5px; border-radius: 15px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
+        .lucky-label { font-size: 0.9rem; color: #ffd700; display: block; margin-bottom: 8px; }
+        .result-detail { background: rgba(255, 255, 255, 0.04); padding: 30px; border-radius: 20px; white-space: pre-wrap; line-height: 2; font-size: 1.25rem; border-left: 6px solid #ffd700; }
+
+        /* [중요] 모바일 반응형 처리 */
+        @media (max-width: 768px) {
+            header { padding: 0 15px; height: 60px; }
+            .logo { font-size: 1.5rem; }
+            
+            /* 모바일에서 상단 메뉴 간격 조절 */
+            .top-menu { gap: 10px; }
+            .top-menu a { font-size: 0.9rem; }
+
+            /* 모바일에서 사이드바 숨김 */
+            .sidebar { display: none !important; }
+
+            /* 모바일에서 메인 영역 여백 제거 (전체 화면 사용) */
+            main { margin-left: 0; margin-top: 60px; padding: 20px; }
+            
+            .page-title { font-size: 2rem; margin-bottom: 25px; }
+            .input-card { padding: 20px; }
+            
+            /* 결과 행운 아이템 그리드 1줄로 변경 */
+            .lucky-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="index.html" class="logo">운점</a>
+        <nav class="top-menu">
+            <a>운세</a><a>사주</a><a>연애</a><a>도파민</a><a>별자리</a>
+        </nav>
+    </header>
+
+    <aside class="sidebar">
+        <div class="menu-category">
+            <span class="category-title">운세</span>
+            <ul class="sub-menu">
+                <li><a href="today_fortune.html">오늘의 운세</a></li>
+                <li><a>신년 운세</a></li>
+            </ul>
+        </div>
+        <div class="menu-category">
+            <span class="category-title">사주</span>
+            <ul class="sub-menu">
+                <li><a>정통 사주</a></li>
+                <li><a>내 사주 풀이</a></li>
+            </ul>
+        </div>
+    </aside>
+
+    <main>
+        <div class="fortune-page">
+            <h2 class="page-title">오늘의 운세</h2>
+            <div class="input-card">
+                <div class="input-row">
+                    <label>이름</label>
+                    <input type="text" id="userName" placeholder="이름을 입력해 주세요">
+                </div>
+                <div class="input-row">
+                    <label>생년월일</label>
+                    <div class="select-group">
+                        <select id="yearSelect"></select>
+                        <select id="monthSelect"></select>
+                        <select id="daySelect"></select>
+                    </div>
+                    <div class="type-toggle">
+                        <div id="solarBtn" class="type-btn active" onclick="setCalendar('solar')">양력</div>
+                        <div id="lunarBtn" class="type-btn" onclick="setCalendar('lunar')">음력</div>
+                    </div>
+                </div>
+                <div class="input-row">
+                    <label>태어난 시간</label>
+                    <select id="hourSelect">
+                        <option value="12">모름</option>
+                        <option value="0">자시 (23:30 ~ 01:29)</option><option value="2">축시 (01:30 ~ 03:29)</option>
+                        <option value="4">인시 (03:30 ~ 05:29)</option><option value="6">묘시 (05:30 ~ 07:29)</option>
+                        <option value="8">진시 (07:30 ~ 09:29)</option><option value="10">사시 (09:30 ~ 11:29)</option>
+                        <option value="12">오시 (11:30 ~ 13:29)</option><option value="14">미시 (13:30 ~ 15:29)</option>
+                        <option value="16">신시 (15:30 ~ 17:29)</option><option value="18">유시 (17:30 ~ 19:29)</option>
+                        <option value="20">술시 (19:30 ~ 21:29)</option><option value="22">해시 (21:30 ~ 23:29)</option>
+                    </select>
+                </div>
+                <button class="submit-btn" onclick="runFortune()">운세 분석하기</button>
+            </div>
+
+            <div id="result-area">
+                <div class="score-box">
+                    <div id="scoreDisplay" style="font-size: 1.5rem; color: #ffd700;"></div>
+                </div>
+                <div class="lucky-grid">
+                    <div class="lucky-item"><span class="lucky-label">행운 색상</span><span id="luckColor"></span></div>
+                    <div class="lucky-item"><span class="lucky-label">행운 방향</span><span id="luckDir"></span></div>
+                    <div class="lucky-item"><span class="lucky-label">행운 소품</span><span id="luckItem"></span></div>
+                </div>
+                <div class="result-detail" id="fortuneText"></div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let calendarType = 'solar';
+        function setCalendar(type) {
+            calendarType = type;
+            document.getElementById('solarBtn').classList.toggle('active', type === 'solar');
+            document.getElementById('lunarBtn').classList.toggle('active', type === 'lunar');
+        }
+
+        const ys = document.getElementById('yearSelect'), ms = document.getElementById('monthSelect'), ds = document.getElementById('daySelect');
+        for(let i=2026; i>=1950; i--) { ys.add(new Option(i+'년', i)); }
+        for(let i=1; i<=12; i++) { ms.add(new Option(i+'월', i)); }
+        for(let i=1; i<=31; i++) { ds.add(new Option(i+'일', i)); }
+
+        // [중요] 한자(Chinese Char) 키값 매핑 - 라이브러리 반환값과 일치시킴
+        const hanjaGans = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"];
+        const hanjaZhis = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"];
+        
+        // 지지 -> 오행 매핑 (한자 키)
+        const zhiToWuxing = {
+            "子":"수", "丑":"토", "寅":"목", "卯":"목", "辰":"토", "巳":"화", 
+            "午":"화", "未":"토", "申":"금", "酉":"금", "戌":"토", "亥":"수"
+        };
+
+        function runFortune() {
+            const name = document.getElementById('userName').value;
+            if(!name) { alert("이름을 입력해 주세요."); return; }
+
+            const h = parseInt(document.getElementById('hourSelect').value);
+            let userLunar;
+            
+            try {
+                if(calendarType === 'solar') {
+                    userLunar = Solar.fromYmdHms(parseInt(ys.value), parseInt(ms.value), parseInt(ds.value), h, 0, 0).getLunar();
+                } else {
+                    userLunar = Lunar.fromYmdHms(parseInt(ys.value), parseInt(ms.value), parseInt(ds.value), h, 0, 0);
+                }
+            } catch(e) { alert("날짜를 확인해 주세요."); return; }
+
+            // 1. 사주 데이터 추출 (한자로 나옴)
+            const meGan = userLunar.getEightChar().getDayGan(); // 예: '丁'
+            const todayLunar = Lunar.fromDate(new Date());
+            const tGan = todayLunar.getEightChar().getDayGan(); // 예: '己'
+            const tZhi = todayLunar.getEightChar().getDayZhi(); // 예: '丑'
+
+            // 2. 오행 및 십신 계산
+            const tZhiWuxing = zhiToWuxing[tZhi]; // 한자 키로 찾으므로 정확함 ('토')
+            
+            // 십신 계산 (인덱스 로직)
+            const meIdx = hanjaGans.indexOf(meGan);
+            const tIdx = hanjaGans.indexOf(tGan);
+            
+            let shipShen = "비견";
+            if (meIdx !== -1 && tIdx !== -1) {
+                const diff = (tIdx - meIdx + 10) % 10;
+                const shipShens = ["비견", "겁재", "식신", "상관", "편재", "정재", "편관", "정관", "편인", "정인"];
+                shipShen = shipShens[diff];
+            }
+
+            // 3. 서술형 데이터 베이스 (한자나 한글 키를 혼용하지 않고 결과값 기준으로 매핑)
+            const introSet = [
+                `오늘 ${name}님의 하루에는 '${tGan}${tZhi}'의 기운이 찾아왔습니다.`,
+                `${name}님의 본인 기운인 '${meGan}'이 오늘 '${tGan}'을 만나 반응하는 날입니다.`,
+                `하늘의 기운 '${tGan}'과 땅의 기운 '${tZhi}'가 본인에게 영향을 주는 하루입니다.`
+            ];
+            const intro = introSet[(name.length) % 3];
+
+            const analysisSet = {
+                "비견": "나와 같은 기운이 들어와 주관이 뚜렷해지고 뚝심 있게 일을 추진할 수 있는 날입니다. 동료나 친구와 협력하면 좋지만 고집은 주의하세요.",
+                "겁재": "경쟁 심리가 강해지고 의욕이 넘치는 날입니다. 타인에게 지기 싫어하는 마음을 긍정적인 에너지로 바꾸면 큰 성과가 있습니다.",
+                "식신": "의식주가 풍족하고 마음이 여유로운 날입니다. 창의적인 활동이나 맛있는 음식을 즐기며 스트레스를 해소하기 좋습니다.",
+                "상관": "표현력이 좋아지고 새로운 아이디어가 샘솟는 날입니다. 다만 말이 앞서 실수를 할 수 있으니 언행을 조금만 조심하면 길합니다.",
+                "편재": "활동 범위가 넓어지고 생각지 못한 재물이 들어올 수 있는 날입니다. 큰 목표를 가지고 과감하게 움직여보세요.",
+                "정재": "성실하게 노력한 만큼 정확한 보상이 주어지는 날입니다. 꼼꼼하게 계획을 세우고 실천하면 안정적인 결실을 맺습니다.",
+                "편관": "책임감이 무거워지지만 그만큼 명예와 권위가 따르는 날입니다. 어려운 일을 피하지 않고 해결하면 주변의 인정을 받습니다.",
+                "정관": "안정적인 궤도 안에서 신용을 얻고 일이 순조롭게 풀리는 날입니다. 원칙을 지키면 윗사람의 도움을 받을 수 있습니다.",
+                "편인": "직관과 센스가 발휘되어 남들이 모르는 것을 캐치하는 날입니다. 전문적인 공부나 기획 업무에서 두각을 나타냅니다.",
+                "정인": "마음이 편안하고 주변의 배려를 받는 날입니다. 문서운이 좋고 공부나 계약 관련 일에서 좋은 결과가 있습니다."
+            };
+
+            const elementSet = {
+                "목": "특히 오늘은 나무처럼 뻗어나가는 성장 에너지가 있어 새로운 일을 시작하기에 좋습니다.",
+                "화": "특히 오늘은 불처럼 타오르는 열정적인 기운이 있어 자신을 적극적으로 알리기에 유리합니다.",
+                "토": "특히 오늘은 흙처럼 포용하고 중재하는 기운이 있어 기반을 다지고 실속을 챙기기 좋습니다.",
+                "금": "특히 오늘은 쇠처럼 단단한 결단력이 생겨 미뤄왔던 일을 확실하게 매듭짓기 좋습니다.",
+                "수": "특히 오늘은 물처럼 유연한 지혜가 생겨 어려운 상황을 슬기롭게 헤쳐나갈 수 있습니다."
+            };
+
+            const closingSet = {
+                "子": "조용히 내실을 다지며 미래를 준비하는 자세가 행운을 부릅니다.",
+                "丑": "서두르지 않고 묵묵히 나아가는 끈기가 결국 빛을 발할 것입니다.",
+                "寅": "활기차게 움직이며 먼저 실천하는 모습이 좋은 기회를 가져옵니다.",
+                "卯": "주변 사람들과 소통하며 부드럽게 대처하는 것이 유리합니다.",
+                "辰": "큰 포부를 가지고 당당하게 도전해보는 것이 좋습니다.",
+                "巳": "집중력을 발휘하여 한 가지 목표에 몰입하면 성과가 큽니다.",
+                "午": "자신의 매력을 당당하게 드러내고 활동적으로 움직이세요.",
+                "未": "섬세하게 주변을 살피고 마무리를 꼼꼼히 하는 것이 중요합니다.",
+                "申": "임기응변과 재치를 발휘하여 상황을 주도해보세요.",
+                "酉": "원칙을 지키며 깔끔하게 일을 처리하면 신뢰를 얻습니다.",
+                "戌": "신의를 지키고 믿음직한 모습을 보여주면 복이 옵니다.",
+                "亥": "넓은 마음으로 상황을 이해하고 포용하면 지혜가 생깁니다."
+            };
+
+            // 출력용 컬러맵
+            const colorMap = {"목":"초록색","화":"빨간색","토":"노란색","금":"흰색","수":"검정색"};
+            const dirMap = {"목":"동쪽","화":"남쪽","토":"중앙","금":"서쪽","수":"북쪽"};
+
+            // 출력
+            document.getElementById('scoreDisplay').innerText = `행운 점수: ${Math.floor(Math.random() * 15) + 85}점`;
+            
+            document.getElementById('luckColor').innerText = colorMap[tZhiWuxing] || "흰색";
+            document.getElementById('luckDir').innerText = dirMap[tZhiWuxing] || "동쪽";
+            document.getElementById('luckItem').innerText = "손수건";
+
+            const finalTxt = 
+                `${intro}\n\n` +
+                `분석 결과, 본인(${meGan})과 오늘(${tGan})의 관계는 '${shipShen}'에 해당합니다.\n` +
+                `${analysisSet[shipShen]}\n\n` +
+                `${elementSet[tZhiWuxing]}\n` +
+                `${closingSet[tZhi]} 오늘 하루도 행복하시길 바랍니다.`;
+
+            document.getElementById('fortuneText').innerText = finalTxt;
+            document.getElementById('result-area').style.display = 'block';
+            window.scrollTo({ top: document.getElementById('result-area').offsetTop - 120, behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
