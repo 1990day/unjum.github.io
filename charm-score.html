@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>운점 - 내 사주 매력도 (일주 분석)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lunar-javascript/1.6.12/lunar.js"></script>
+    
+    <style>
+        @font-face {
+            font-family: 'ThinRounded';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2511-1@1.0/ThinDungGeunMo.woff2') format('woff2');
+            font-weight: normal; font-style: normal; font-display: swap;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        /* --- 스크롤바 디자인 (핑크) --- */
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: #fff0f5; }
+        ::-webkit-scrollbar-thumb { background: #ff9aa2; border-radius: 10px; border: 2px solid #fff0f5; }
+        ::-webkit-scrollbar-thumb:hover { background: #ff6b81; }
+        html { scrollbar-width: thin; scrollbar-color: #ff9aa2 #fff0f5; }
+
+        body {
+            font-family: 'ThinRounded', sans-serif;
+            background-color: #fff5f7;
+            color: #444;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* --- 상단 헤더 --- */
+        header {
+            position: fixed; top: 0; left: 0; width: 100%; height: 70px;
+            background-color: #ff8fa3;
+            display: flex; justify-content: space-between;
+            align-items: center; padding: 0 40px; z-index: 1000;
+            box-shadow: 0 4px 15px rgba(255, 143, 163, 0.4);
+            border-bottom: 2px solid #fff;
+        }
+        .logo img { height: 40px; width: auto; filter: brightness(100); }
+
+        /* [PC용] 상단 메뉴 (모바일 숨김) */
+        .top-menu { display: flex; gap: 30px; height: 100%; align-items: center; }
+        .menu-item { position: relative; height: 100%; display: flex; align-items: center; cursor: pointer; }
+        .menu-title { color: #fff; text-decoration: none; font-size: 1.1rem; transition: 0.3s; white-space: nowrap; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.1); }
+        .menu-item:hover .menu-title { color: #fff0f5; transform: scale(1.05); }
+
+        /* [PC용] 드롭다운 */
+        .dropdown-content {
+            display: none; position: absolute; top: 70px; left: 50%; transform: translateX(-50%);
+            background-color: #fff; min-width: 160px; box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            border: 2px solid #ff8fa3; border-radius: 0 0 15px 15px; z-index: 1001; flex-direction: column; padding: 10px 0;
+        }
+        .dropdown-content a { color: #ff8fa3; padding: 12px 16px; text-decoration: none; display: block; font-size: 0.95rem; text-align: center; font-weight: bold; }
+        .dropdown-content a:hover { background-color: #fff0f5; }
+        @media (min-width: 769px) { .menu-item:hover .dropdown-content { display: flex; } }
+
+        /* [모바일용] 햄버거 버튼 (PC 숨김) */
+        .hamburger-btn {
+            display: none; /* PC에서는 안 보임 */
+            flex-direction: column;
+            justify-content: space-between;
+            width: 30px; height: 21px;
+            cursor: pointer; z-index: 1100;
+        }
+        .hamburger-btn span {
+            display: block; width: 100%; height: 3px;
+            background-color: #ffffff; /* 핑크 배경이므로 흰색 아이콘 */
+            border-radius: 3px; transition: all 0.3s ease;
+        }
+        .hamburger-btn.active span:nth-child(1) { transform: translateY(9px) rotate(45deg); }
+        .hamburger-btn.active span:nth-child(2) { opacity: 0; }
+        .hamburger-btn.active span:nth-child(3) { transform: translateY(-9px) rotate(-45deg); }
+
+        /* --- 좌측 사이드바 --- */
+        .sidebar {
+            position: fixed; top: 70px; left: 0; /* PC는 항상 보임 */
+            width: 250px; height: calc(100vh - 70px);
+            background-color: #ffffff; padding: 20px; overflow-y: auto;
+            border-right: 1px solid #ffccd5;
+            transition: left 0.3s ease-in-out; /* 모바일 슬라이드 효과 */
+            z-index: 1050;
+        }
+        .category-title { font-size: 1.2rem; color: #ff8fa3; margin-bottom: 10px; display: block; border-bottom: 2px dashed #ffccd5; padding-bottom: 5px; font-weight: bold; }
+        .sub-menu { list-style: none; padding-left: 10px; margin-bottom: 25px; }
+        .sub-menu li { margin: 8px 0; }
+        .sub-menu a { color: #888; text-decoration: none; font-size: 0.95rem; transition: 0.2s; }
+        .sub-menu a:hover { color: #ff8fa3; padding-left: 5px; font-weight: bold; }
+
+        /* --- 모바일용 배경 오버레이 --- */
+        .overlay {
+            display: none; position: fixed; top: 70px; left: 0;
+            width: 100%; height: calc(100vh - 70px);
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1040; opacity: 0; transition: opacity 0.3s ease;
+        }
+        .overlay.active { display: block; opacity: 1; }
+
+        /* --- 메인 영역 --- */
+        main {
+            margin-top: 70px; margin-left: 250px; /* PC: 사이드바 공간 확보 */
+            padding: 40px;
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+            min-height: calc(100vh - 70px);
+            transition: margin-left 0.3s ease;
+        }
+
+        /* --- 입력 폼 (드롭다운 스타일) --- */
+        .input-card {
+            background: white; width: 100%; max-width: 500px;
+            padding: 40px; border-radius: 30px;
+            box-shadow: 0 10px 30px rgba(255, 143, 163, 0.2);
+            text-align: center; border: 4px solid #fff0f5;
+        }
+        .form-group { margin-bottom: 20px; text-align: left; }
+        .form-label { display: block; color: #ff8fa3; margin-bottom: 8px; font-size: 1.1rem; font-weight: bold; }
+        
+        input[type="text"], select {
+            width: 100%; padding: 15px; border-radius: 15px;
+            border: 2px solid #ffccd5; background: #fffafa;
+            font-family: 'ThinRounded'; font-size: 1rem; color: #555; outline: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff8fa3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat; background-position: right 1rem center; background-size: 1em;
+        }
+        input[type="text"] { background-image: none; }
+        input:focus, select:focus { border-color: #ff8fa3; background-color: #fff; }
+
+        .radio-group { display: flex; gap: 10px; margin-bottom: 10px; }
+        .radio-label {
+            flex: 1; text-align: center; padding: 12px; border-radius: 12px;
+            border: 2px solid #ffccd5; color: #888; cursor: pointer; transition: 0.3s;
+        }
+        input[type="radio"] { display: none; }
+        input[type="radio"]:checked + .radio-label {
+            background-color: #ff8fa3; color: white; border-color: #ff8fa3; font-weight: bold;
+        }
+
+        .date-inputs { display: flex; gap: 10px; }
+        .date-inputs select { flex: 1; }
+
+        .submit-btn {
+            width: 100%; padding: 18px; margin-top: 20px;
+            background: linear-gradient(45deg, #ff8fa3, #ffb3c1);
+            color: white; border: none; border-radius: 50px;
+            font-size: 1.2rem; cursor: pointer; font-family: 'ThinRounded';
+            transition: 0.3s; box-shadow: 0 5px 15px rgba(255, 143, 163, 0.4);
+        }
+        .submit-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(255, 143, 163, 0.6); }
+
+        /* --- 결과 카드 --- */
+        #result-section { display: none; width: 100%; max-width: 550px; margin-top: 20px; }
+        .charm-card {
+            background: white; border-radius: 30px; overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1); border: 2px solid #ffe4e1;
+            animation: slideUp 0.6s ease;
+        }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card-header {
+            background: linear-gradient(135deg, #ff9a9e 0%, #ffc3a0 100%);
+            padding: 30px 20px; text-align: center; color: white; position: relative;
+        }
+        
+        .ilju-badge {
+            background: rgba(255,255,255,0.3); padding: 5px 15px; border-radius: 20px;
+            font-size: 0.9rem; display: inline-block; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.5);
+        }
+
+        .score-box {
+            background: white; color: #ff8fa3; width: 110px; height: 110px; border-radius: 50%;
+            margin: 0 auto 15px; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            border: 4px solid rgba(255,255,255,0.6); box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .score-val { font-size: 2.8rem; font-weight: bold; line-height: 1; }
+        .score-txt { font-size: 0.8rem; }
+
+        .card-body { padding: 30px; text-align: left; }
+        
+        .charm-tags { text-align: center; margin-bottom: 25px; }
+        .tag { 
+            display: inline-block; background: #fff0f5; color: #ff6b81; 
+            padding: 6px 12px; border-radius: 20px; font-size: 0.9rem; margin: 3px; font-weight: bold; 
+            border: 1px solid #ffccd5;
+        }
+
+        .analysis-text {
+            font-size: 1.1rem; color: #555; margin-bottom: 30px; line-height: 1.8; text-align: justify; word-break: keep-all;
+        }
+        .highlight-text { color: #ff6b81; font-weight: bold; }
+
+        .ilju-info-box {
+            background: #fffafa; border: 1px solid #ffccd5; border-radius: 15px; padding: 20px; text-align: center; margin-bottom: 20px;
+        }
+        .ilju-char { font-size: 2rem; color: #ff8fa3; font-weight: bold; margin-bottom: 5px; }
+        .ilju-desc { font-size: 0.95rem; color: #777; }
+
+        .retry-btn {
+            display: block; width: 100%; text-align: center; padding: 15px;
+            background: #f8f8f8; color: #888; text-decoration: none; border-top: 1px solid #eee;
+            font-size: 1rem; transition: 0.3s;
+        }
+        .retry-btn:hover { background: #ffe4e1; color: #ff6b81; }
+
+        /* --- [핵심] 모바일 반응형 (768px 이하) --- */
+        @media (max-width: 768px) {
+            header { padding: 0 15px; height: 60px; }
+            .logo img { height: 28px; }
+
+            /* 1. 상단 메뉴 숨김 & 햄버거 표시 */
+            .top-menu { display: none; }
+            .hamburger-btn { display: flex; }
+
+            /* 2. 사이드바 숨기기 (left: -250px) */
+            .sidebar { left: -260px; width: 250px; top: 60px; height: calc(100vh - 60px); }
+            
+            /* 3. 사이드바 열림 */
+            .sidebar.open { left: 0; }
+
+            /* 4. 메인 영역 여백 제거 */
+            main { margin-left: 0; padding: 20px; margin-top: 60px; }
+            
+            .date-inputs { flex-direction: column; }
+            .overlay { top: 60px; height: calc(100vh - 60px); }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="index.html" class="logo"><img src="img_logo1.png" alt="logo"></a>
+        
+        <nav class="top-menu">
+            <div class="menu-item">
+                <span class="menu-title">운세</span>
+                <div class="dropdown-content">
+                    <a href="today_fortune.html">오늘의 운세</a>
+                    <a href="new_year_fortune.html">신년 운세</a>
+                    <a href="lifetime_fortune.html">평생 운세</a>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span class="menu-title">사주</span>
+                <div class="dropdown-content">
+                    <a href="manse_calendar.html">정통 만세력</a>
+                    <a href="traditional_saju.html">정통 사주</a>
+                    <a href="my_saju.html">내 사주 풀이</a>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span class="menu-title">연애</span>
+                <div class="dropdown-content">
+                    <a href="love-fortune.html">평생 연애운</a>
+                    <a href="saju-compatibility.html">사주 궁합</a>
+                    <a href="reunion-saju.html">재회 사주</a>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span class="menu-title">도파민</span>
+                <div class="dropdown-content">
+                    <a href="charm-score.html">내 사주 매력</a>
+                    <a href="saju-popularity.html">사주 인기운</a>
+                    <a href="dohwasal-check.html">도화살 진단기</a>
+                    <a href="saju-spotlight.html">주목받는 사주</a>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span class="menu-title">별자리</span>
+                <div class="dropdown-content">
+                    <a href="weekly-zodiac.html">이번주 별자리</a>
+                    <a href="monthly-zodiac.html">이번달 별자리</a>
+                </div>
+            </div>
+        </nav>
+
+        <div class="hamburger-btn" onclick="toggleSidebar()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </header>
+
+    <div class="overlay" onclick="toggleSidebar()"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="menu-category">
+            <span class="category-title">운세</span>
+            <ul class="sub-menu">
+                <li><a href="today_fortune.html">오늘의 운세</a></li>
+                <li><a href="new_year_fortune.html">신년 운세</a></li>
+                <li><a href="lifetime_fortune.html">평생 운세</a></li>
+            </ul>
+        </div>
+        <div class="menu-category">
+            <span class="category-title">사주</span>
+            <ul class="sub-menu">
+                <li><a href="manse_calendar.html">정통 만세력</a></li>
+                <li><a href="traditional_saju.html">정통 사주</a></li>
+                <li><a href="my_saju.html">내 사주 풀이</a></li>
+            </ul>
+        </div>
+        <div class="menu-category">
+            <span class="category-title">연애</span>
+            <ul class="sub-menu">
+                <li><a href="love-fortune.html">평생 연애운</a></li>
+                <li><a href="saju-compatibility.html">사주 궁합</a></li>
+                <li><a href="reunion-saju.html">재회 사주</a></li>
+            </ul>
+        </div>
+        <div class="menu-category">
+            <span class="category-title">도파민</span>
+            <ul class="sub-menu">
+                <li><a href="charm-score.html">내 사주의 매력도</a></li>
+                <li><a href="saju-popularity.html">사주에 있는 인기운</a></li>
+                <li><a href="dohwasal-check.html">도화살 진단기</a></li>
+                <li><a href="saju-spotlight.html">주목받는 사주</a></li>
+            </ul>
+        </div>
+        <div class="menu-category">
+            <span class="category-title">별자리</span>
+            <ul class="sub-menu">
+                <li><a href="weekly-zodiac.html">이번주 별자리 운세</a></li>
+                <li><a href="monthly-zodiac.html">이번달 별자리 운세</a></li>
+            </ul>
+        </div>
+    </aside>
+
+    <main>
+        <div class="input-card" id="input-section">
+            <h2 style="color: #ff8fa3; margin-bottom: 10px;">🌸 내 사주 매력도</h2>
+            <p style="font-size:0.9rem; color:#999; margin-bottom:30px;">당신이 태어난 '일주'가 가진 고유한 매력을 분석합니다.</p>
+            
+            <div class="form-group">
+                <label class="form-label">이름</label>
+                <input type="text" id="username" placeholder="이름을 입력하세요">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">성별</label>
+                <div class="radio-group">
+                    <input type="radio" name="gender" id="female" value="female" checked><label class="radio-label" for="female">여성</label>
+                    <input type="radio" name="gender" id="male" value="male"><label class="radio-label" for="male">남성</label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">생년월일시</label>
+                <div class="radio-group" style="margin-bottom:15px;">
+                    <input type="radio" name="calType" id="solar" value="solar" checked><label class="radio-label" for="solar">양력</label>
+                    <input type="radio" name="calType" id="lunar" value="lunar"><label class="radio-label" for="lunar">음력</label>
+                </div>
+
+                <div class="date-inputs">
+                    <select id="birth-year">
+                        <option value="" disabled selected>년도</option>
+                        <script>
+                            for(let i=2025; i>=1940; i--) document.write(`<option value="${i}">${i}년</option>`);
+                        </script>
+                    </select>
+                    <select id="birth-month">
+                        <option value="" disabled selected>월</option>
+                        <script>for(let i=1;i<=12;i++) document.write(`<option value="${i}">${i}월</option>`);</script>
+                    </select>
+                    <select id="birth-day">
+                        <option value="" disabled selected>일</option>
+                        <script>for(let i=1;i<=31;i++) document.write(`<option value="${i}">${i}일</option>`);</script>
+                    </select>
+                </div>
+                
+                <div style="margin-top:10px;">
+                    <select id="birth-time-ganji">
+                        <option value="-1" disabled selected>태어난 시간 선택</option>
+                        <option value="99">시간 모름</option>
+                        <option value="0">자시 (23:30 ~ 01:29)</option>
+                        <option value="1">축시 (01:30 ~ 03:29)</option>
+                        <option value="2">인시 (03:30 ~ 05:29)</option>
+                        <option value="3">묘시 (05:30 ~ 07:29)</option>
+                        <option value="4">진시 (07:30 ~ 09:29)</option>
+                        <option value="5">사시 (09:30 ~ 11:29)</option>
+                        <option value="6">오시 (11:30 ~ 13:29)</option>
+                        <option value="7">미시 (13:30 ~ 15:29)</option>
+                        <option value="8">신시 (15:30 ~ 17:29)</option>
+                        <option value="9">유시 (17:30 ~ 19:29)</option>
+                        <option value="10">술시 (19:30 ~ 21:29)</option>
+                        <option value="11">해시 (21:30 ~ 23:29)</option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="submit-btn" onclick="analyzeCharm()">내 매력 확인하기 💕</button>
+        </div>
+
+        <div id="result-section">
+            <div class="charm-card">
+                <div class="card-header">
+                    <div class="ilju-badge" id="user-ilju-badge"></div>
+                    <div style="font-size:1.5rem; font-weight:bold; margin-bottom:15px;" id="result-title"></div>
+                    
+                    <div class="score-box">
+                        <div class="score-val" id="charm-score">0</div>
+                        <div class="score-txt">매력점수</div>
+                    </div>
+                    
+                    <div style="font-size:0.95rem; opacity:0.9;">타고난 일주 매력 분석 완료!</div>
+                </div>
+
+                <div class="card-body">
+                    <div class="charm-tags" id="result-tags"></div>
+
+                    <div class="ilju-info-box">
+                        <div class="ilju-char" id="ilju-hanja"></div>
+                        <div class="ilju-desc" id="ilju-meaning"></div>
+                    </div>
+
+                    <div class="analysis-text" id="analysis-content">
+                        </div>
+
+                </div>
+                <a href="#" onclick="location.reload()" class="retry-btn">🔄 다시 입력하기</a>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // --- 햄버거 메뉴 스크립트 (모바일용) ---
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.querySelector('.overlay');
+            const hamburger = document.querySelector('.hamburger-btn');
+
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+            hamburger.classList.toggle('active');
+        }
+
+        // --- 1. 한글 매핑 데이터 ---
+        const GAN_KO = {'甲':'갑', '乙':'을', '丙':'병', '丁':'정', '戊':'무', '己':'기', '庚':'경', '辛':'신', '壬':'임', '癸':'계'};
+        const JI_KO = {'子':'자', '丑':'축', '寅':'인', '卯':'묘', '辰':'진', '巳':'사', '午':'오', '未':'미', '申':'신', '酉':'유', '戌':'술', '亥':'해'};
+        const ANIMAL_KO = {'子':'쥐', '丑':'소', '寅':'호랑이', '卯':'토끼', '辰':'용', '巳':'뱀', '午':'말', '未':'양', '申':'원숭이', '酉':'닭', '戌':'개', '亥':'돼지'};
+        const COLOR_KO = {'甲':'푸른', '乙':'푸른', '丙':'붉은', '丁':'붉은', '戊':'황금', '己':'황금', '庚':'하얀', '辛':'하얀', '壬':'검은', '癸':'검은'};
+
+        // --- 2. 60갑자 일주별 매력 해석 데이터 (대표적인 일주 샘플 + 공통로직) ---
+        const ILJU_DATA = {
+            // 목(Wood) 일간
+            '갑자': { score: 92, tags: ['#우두머리', '#지적인매력', '#은근한섹시함'], text: "당신은 차가운 물 위에 떠 있는 곧은 나무입니다. 겉으로는 차분하고 지적으로 보이지만, 내면에는 남을 리드하고 싶은 욕망이 강합니다. 차가우면서도 도도한 매력이 있어 이성들이 쉽게 다가오지 못하면서도 계속 쳐다보게 만드는 '냉미녀/냉미남' 스타일입니다." },
+            '을묘': { score: 95, tags: ['#귀여움', '#생활력', '#반전매력'], text: "봄날의 꽃밭처럼 싱그럽고 귀여운 외모를 가진 경우가 많습니다. 유연하고 사교적인 성격 덕분에 어디서나 사랑받는 '인기쟁이'입니다. 하지만 마냥 여려 보여도 내면은 잡초처럼 강인한 생활력을 가지고 있어, 알면 알수록 진국이라는 평가를 받습니다." },
+            '을사': { score: 98, tags: ['#표현력장인', '#끼쟁이', '#화려함'], text: "꽃이 활짝 핀 형상으로, 자기표현 능력이 매우 뛰어납니다. 말솜씨가 좋고 센스가 넘쳐 이성에게 인기가 폭발하는 일주입니다. 가만히 있어도 눈에 띄는 화려함이 있으며, 상대방의 기분을 좋게 만드는 재주가 있어 연애 고수들이 많습니다." },
+            
+            // 화(Fire) 일간
+            '병오': { score: 90, tags: ['#강렬함', '#정열적', '#시선집중'], text: "한여름의 태양처럼 뜨겁고 강렬한 에너지를 가졌습니다. 어디를 가든 주인공이 되어야 직성이 풀리며, 숨길 수 없는 존재감을 발산합니다. 화끈하고 뒤끝 없는 성격에 반하는 이성들이 많으며, 압도적인 카리스마로 상대를 리드합니다." },
+            '정유': { score: 96, tags: ['#섬세함', '#귀티', '#촛불같은매력'], text: "어두운 밤을 밝히는 촛불처럼 따뜻하면서도 섬세한 매력이 있습니다. 외모가 수려하고 깔끔한 사람이 많으며, 예리한 감각으로 상대방의 마음을 잘 캐치합니다. 은은하게 빛나는 매력 덕분에 대놓고 드러내지 않아도 실속 있게 인기를 챙기는 타입입니다." },
+            
+            // 토(Earth) 일간
+            '무진': { score: 85, tags: ['#듬직함', '#포용력', '#태산'], text: "거대한 산처럼 묵묵하고 듬직한 매력의 소유자입니다. 가벼운 연애보다는 진중한 만남을 선호하는 이성들에게 인기가 많습니다. 속을 쉽게 드러내지 않아 신비로워 보이며, 한 번 내 사람이라고 생각하면 끝까지 책임지는 모습에 감동을 줍니다." },
+            '기묘': { score: 89, tags: ['#다정다감', '#챙김', '#모성애/부성애'], text: "들판의 토끼처럼 민첩하면서도 다정다감한 성격입니다. 상대방을 세심하게 챙겨주는 배려심이 돋보이며, 부드러운 화법으로 이성의 마음을 무장해제 시킵니다. 편안하고 기댈 수 있는 안식처 같은 매력을 지녔습니다." },
+            
+            // 금(Metal) 일간
+            '경신': { score: 87, tags: ['#카리스마', '#의리', '#걸크러쉬'], text: "단단한 바위처럼 강인하고 의리가 넘칩니다. 맺고 끊음이 확실하여 흐지부지한 것을 싫어하는 '쿨'한 매력이 있습니다. 시크해 보이지만 내 사람에게는 한없이 약한 '츤데레' 기질이 있어, 그 반전 매력에 빠지는 사람들이 많습니다." },
+            '신유': { score: 99, tags: ['#보석', '#도도함', '#완벽주의'], text: "가장 빛나는 보석 같은 일주입니다. 외모가 수려하고 피부가 좋은 경우가 많아 첫인상 점수가 매우 높습니다. 예민하고 까칠해 보일 수 있지만, 그 도도함이 오히려 도전 의식을 자극하여 인기를 끕니다. 자신을 꾸밀 줄 아는 패셔니스타가 많습니다." },
+            
+            // 수(Water) 일간
+            '임자': { score: 97, tags: ['#마성의매력', '#깊은바다', '#섹시함'], text: "깊고 넓은 바다처럼 속을 알 수 없는 매력이 있습니다. 스케일이 크고 두뇌 회전이 빠르며, 이성을 끌어당기는 묘한 흡입력이 강합니다. 너무 매력적이라 주변에 이성이 끊이지 않을 수 있으니 관리가 필요할 정도입니다." },
+            '계묘': { score: 94, tags: ['#순수함', '#감수성', '#보호본능'], text: "봄비처럼 촉촉하고 감수성이 풍부합니다. 여리고 착해 보이는 인상으로 보호 본능을 자극합니다. 예술적인 재능이 뛰어나고 센스가 있어 대화가 잘 통하며, 누구와도 잘 어울리는 친화력이 가장 큰 무기입니다." }
+        };
+
+        // 공통 로직 (데이터가 없는 일주용)
+        function getCommonCharm(gan, ji, animal, color) {
+            let baseText = `당신은 <strong>'${color} ${animal}'</strong>의 기운을 타고났습니다. `;
+            let score = 80 + Math.floor(Math.random() * 10);
+            let tags = ['#매력쟁이', `#${color}기운`, `#${animal}띠성향`];
+
+            if (['子','午','卯','酉'].includes(ji)) {
+                baseText += "가만히 있어도 시선을 끄는 <strong>인기 DNA</strong>를 타고났습니다. 본능적으로 사람을 끌어당기는 힘이 있어, 연애 기회가 많은 편입니다. 화려한 스포트라이트를 받는 것을 즐기며, 어디서나 주인공이 되는 매력이 있습니다.";
+                score += 5;
+                tags.push('#타고난인기');
+            } else if (['辰','戌','丑','未'].includes(ji)) {
+                baseText += "화려함보다는 <strong>은은하고 묵직한 매력</strong>이 있습니다. 알면 알수록 진국이라는 소리를 들으며, 신뢰감을 주는 모습이 이성에게 크게 어필합니다. 가벼운 만남보다는 진지하고 깊은 관계에서 당신의 진가가 발휘됩니다.";
+                tags.push('#볼매');
+            } else { // 인신사해
+                baseText += "활동적이고 역동적인 매력이 있습니다. <strong>자신감 넘치는 모습</strong>이 이성에게 멋지게 비춰지며, 리더십 있게 관계를 이끌어가는 능력이 탁월합니다. 솔직하고 시원시원한 성격 덕분에 주변에 사람이 끊이지 않습니다.";
+                tags.push('#활동적');
+            }
+            return { score, tags, text: baseText };
+        }
+
+        function analyzeCharm() {
+            const name = document.getElementById('username').value;
+            const yearStr = document.getElementById('birth-year').value;
+            const monthStr = document.getElementById('birth-month').value;
+            const dayStr = document.getElementById('birth-day').value;
+            const timeCode = document.getElementById('birth-time-ganji').value; // 자시=0, 축시=1 ...
+            const calType = document.querySelector('input[name="calType"]:checked').value;
+
+            if (!name || yearStr === "" || monthStr === "" || dayStr === "" || timeCode === "-1") {
+                alert("이름과 생년월일시를 모두 선택해주세요!");
+                return;
+            }
+
+            const year = parseInt(yearStr);
+            const month = parseInt(monthStr);
+            const day = parseInt(dayStr);
+            
+            // 1. 12간지 시간 -> 실제 시간(정가운데) 매핑
+            let calcHour = 12; // 모름 기본값
+            if(timeCode !== "99" && timeCode !== "-1") {
+                const timeMap = {
+                    "0": 0,  // 자시 -> 00:00
+                    "1": 2,  // 축시 -> 02:00
+                    "2": 4,  // 인시 -> 04:00
+                    "3": 6,  // 묘시 -> 06:00
+                    "4": 8,  // 진시 -> 08:00
+                    "5": 10, // 사시 -> 10:00
+                    "6": 12, // 오시 -> 12:00
+                    "7": 14, // 미시 -> 14:00
+                    "8": 16, // 신시 -> 16:00
+                    "9": 18, // 유시 -> 18:00
+                    "10": 20,// 술시 -> 20:00
+                    "11": 22 // 해시 -> 22:00
+                };
+                calcHour = timeMap[timeCode];
+            }
+
+            // 2. 만세력 계산
+            let lunar, baZi;
+            if (calType === 'lunar') {
+                lunar = Lunar.fromYmdHms(year, month, day, calcHour, 0, 0);
+                baZi = lunar.getEightChar();
+            } else {
+                let solar = Solar.fromYmdHms(year, month, day, calcHour, 0, 0);
+                lunar = solar.getLunar();
+                baZi = lunar.getEightChar();
+            }
+
+            // 3. 일주 추출
+            const dGan = baZi.getDayGan(); 
+            const dZhi = baZi.getDayZhi(); 
+            
+            const ganKo = GAN_KO[dGan];
+            const jiKo = JI_KO[dZhi];
+            const iljuName = ganKo + jiKo; // 예: 갑자
+
+            // 4. 데이터 조회
+            let resultData = ILJU_DATA[iljuName];
+            if (!resultData) {
+                const animal = ANIMAL_KO[dZhi];
+                const color = COLOR_KO[dGan];
+                resultData = getCommonCharm(dGan, dZhi, animal, color);
+            }
+
+            // 5. UI 업데이트
+            document.getElementById('input-section').style.display = 'none';
+            document.getElementById('result-section').style.display = 'block';
+
+            document.getElementById('user-ilju-badge').innerText = `${iljuName}일주`;
+            document.getElementById('result-title').innerText = `${name}님의 매력`;
+            document.getElementById('charm-score').innerText = resultData.score;
+            
+            document.getElementById('ilju-hanja').innerText = dGan + dZhi;
+            document.getElementById('ilju-meaning').innerText = `${COLOR_KO[dGan]} ${ANIMAL_KO[dZhi]}의 날`;
+
+            // 태그
+            const tagContainer = document.getElementById('result-tags');
+            tagContainer.innerHTML = '';
+            resultData.tags.forEach(tag => {
+                const span = document.createElement('span');
+                span.className = 'tag';
+                span.innerText = tag;
+                tagContainer.appendChild(span);
+            });
+
+            // 텍스트
+            document.getElementById('analysis-content').innerHTML = `
+                <span class="highlight-text">${name}</span>님은 
+                <span class="highlight-text">'${iljuName}일주'</span>입니다.<br><br>
+                ${resultData.text}
+            `;
+        }
+    </script>
+</body>
+</html>

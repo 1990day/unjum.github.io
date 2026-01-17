@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>운점 - 내 사주 인기운 분석</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lunar-javascript/1.6.12/lunar.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        @font-face {
+            font-family: 'ThinRounded';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2511-1@1.0/ThinDungGeunMo.woff2') format('woff2');
+            font-weight: normal; font-style: normal; font-display: swap;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            /* 인기운 페이지 전용 테마 (Light Mint & Violet) */
+            --bg-color: #f0fdfa;
+            --header-bg: linear-gradient(90deg, #20c997, #7048e8);
+            --sidebar-bg: #ffffff;
+            --accent-color: #20c997;
+            --secondary-color: #7048e8;
+            --text-color: #333333;
+            --border-color: #c3fae8;
+            --overlay-bg: rgba(0, 0, 0, 0.5);
+        }
+
+        /* 스크롤바 디자인 */
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: #e0fcf6; }
+        ::-webkit-scrollbar-thumb { background: var(--accent-color); border-radius: 10px; border: 2px solid #e0fcf6; }
+        ::-webkit-scrollbar-thumb:hover { background: #12a176; }
+
+        body {
+            font-family: 'ThinRounded', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* --- [공통 레이아웃] 헤더 --- */
+        header {
+            position: fixed; top: 0; left: 0; width: 100%; height: 70px;
+            background: var(--header-bg); /* 그라데이션 적용 */
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 40px; z-index: 1000;
+            box-shadow: 0 4px 15px rgba(32, 201, 151, 0.3);
+        }
+
+        .logo img { height: 40px; width: auto; filter: brightness(200); } /* 로고 흰색 처리 */
+
+        /* [PC용] 상단 메뉴 */
+        .top-menu { display: flex; gap: 30px; height: 100%; align-items: center; }
+        .menu-item { position: relative; height: 100%; display: flex; align-items: center; cursor: pointer; }
+        .menu-title { color: #fff; text-decoration: none; font-size: 1.1rem; transition: 0.3s; white-space: nowrap; font-weight: bold; }
+        .menu-item:hover .menu-title { color: #e0fcf6; transform: scale(1.05); }
+
+        /* [PC용] 드롭다운 */
+        .dropdown-content {
+            display: none; position: absolute; top: 70px; left: 50%; transform: translateX(-50%);
+            background-color: #fff; min-width: 160px; box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            border: 2px solid var(--accent-color); border-radius: 0 0 15px 15px; z-index: 1001; flex-direction: column; padding: 10px 0;
+        }
+        .dropdown-content a { color: var(--accent-color); padding: 12px 16px; text-decoration: none; display: block; font-size: 0.95rem; text-align: center; font-weight: bold; }
+        .dropdown-content a:hover { background-color: #f0fcf9; color: var(--secondary-color); }
+        @media (min-width: 769px) { .menu-item:hover .dropdown-content { display: flex; } }
+
+        /* [모바일용] 햄버거 버튼 */
+        .hamburger-btn {
+            display: none; flex-direction: column; justify-content: space-between;
+            width: 30px; height: 21px; cursor: pointer; z-index: 1100;
+        }
+        .hamburger-btn span {
+            display: block; width: 100%; height: 3px;
+            background-color: #fff; /* 헤더 배경이 진하므로 흰색 */
+            border-radius: 3px; transition: all 0.3s ease;
+        }
+        .hamburger-btn.active span:nth-child(1) { transform: translateY(9px) rotate(45deg); }
+        .hamburger-btn.active span:nth-child(2) { opacity: 0; }
+        .hamburger-btn.active span:nth-child(3) { transform: translateY(-9px) rotate(-45deg); }
+
+        /* --- [공통 레이아웃] 사이드바 (라이트 테마 적용) --- */
+        .sidebar {
+            position: fixed; top: 70px; left: 0; width: 260px; height: calc(100vh - 70px);
+            background-color: var(--sidebar-bg); padding: 30px 20px; overflow-y: auto; 
+            border-right: 1px solid var(--border-color);
+            z-index: 1050; transition: left 0.3s ease-in-out;
+        }
+        .category-title { font-size: 1.1rem; color: var(--accent-color); margin-bottom: 15px; display: block; font-weight: bold; border-bottom: 2px dashed var(--border-color); padding-bottom: 5px; }
+        .sub-menu { list-style: none; padding-left: 10px; margin-bottom: 30px; }
+        .sub-menu li { margin: 12px 0; }
+        .sub-menu a { color: #888; text-decoration: none; font-size: 0.95rem; transition: 0.2s; }
+        .sub-menu a:hover { padding-left: 5px; color: var(--secondary-color); font-weight: bold; }
+
+        /* [모바일용] 오버레이 */
+        .overlay {
+            display: none; position: fixed; top: 70px; left: 0;
+            width: 100%; height: calc(100vh - 70px);
+            background-color: var(--overlay-bg); z-index: 90; opacity: 0; transition: opacity 0.3s ease;
+        }
+        .overlay.active { display: block; opacity: 1; }
+
+        /* --- 메인 영역 --- */
+        main {
+            margin-top: 70px; margin-left: 260px; padding: 40px 20px;
+            display: flex; flex-direction: column; align-items: center; min-height: calc(100vh - 70px);
+            transition: margin-left 0.3s ease;
+        }
+
+        /* --- 기존 콘텐츠 스타일 (테마에 맞게 조정) --- */
+        .input-card {
+            background: white; width: 100%; max-width: 500px;
+            padding: 40px; border-radius: 30px;
+            box-shadow: 0 10px 30px rgba(32, 201, 151, 0.15);
+            text-align: center; border: 4px solid #e6fcf5;
+            margin-bottom: 30px;
+        }
+        .form-group { margin-bottom: 20px; text-align: left; }
+        .form-label { display: block; color: var(--accent-color); margin-bottom: 8px; font-size: 1.1rem; font-weight: bold; }
+        
+        input[type="text"], select {
+            width: 100%; padding: 15px; border-radius: 15px;
+            border: 2px solid var(--border-color); background: #f8fffd;
+            font-family: 'ThinRounded'; font-size: 1rem; color: #555; outline: none;
+            appearance: none;
+        }
+        input:focus, select:focus { border-color: var(--accent-color); background-color: #fff; }
+
+        .radio-group { display: flex; gap: 10px; margin-bottom: 10px; }
+        .radio-label {
+            flex: 1; text-align: center; padding: 12px; border-radius: 12px;
+            border: 2px solid var(--border-color); color: #888; cursor: pointer; transition: 0.3s;
+        }
+        input[type="radio"] { display: none; }
+        input[type="radio"]:checked + .radio-label {
+            background-color: var(--accent-color); color: white; border-color: var(--accent-color); font-weight: bold;
+        }
+        .date-inputs { display: flex; gap: 10px; }
+        .date-inputs select { flex: 1; }
+
+        .submit-btn {
+            width: 100%; padding: 18px; margin-top: 20px;
+            background: linear-gradient(45deg, var(--accent-color), #38d9a9);
+            color: white; border: none; border-radius: 50px;
+            font-size: 1.2rem; cursor: pointer; font-family: 'ThinRounded';
+            transition: 0.3s; box-shadow: 0 5px 15px rgba(32, 201, 151, 0.4);
+        }
+        .submit-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(32, 201, 151, 0.6); }
+
+        /* 결과 영역 */
+        #result-section { display: none; width: 100%; max-width: 600px; }
+        .result-container { display: grid; grid-template-columns: 1fr; gap: 20px; animation: slideUp 0.6s ease; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+        .profile-card {
+            background: white; border-radius: 25px; padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #e0fcf6; text-align: center;
+        }
+        .profile-img {
+            width: 100px; height: 100px; border-radius: 50%;
+            background: linear-gradient(135deg, #a9e34b, var(--accent-color));
+            margin: 0 auto 15px; display: flex; align-items: center; justify-content: center;
+            font-size: 3rem; color: white; border: 4px solid #fff;
+            box-shadow: 0 5px 15px rgba(32, 201, 151, 0.3);
+        }
+        .profile-name { font-size: 1.5rem; font-weight: bold; margin-bottom: 5px; color: #333; }
+        .profile-tag { color: var(--secondary-color); font-size: 0.95rem; margin-bottom: 20px; font-weight: bold; }
+        
+        .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; background: #f8f9fa; border-radius: 15px; padding: 15px; }
+        .stat-item { display: flex; flex-direction: column; }
+        .stat-num { font-size: 1.3rem; font-weight: bold; color: var(--accent-color); }
+        .stat-label { font-size: 0.8rem; color: #888; }
+
+        .chart-card {
+            background: white; border-radius: 25px; padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #e0fcf6;
+        }
+        .card-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 20px; color: var(--secondary-color); border-left: 4px solid var(--accent-color); padding-left: 10px; }
+
+        /* 신살 설명 카드 */
+        .sinsal-card {
+            background: white; border-radius: 20px; padding: 20px; margin-bottom: 15px;
+            border-left: 5px solid #ccc; box-shadow: 0 5px 15px rgba(0,0,0,0.03); transition: transform 0.2s;
+        }
+        .sinsal-card:hover { transform: translateY(-3px); }
+        .sinsal-card.dohwa { border-left-color: #ff6b6b; background: #fff5f5; }
+        .sinsal-card.hongyeom { border-left-color: #cc5de8; background: #f3f0ff; }
+        .sinsal-card.hwagae { border-left-color: #fcc419; background: #fff9db; }
+        
+        .sinsal-name { font-weight: bold; font-size: 1.1rem; margin-bottom: 5px; display: flex; align-items: center; gap: 8px; }
+        .sinsal-desc { font-size: 0.95rem; color: #555; line-height: 1.5; }
+
+        .retry-btn {
+            display: block; width: 100%; text-align: center; padding: 15px;
+            background: var(--secondary-color); color: white; text-decoration: none; border-radius: 50px;
+            font-size: 1rem; transition: 0.3s; margin-top: 30px;
+        }
+        .retry-btn:hover { background: #5f3dc4; box-shadow: 0 5px 15px rgba(112, 72, 232, 0.4); }
+
+        /* --- [공통 레이아웃] 반응형 --- */
+        @media (max-width: 768px) {
+            header { padding: 0 20px; height: 60px; }
+            .logo img { height: 28px; }
+            
+            /* 메뉴 숨김 / 햄버거 보임 */
+            .top-menu { display: none; }
+            .hamburger-btn { display: flex; }
+
+            /* 사이드바 제어 */
+            .sidebar { left: -270px; top: 60px; height: calc(100vh - 60px); display: block; }
+            .sidebar.open { left: 0; }
+            .overlay { top: 60px; height: calc(100vh - 60px); }
+
+            /* 메인 제어 */
+            main { margin-left: 0; margin-top: 60px; padding: 20px; }
+
+            .date-inputs { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="index.html" class="logo"><img src="img_logo1.png" alt="logo"></a>
+        
+        <nav class="top-menu">
+            <div class="menu-item">
+                <span class="menu-title">운세</span>
+                <div class="dropdown-content">
+                    <a href="today_fortune.html">오늘의 운세</a>
+                    <a href="new_year_fortune.html">신년 운세</a>
+                    <a href="lifetime_fortune.html">평생 운세</a>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span class="menu-title">사주</span>
+                <div class="dropdown-content">
+                    <a href="manse_calendar.html">정통 만세력</a>
+                    <a href="traditional_saju.html">정통 사주</a>
+                    <a href="my_saju.html">내 사주 풀이</a>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span class="menu-title">연애</span>
+                <div class="dropdown-content">
+                    <a href="love-fortune.html">평생 연애운</a>
+                    <a href="saju-compatibility.html">사주 궁합</a>
+                    <a href="reunion-saju.html">재회 사주</a>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span class="menu-title">도파민</span>
+                <div class="dropdown-content">
+                    <a href="charm-score.html">내 사주 매력</a>
+                    <a href="saju-popularity.html" style="color:var(--secondary-color);">사주 인기운</a>
+                    <a href="dohwasal-check.html">도화살 진단기</a>
+                    <a href="saju-spotlight.html">주목받는 사주</a>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span class="menu-title">별자리</span>
+                <div class="dropdown-content">
+                    <a href="weekly-zodiac.html">이번주 별자리</a>
+                    <a href="monthly-zodiac.html">이번달 별자리</a>
+                </div>
+            </div>
+        </nav>
+
+        <div class="hamburger-btn" onclick="toggleSidebar()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </header>
+
+    <div class="overlay" onclick="toggleSidebar()"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="category-title">운세</div>
+        <ul class="sub-menu">
+            <li><a href="today_fortune.html">오늘의 운세</a></li>
+            <li><a href="new_year_fortune.html">신년 운세</a></li>
+            <li><a href="lifetime_fortune.html">평생 운세</a></li>
+        </ul>
+        <div class="category-title">사주</div>
+        <ul class="sub-menu">
+            <li><a href="manse_calendar.html">정통 만세력</a></li>
+            <li><a href="traditional_saju.html">정통 사주</a></li>
+            <li><a href="my_saju.html">내 사주 풀이</a></li>
+        </ul>
+        <div class="category-title">연애</div>
+        <ul class="sub-menu">
+            <li><a href="love-fortune.html">평생 연애운</a></li>
+            <li><a href="saju-compatibility.html">사주 궁합</a></li>
+            <li><a href="reunion-saju.html">재회 사주</a></li>
+        </ul>
+        <div class="category-title">도파민</div>
+        <ul class="sub-menu">
+            <li><a href="charm-score.html">내 사주 매력</a></li>
+            <li><a href="saju-popularity.html" style="color:var(--secondary-color); font-weight:bold;">사주 인기운</a></li>
+            <li><a href="dohwasal-check.html">도화살 진단기</a></li>
+            <li><a href="saju-spotlight.html">주목받는 사주</a></li>
+        </ul>
+        <div class="category-title">별자리</div>
+        <ul class="sub-menu">
+            <li><a href="weekly-zodiac.html">이번주 별자리 운세</a></li>
+            <li><a href="monthly-zodiac.html">이번달 별자리 운세</a></li>
+        </ul>
+    </aside>
+
+    <main>
+        <div class="input-card" id="input-section">
+            <h2 style="color: var(--accent-color); margin-bottom: 10px;">✨ 사주 인기운 분석</h2>
+            <p style="font-size:0.9rem; color:#888; margin-bottom:30px;">당신의 사주에 숨겨진 '인기 살(神殺)'을 찾아드립니다.</p>
+            
+            <div class="form-group">
+                <label class="form-label">이름</label>
+                <input type="text" id="username" placeholder="이름을 입력하세요">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">성별</label>
+                <div class="radio-group">
+                    <input type="radio" name="gender" id="female" value="female" checked><label class="radio-label" for="female">여성</label>
+                    <input type="radio" name="gender" id="male" value="male"><label class="radio-label" for="male">남성</label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">생년월일시</label>
+                <div class="radio-group" style="margin-bottom:15px;">
+                    <input type="radio" name="calType" id="solar" value="solar" checked><label class="radio-label" for="solar">양력</label>
+                    <input type="radio" name="calType" id="lunar" value="lunar"><label class="radio-label" for="lunar">음력</label>
+                </div>
+
+                <div class="date-inputs">
+                    <select id="birth-year">
+                        <option value="" disabled selected>년도</option>
+                        <script>for(let i=2025; i>=1940; i--) document.write(`<option value="${i}">${i}년</option>`);</script>
+                    </select>
+                    <select id="birth-month">
+                        <option value="" disabled selected>월</option>
+                        <script>for(let i=1;i<=12;i++) document.write(`<option value="${i}">${i}월</option>`);</script>
+                    </select>
+                    <select id="birth-day">
+                        <option value="" disabled selected>일</option>
+                        <script>for(let i=1;i<=31;i++) document.write(`<option value="${i}">${i}일</option>`);</script>
+                    </select>
+                </div>
+                
+                <div style="margin-top:10px;">
+                    <select id="birth-time-ganji">
+                        <option value="-1" disabled selected>태어난 시간 선택</option>
+                        <option value="99">시간 모름</option>
+                        <option value="0">자시 (23:30 ~ 01:29)</option>
+                        <option value="1">축시 (01:30 ~ 03:29)</option>
+                        <option value="2">인시 (03:30 ~ 05:29)</option>
+                        <option value="3">묘시 (05:30 ~ 07:29)</option>
+                        <option value="4">진시 (07:30 ~ 09:29)</option>
+                        <option value="5">사시 (09:30 ~ 11:29)</option>
+                        <option value="6">오시 (11:30 ~ 13:29)</option>
+                        <option value="7">미시 (13:30 ~ 15:29)</option>
+                        <option value="8">신시 (15:30 ~ 17:29)</option>
+                        <option value="9">유시 (17:30 ~ 19:29)</option>
+                        <option value="10">술시 (19:30 ~ 21:29)</option>
+                        <option value="11">해시 (21:30 ~ 23:29)</option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="submit-btn" onclick="analyzePopularity()">인기운 확인하기 🚀</button>
+        </div>
+
+        <div id="result-section">
+            <div class="result-container">
+                
+                <div class="profile-card">
+                    <div class="profile-img" id="profile-initial">?</div>
+                    <div class="profile-name" id="res-name">홍길동</div>
+                    <div class="profile-tag" id="res-slogan">"타고난 연예인 기질"</div>
+                    
+                    <div class="stat-grid">
+                        <div class="stat-item">
+                            <span class="stat-num" id="dohwa-score">0</span>
+                            <span class="stat-label">도화력</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-num" id="hongyeom-score">0</span>
+                            <span class="stat-label">홍염력</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-num" id="hwagae-score">0</span>
+                            <span class="stat-label">화개력</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="card-title">📊 나의 인기 성향 그래프</div>
+                    <div style="position: relative; height: 250px; width: 100%;">
+                        <canvas id="popularityChart"></canvas>
+                    </div>
+                </div>
+
+                <div id="sinsal-list">
+                    <div class="card-title">🔮 보유한 인기살 상세</div>
+                    </div>
+
+                <a href="#" onclick="location.reload()" class="retry-btn">🔄 다시 분석하기</a>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // [추가] 햄버거 토글 함수
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.querySelector('.overlay');
+            const hamburger = document.querySelector('.hamburger-btn');
+
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+            hamburger.classList.toggle('active');
+        }
+
+        // --- 데이터 ---
+        const GAN = {'甲':'갑', '乙':'을', '丙':'병', '丁':'정', '戊':'무', '己':'기', '庚':'경', '辛':'신', '壬':'임', '癸':'계'};
+        const JI = {'子':'자', '丑':'축', '寅':'인', '卯':'묘', '辰':'진', '巳':'사', '午':'오', '未':'미', '申':'신', '酉':'유', '戌':'술', '亥':'해'};
+
+        // --- 분석 로직 ---
+        function analyzePopularity() {
+            const name = document.getElementById('username').value;
+            const year = parseInt(document.getElementById('birth-year').value);
+            const month = parseInt(document.getElementById('birth-month').value);
+            const day = parseInt(document.getElementById('birth-day').value);
+            const timeCode = document.getElementById('birth-time-ganji').value;
+            const calType = document.querySelector('input[name="calType"]:checked').value;
+
+            if (!name || isNaN(year) || isNaN(month) || isNaN(day) || timeCode === "-1") {
+                alert("정보를 모두 입력해주세요!");
+                return;
+            }
+
+            // 1. 시간 변환
+            let calcHour = 12; 
+            if(timeCode !== "99" && timeCode !== "-1") {
+                const map = { "0":0, "1":2, "2":4, "3":6, "4":8, "5":10, "6":12, "7":14, "8":16, "9":18, "10":20, "11":22 };
+                calcHour = map[timeCode];
+            }
+
+            // 2. 만세력 추출
+            let lunar, baZi;
+            if (calType === 'lunar') {
+                lunar = Lunar.fromYmdHms(year, month, day, calcHour, 0, 0);
+                baZi = lunar.getEightChar();
+            } else {
+                let solar = Solar.fromYmdHms(year, month, day, calcHour, 0, 0);
+                lunar = solar.getLunar();
+                baZi = lunar.getEightChar();
+            }
+
+            const yZhi = baZi.getYearZhi(); // 년지
+            const mZhi = baZi.getMonthZhi(); // 월지
+            const dGan = baZi.getDayGan();   // 일간
+            const dZhi = baZi.getDayZhi();   // 일지
+            const tZhi = (timeCode !== "99") ? baZi.getTimeZhi() : null; // 시지
+
+            const zhis = [yZhi, mZhi, dZhi];
+            if(tZhi) zhis.push(tZhi);
+
+            // --- 3. 신살 계산 (진도화, 홍염, 화개) ---
+            
+            // [A] 도화살 (Nyeon-sal): 년지/일지 삼합의 다음 글자 (왕지)
+            function getRealDohwaChar(baseJi) {
+                if (['申','子','辰'].includes(baseJi)) return '酉';
+                if (['寅','午','戌'].includes(baseJi)) return '卯';
+                if (['巳','酉','丑'].includes(baseJi)) return '午';
+                if (['亥','卯','未'].includes(baseJi)) return '子';
+                return null;
+            }
+            
+            let dohwaCards = [];
+            const targetDohwaYear = getRealDohwaChar(yZhi); // 년지 기준 도화
+            const targetDohwaDay = getRealDohwaChar(dZhi);  // 일지 기준 도화
+            
+            let dohwaScore = 0;
+
+            // 가도화 (자오묘유 자체) 체크
+            let tempDohwa = 0;
+            zhis.forEach(z => { if(['子','午','卯','酉'].includes(z)) tempDohwa++; });
+            dohwaScore += (tempDohwa * 20); // 기본 점수
+
+            // 진도화 체크 (가중치 높음)
+            zhis.forEach(z => {
+                if(z === targetDohwaYear || z === targetDohwaDay) {
+                    dohwaScore += 30; // 진도화 보너스
+                    if(!dohwaCards.includes('진도화')) dohwaCards.push('진도화');
+                }
+            });
+            if(dohwaCards.length === 0 && tempDohwa > 0) dohwaCards.push('가도화 (자오묘유)');
+
+
+            // [B] 홍염살 (일주 기준)
+            const hongyeomList = ['甲午', '丙寅', '丁未', '戊辰', '庚戌', '辛酉', '壬子'];
+            const dayPillar = dGan + dZhi;
+            let hongyeomScore = 0;
+            let isHongyeom = false;
+            
+            if(hongyeomList.includes(dayPillar)) {
+                hongyeomScore = 90;
+                isHongyeom = true;
+            } else {
+                hongyeomScore = 10; // 기본 점수
+            }
+
+            // [C] 화개살 (삼합의 고지: 진술축미)
+            function getHwagaeChar(baseJi) {
+                if (['申','子','辰'].includes(baseJi)) return '辰';
+                if (['寅','午','戌'].includes(baseJi)) return '戌';
+                if (['巳','酉','丑'].includes(baseJi)) return '丑';
+                if (['亥','卯','未'].includes(baseJi)) return '未';
+                return null;
+            }
+            let hwagaeScore = 0;
+            let hwagaeFound = false;
+            const targetHwagaeYear = getHwagaeChar(yZhi);
+            
+            // 일반 화개 (진술축미)
+            let tempHwagae = 0;
+            zhis.forEach(z => { if(['辰','戌','丑','未'].includes(z)) tempHwagae++; });
+            hwagaeScore += (tempHwagae * 15);
+
+            // 진화개
+            zhis.forEach(z => {
+                if(z === targetHwagaeYear) {
+                    hwagaeScore += 25;
+                    hwagaeFound = true;
+                }
+            });
+
+            // 점수 보정 (최대 100)
+            dohwaScore = Math.min(dohwaScore, 99);
+            hongyeomScore = Math.min(hongyeomScore, 99);
+            hwagaeScore = Math.min(hwagaeScore, 99);
+
+
+            // --- 4. 화면 표시 ---
+            document.getElementById('input-section').style.display = 'none';
+            document.getElementById('result-section').style.display = 'block';
+
+            // 프로필
+            document.getElementById('res-name').innerText = name;
+            document.getElementById('profile-initial').innerText = name.charAt(0);
+            
+            // 슬로건 선정
+            let maxScore = Math.max(dohwaScore, hongyeomScore, hwagaeScore);
+            let slogan = "";
+            if(maxScore === dohwaScore) slogan = "\"시선을 사로잡는 아이돌 재질\"";
+            else if(maxScore === hongyeomScore) slogan = "\"치명적인 매력의 소유자\"";
+            else slogan = "\"고독하지만 빛나는 예술가\"";
+            document.getElementById('res-slogan').innerText = slogan;
+
+            document.getElementById('dohwa-score').innerText = dohwaScore;
+            document.getElementById('hongyeom-score').innerText = hongyeomScore;
+            document.getElementById('hwagae-score').innerText = hwagaeScore;
+
+            // 차트 생성
+            renderChart(dohwaScore, hongyeomScore, hwagaeScore);
+
+            // 리스트 생성
+            const listDiv = document.getElementById('sinsal-list');
+            listDiv.innerHTML = '<div class="card-title">🔮 보유한 인기살 상세</div>'; // 초기화
+
+            let hasContent = false;
+
+            // 도화 카드
+            if(dohwaScore > 30) {
+                hasContent = true;
+                listDiv.innerHTML += `
+                    <div class="sinsal-card dohwa">
+                        <div class="sinsal-name">🌸 도화살 (Peach Blossom) </div>
+                        <div class="sinsal-desc">
+                            대중적인 인기를 한몸에 받는 살입니다. 가만히 있어도 사람들의 시선을 끌며, 연예인이나 인플루언서에게서 많이 발견됩니다. 
+                            끼를 발산할 수 있는 무대나 공간이 있으면 인생이 꽃핍니다.
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 홍염 카드
+            if(hongyeomScore > 30) {
+                hasContent = true;
+                listDiv.innerHTML += `
+                    <div class="sinsal-card hongyeom">
+                        <div class="sinsal-name">💋 홍염살 (Red Beauty) </div>
+                        <div class="sinsal-desc">
+                            도화살보다 더 개인적이고 치명적인 매력입니다. 
+                            불특정 다수보다는 특정 상대에게 강하게 어필하며, 눈웃음이나 분위기만으로 이성을 무장해제 시키는 강력한 유혹의 힘이 있습니다.
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 화개 카드
+            if(hwagaeScore > 30) {
+                hasContent = true;
+                listDiv.innerHTML += `
+                    <div class="sinsal-card hwagae">
+                        <div class="sinsal-name">🎨 화개살 (Covering Splendor) 
+
+[Image of artistic painting tools]
+</div>
+                        <div class="sinsal-desc">
+                            화려함을 덮는다는 뜻으로, 내면에 깊은 예술성과 철학을 품고 있습니다. 
+                            고독해 보이지만 그 신비로움 때문에 사람들이 끌려옵니다. 종교, 예술, 학문 분야에서 두각을 나타내며 재기(再起)의 아이콘이기도 합니다.
+                        </div>
+                    </div>
+                `;
+            }
+
+            if(!hasContent) {
+                listDiv.innerHTML += `
+                    <div class="sinsal-card">
+                        <div class="sinsal-name">🍀 맑은 기운 (Pure Energy)</div>
+                        <div class="sinsal-desc">
+                            특별한 살은 발견되지 않았지만, 이는 오히려 편파적이지 않고 담백한 매력을 의미합니다. 
+                            자극적이지 않아 오랫동안 질리지 않는 '볼매' 스타일로, 진정성으로 승부할 때 가장 빛납니다.
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // --- 차트 렌더링 함수 ---
+        let myChart = null;
+        function renderChart(d, h, hw) {
+            const ctx = document.getElementById('popularityChart').getContext('2d');
+            
+            if(myChart) myChart.destroy(); // 기존 차트 삭제
+
+            myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['도화(인기)', '홍염(매력)', '화개(예술)'],
+                    datasets: [{
+                        label: '인기 지수',
+                        data: [d, h, hw],
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.6)', // 도화 - 핑크
+                            'rgba(153, 102, 255, 0.6)', // 홍염 - 보라
+                            'rgba(255, 206, 86, 0.6)'  // 화개 - 노랑
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 206, 86, 1)'
+                        ],
+                        borderWidth: 2,
+                        borderRadius: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, max: 100, grid: { display: false } },
+                        x: { grid: { display: false } }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

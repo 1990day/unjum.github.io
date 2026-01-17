@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>운점 - 프리미엄 정밀 궁합</title>
+    <script src="https://unpkg.com/lunar-javascript/lunar.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+
+    <style>
+        @font-face {
+            font-family: 'ThinRounded';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2511-1@1.0/ThinDungGeunMo.woff2') format('woff2');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            /* 궁합 페이지 전용 테마 (Green & Gold) */
+            --bg-color: #051e18;
+            --header-bg: #03120e;
+            --sidebar-bg: #07261e;
+            --accent-color: #00e676; 
+            --gold-color: #ffd700;
+            --text-color: #e0f2f1;
+            --panel-bg: rgba(255, 255, 255, 0.05);
+            --border-color: rgba(0, 230, 118, 0.3);
+            --danger-color: #ff5252;
+            --overlay-bg: rgba(0, 0, 0, 0.7);
+        }
+
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: var(--bg-color); }
+        ::-webkit-scrollbar-thumb { background: var(--accent-color); border-radius: 10px; border: 2px solid var(--bg-color); }
+
+        body {
+            font-family: 'ThinRounded', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow-x: hidden;
+            line-height: 1.7;
+        }
+
+        /* --- [통일] 상단 헤더 --- */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 70px;
+            background-color: var(--header-bg);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 40px;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .logo img { height: 40px; width: auto; }
+
+        /* [PC용] 상단 메뉴 */
+        .top-menu { display: flex; gap: 30px; height: 100%; align-items: center; }
+        .menu-item { position: relative; height: 100%; display: flex; align-items: center; cursor: pointer; }
+        .menu-title { color: #b2dfdb; text-decoration: none; font-size: 1.1rem; transition: 0.3s; white-space: nowrap; }
+        .menu-item:hover .menu-title { color: var(--gold-color); }
+
+        /* [PC용] 드롭다운 */
+        .dropdown-content {
+            display: none; position: absolute; top: 70px; left: 50%; transform: translateX(-50%);
+            background-color: var(--header-bg); min-width: 160px; box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+            border: 1px solid var(--accent-color); border-radius: 0 0 10px 10px; z-index: 1001; flex-direction: column; padding: 10px 0;
+        }
+        .dropdown-content a { color: var(--text-color); padding: 12px 16px; text-decoration: none; display: block; font-size: 0.95rem; text-align: center; }
+        .dropdown-content a:hover { background-color: var(--sidebar-bg); color: var(--gold-color); }
+        @media (min-width: 769px) { .menu-item:hover .dropdown-content { display: flex; } }
+
+        /* [모바일용] 햄버거 버튼 */
+        .hamburger-btn {
+            display: none; flex-direction: column; justify-content: space-between;
+            width: 30px; height: 21px; cursor: pointer; z-index: 1100;
+        }
+        .hamburger-btn span {
+            display: block; width: 100%; height: 3px;
+            background-color: var(--gold-color); /* 테마 컬러 적용 */
+            border-radius: 3px; transition: all 0.3s ease;
+        }
+        .hamburger-btn.active span:nth-child(1) { transform: translateY(9px) rotate(45deg); }
+        .hamburger-btn.active span:nth-child(2) { opacity: 0; }
+        .hamburger-btn.active span:nth-child(3) { transform: translateY(-9px) rotate(-45deg); }
+
+
+        /* --- [통일] 사이드바 --- */
+        .sidebar {
+            position: fixed; top: 70px; left: 0; width: 260px; height: calc(100vh - 70px);
+            background-color: var(--sidebar-bg); padding: 30px 20px; overflow-y: auto; 
+            border-right: 1px solid rgba(255, 215, 0, 0.1);
+            z-index: 1050; transition: left 0.3s ease-in-out; /* 슬라이드 효과 */
+        }
+        .category-title { font-size: 1.1rem; color: var(--gold-color); margin-bottom: 15px; display: block; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; }
+        .sub-menu { list-style: none; padding-left: 10px; margin-bottom: 30px; }
+        .sub-menu li { margin: 12px 0; }
+        .sub-menu a { color: #b2dfdb; text-decoration: none; font-size: 0.95rem; transition: 0.2s; }
+        .sub-menu a:hover { padding-left: 5px; color: var(--accent-color); }
+
+        /* [통일] 모바일용 오버레이 */
+        .overlay {
+            display: none; position: fixed; top: 70px; left: 0;
+            width: 100%; height: calc(100vh - 70px);
+            background-color: var(--overlay-bg); z-index: 90; opacity: 0; transition: opacity 0.3s ease;
+        }
+        .overlay.active { display: block; opacity: 1; }
+
+
+        /* --- 메인 영역 --- */
+        main {
+            margin-top: 70px; margin-left: 260px; padding: 40px 20px;
+            display: flex; flex-direction: column; align-items: center; min-height: calc(100vh - 70px);
+            background: radial-gradient(circle at top, #0f3d32 0%, var(--bg-color) 80%);
+            transition: margin-left 0.3s ease;
+        }
+
+        .page-header { text-align: center; margin-bottom: 40px; }
+        .page-title { font-size: 2.5rem; color: var(--accent-color); text-shadow: 0 0 15px rgba(0, 230, 118, 0.4); margin-bottom: 10px; }
+        .page-desc { color: #b2dfdb; font-size: 1.0rem; opacity: 0.8; }
+
+        /* --- 입력 컨테이너 --- */
+        .input-container {
+            width: 100%; max-width: 900px;
+            background: var(--panel-bg); border: 1px solid var(--border-color);
+            border-radius: 20px; padding: 30px;
+            backdrop-filter: blur(10px); box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+        }
+
+        .couple-grid { display: grid; grid-template-columns: 1fr 50px 1fr; gap: 20px; align-items: start; }
+        
+        .person-box { background: rgba(0,0,0,0.2); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.05); position: relative;}
+        .person-tag { 
+            position: absolute; top: -10px; left: 20px; background: var(--bg-color); border: 1px solid var(--gold-color);
+            color: var(--gold-color); padding: 2px 10px; font-size: 0.8rem; border-radius: 10px;
+        }
+        
+        .vs-badge { 
+            display: flex; align-items: center; justify-content: center; height: 100%; 
+            font-size: 1.5rem; color: var(--danger-color); font-weight: bold; align-self: center; padding-top: 50px;
+        }
+
+        .input-row { margin-bottom: 15px; }
+        .input-label { display: block; color: var(--accent-color); font-size: 0.9rem; margin-bottom: 8px; }
+        .input-field {
+            width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #4db6ac;
+            background: rgba(0, 0, 0, 0.4); color: #fff; font-size: 0.95rem; font-family: inherit; outline: none;
+        }
+        .date-grid { display: grid; grid-template-columns: 1.2fr 0.9fr 0.9fr; gap: 5px; }
+
+        .submit-btn {
+            width: 100%; padding: 18px; margin-top: 30px; border: none; border-radius: 15px;
+            background: linear-gradient(135deg, var(--accent-color), #00bfa5);
+            color: #03120e; font-size: 1.3rem; font-weight: bold; cursor: pointer;
+            box-shadow: 0 5px 20px rgba(0, 230, 118, 0.3); transition: 0.3s;
+        }
+        .submit-btn:hover { transform: translateY(-3px); filter: brightness(1.1); }
+
+        /* --- 결과 영역 --- */
+        #result-area { display: none; width: 100%; max-width: 900px; animation: slideUp 0.8s ease; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+        .score-section {
+            background: linear-gradient(135deg, rgba(0,77,64,0.9), rgba(0,0,0,0.9));
+            border: 1px solid var(--accent-color); border-radius: 20px; padding: 40px;
+            text-align: center; margin-bottom: 30px; position: relative; overflow: hidden;
+        }
+        .score-val { font-size: 5rem; font-weight: bold; color: var(--gold-color); text-shadow: 0 0 30px rgba(255, 215, 0, 0.6); line-height: 1.1; margin: 10px 0;}
+        .score-msg { font-size: 1.8rem; color: #fff; font-weight: bold; margin-bottom: 5px; }
+        .score-sub { font-size: 1rem; color: #b2dfdb; opacity: 0.8; }
+
+        /* 차트 */
+        .chart-container {
+            background: rgba(0,0,0,0.3); border-radius: 15px; padding: 25px; margin-bottom: 30px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .chart-title { text-align: center; color: #fff; margin-bottom: 20px; font-size: 1.2rem; }
+
+        /* 텍스트 분석 카드 */
+        .detail-card {
+            background: rgba(7, 38, 30, 0.8); border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 15px; padding: 35px; margin-bottom: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+        .detail-title { 
+            color: var(--gold-color); font-size: 1.5rem; margin-bottom: 20px; 
+            border-bottom: 2px solid var(--accent-color); padding-bottom: 10px; display: block;
+        }
+        .detail-content { color: #e0f2f1; line-height: 1.9; font-size: 1.05rem; word-break: keep-all; text-align: justify; }
+        
+        .highlight { color: var(--accent-color); font-weight: bold; }
+        .gold-text { color: var(--gold-color); font-weight: bold; }
+        .warn-text { color: var(--danger-color); font-weight: bold; }
+
+        /* --- [통일] 반응형 로직 (768px 이하) --- */
+        @media (max-width: 768px) {
+            header { padding: 0 20px; height: 60px; }
+            .logo img { height: 28px; }
+            
+            /* 메뉴 제어 */
+            .top-menu { display: none; }
+            .hamburger-btn { display: flex; }
+
+            /* 사이드바 제어 */
+            .sidebar { left: -270px; top: 60px; height: calc(100vh - 60px); display: block; /* 인라인 블록 제거 및 위치제어 */ }
+            .sidebar.open { left: 0; }
+            .overlay { top: 60px; height: calc(100vh - 60px); }
+
+            /* 메인 영역 제어 */
+            main { margin-left: 0; margin-top: 60px; padding: 20px; }
+
+            /* 콘텐츠 스타일 */
+            .couple-grid { grid-template-columns: 1fr; gap: 30px; }
+            .vs-badge { transform: none; padding: 10px 0; height: auto; font-size: 2rem; }
+            .score-val { font-size: 4rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="index.html" class="logo"><img src="img_logo1.png" alt="logo"></a>
+        
+        <nav class="top-menu">
+            <div class="menu-item">
+                <span class="menu-title">운세</span>
+                <div class="dropdown-content">
+                    <a href="today_fortune.html">오늘의 운세</a>
+                    <a href="new_year_fortune.html">신년 운세</a>
+                    <a href="lifetime_fortune.html">평생 운세</a>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span class="menu-title">사주</span>
+                <div class="dropdown-content">
+                    <a href="manse_calendar.html">정통 만세력</a>
+                    <a href="traditional_saju.html">정통 사주</a>
+                    <a href="my_saju.html">내 사주 풀이</a>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span class="menu-title">연애</span>
+                <div class="dropdown-content">
+                    <a href="love-fortune.html">평생 연애운</a>
+                    <a href="saju-compatibility.html" style="color:var(--gold-color);">사주 궁합</a>
+                    <a href="reunion-saju.html">재회 사주</a>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span class="menu-title">도파민</span>
+                <div class="dropdown-content">
+                    <a href="charm-score.html">내 사주 매력</a>
+                    <a href="saju-popularity.html">사주 인기운</a>
+                    <a href="dohwasal-check.html">도화살 진단기</a>
+                    <a href="saju-spotlight.html">주목받는 사주</a>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span class="menu-title">별자리</span>
+                <div class="dropdown-content">
+                    <a href="weekly-zodiac.html">이번주 별자리</a>
+                    <a href="monthly-zodiac.html">이번달 별자리</a>
+                </div>
+            </div>
+        </nav>
+
+        <div class="hamburger-btn" onclick="toggleSidebar()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </header>
+
+    <div class="overlay" onclick="toggleSidebar()"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="category-title">운세</div>
+        <ul class="sub-menu">
+            <li><a href="today_fortune.html">오늘의 운세</a></li>
+            <li><a href="new_year_fortune.html">신년 운세</a></li>
+            <li><a href="lifetime_fortune.html">평생 운세</a></li>
+        </ul>
+        <div class="category-title">사주</div>
+        <ul class="sub-menu">
+            <li><a href="manse_calendar.html">정통 만세력</a></li>
+            <li><a href="traditional_saju.html">정통 사주</a></li>
+            <li><a href="my_saju.html">내 사주 풀이</a></li>
+        </ul>
+        <div class="category-title">연애</div>
+        <ul class="sub-menu">
+            <li><a href="love-fortune.html">평생 연애운</a></li>
+            <li><a href="saju-compatibility.html" style="color:var(--accent-color);">사주 궁합</a></li>
+            <li><a href="reunion-saju.html">재회 사주</a></li>
+        </ul>
+        <div class="category-title">도파민</div>
+        <ul class="sub-menu">
+            <li><a href="charm-score.html">내 사주의 매력도</a></li>
+            <li><a href="saju-popularity.html">사주에 있는 인기운</a></li>
+            <li><a href="dohwasal-check.html">도화살 진단기</a></li>
+            <li><a href="saju-spotlight.html">주목받는 사주</a></li>
+        </ul>
+        <div class="category-title">별자리</div>
+        <ul class="sub-menu">
+            <li><a href="weekly-zodiac.html">이번주 별자리 운세</a></li>
+            <li><a href="monthly-zodiac.html">이번달 별자리 운세</a></li>
+        </ul>
+    </aside>
+
+    <main>
+        <div class="page-header">
+            <h1 class="page-title">프리미엄 정밀 궁합</h1>
+            <p class="page-desc">정통 명리학 시간법 적용 · 오행 밸런스 · 기질 정밀 분석</p>
+        </div>
+
+        <div class="input-container" id="inputArea">
+            <div class="couple-grid">
+                <div class="person-box">
+                    <span class="person-tag">본인 (Me)</span>
+                    <div class="input-row" style="margin-top: 10px;">
+                        <label class="input-label">이름</label>
+                        <input type="text" class="input-field" id="name1" placeholder="내 이름">
+                    </div>
+                    <div class="input-row">
+                        <label class="input-label">생년월일 (양력)</label>
+                        <div class="date-grid">
+                            <select class="input-field year-select" id="year1"></select>
+                            <select class="input-field month-select" id="month1"></select>
+                            <select class="input-field day-select" id="day1"></select>
+                        </div>
+                    </div>
+                    <div class="input-row">
+                        <label class="input-label">태어난 시간 (한국 표준시 적용)</label>
+                        <select class="input-field time-select" id="time1"></select>
+                    </div>
+                </div>
+
+                <div class="vs-badge">VS</div>
+
+                <div class="person-box">
+                    <span class="person-tag">상대방 (You)</span>
+                    <div class="input-row" style="margin-top: 10px;">
+                        <label class="input-label">이름</label>
+                        <input type="text" class="input-field" id="name2" placeholder="상대방 이름">
+                    </div>
+                    <div class="input-row">
+                        <label class="input-label">생년월일 (양력)</label>
+                        <div class="date-grid">
+                            <select class="input-field year-select" id="year2"></select>
+                            <select class="input-field month-select" id="month2"></select>
+                            <select class="input-field day-select" id="day2"></select>
+                        </div>
+                    </div>
+                    <div class="input-row">
+                        <label class="input-label">태어난 시간 (한국 표준시 적용)</label>
+                        <select class="input-field time-select" id="time2"></select>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="submit-btn" onclick="analyzeGunghap()">궁합 정밀 분석 시작</button>
+        </div>
+
+        <div id="result-area">
+            
+            <div class="score-section">
+                <div class="score-msg" id="scoreMsg"></div>
+                <div class="score-val" id="totalScore">0</div>
+                <div class="score-sub" id="scoreSub"></div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-title">📊 두 사람의 에너지(五行) 밸런스</div>
+                <canvas id="elementChart" height="90"></canvas>
+                <p style="text-align: center; color: #b2dfdb; font-size: 0.9rem; margin-top: 15px;">
+                    * 겹치지 않고 서로의 빈 공간을 채워줄수록 완벽한 조화입니다.
+                </p>
+            </div>
+
+            <div class="detail-card">
+                <span class="detail-title">☯️ 기질 및 성격 정밀 분석</span>
+                <div class="detail-content" id="analysisText"></div>
+            </div>
+
+            <div class="detail-card">
+                <span class="detail-title">📜 마스터의 심층 조언</span>
+                <div class="detail-content" id="masterAdvice"></div>
+            </div>
+
+            <button class="submit-btn" style="background: #37474f; margin-top: 10px;" onclick="location.reload()">새로운 궁합 보기</button>
+        </div>
+    </main>
+
+    <script>
+        // [추가] 햄버거 토글 함수
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.querySelector('.overlay');
+            const hamburger = document.querySelector('.hamburger-btn');
+
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+            hamburger.classList.toggle('active');
+        }
+
+        // --- 1. 초기 세팅 ---
+        window.onload = function() {
+            initDateSelectors();
+        };
+
+        function initDateSelectors() {
+            const years = document.querySelectorAll('.year-select');
+            const months = document.querySelectorAll('.month-select');
+            const days = document.querySelectorAll('.day-select');
+            const times = document.querySelectorAll('.time-select');
+
+            const currentYear = new Date().getFullYear();
+            years.forEach(sel => {
+                for(let i = currentYear; i >= 1940; i--) {
+                    let opt = document.createElement('option'); opt.value = i; opt.innerText = i + '년'; sel.appendChild(opt);
+                }
+                sel.value = 1995;
+            });
+
+            months.forEach(sel => {
+                for(let i=1; i<=12; i++) {
+                    let opt = document.createElement('option'); opt.value = i; opt.innerText = i + '월'; sel.appendChild(opt);
+                }
+            });
+
+            days.forEach(sel => {
+                for(let i=1; i<=31; i++) {
+                    let opt = document.createElement('option'); opt.value = i; opt.innerText = i + '일'; sel.appendChild(opt);
+                }
+            });
+
+            const sajuTimes = [
+                { val: 0, text: "자시 (23:30 ~ 01:29)" }, { val: 2, text: "축시 (01:30 ~ 03:29)" },
+                { val: 4, text: "인시 (03:30 ~ 05:29)" }, { val: 6, text: "묘시 (05:30 ~ 07:29)" },
+                { val: 8, text: "진시 (07:30 ~ 09:29)" }, { val: 10, text: "사시 (09:30 ~ 11:29)" },
+                { val: 12, text: "오시 (11:30 ~ 13:29)" }, { val: 14, text: "미시 (13:30 ~ 15:29)" },
+                { val: 16, text: "신시 (15:30 ~ 17:29)" }, { val: 18, text: "유시 (17:30 ~ 19:29)" },
+                { val: 20, text: "술시 (19:30 ~ 21:29)" }, { val: 22, text: "해시 (21:30 ~ 23:29)" }
+            ];
+
+            times.forEach(sel => {
+                sajuTimes.forEach(t => {
+                    let opt = document.createElement('option'); opt.value = t.val; opt.innerText = t.text; sel.appendChild(opt);
+                });
+            });
+        }
+
+        // --- 2. 데이터 및 로직 ---
+        const GAN = { '甲': '목', '乙': '목', '丙': '화', '丁': '화', '戊': '토', '己': '토', '庚': '금', '辛': '금', '壬': '수', '癸': '수' };
+        const ZHI = { '子': '수', '丑': '토', '寅': '목', '卯': '목', '辰': '토', '巳': '화', '午': '화', '未': '토', '申': '금', '酉': '금', '戌': '토', '亥': '수' };
+
+        function analyzeGunghap() {
+            const n1 = document.getElementById('name1').value || 'A님';
+            const n2 = document.getElementById('name2').value || 'B님';
+            
+            const s1 = getSaju(1);
+            const s2 = getSaju(2);
+            if(!s1 || !s2) return;
+
+            document.getElementById('inputArea').style.display = 'none';
+            document.getElementById('result-area').style.display = 'block';
+            window.scrollTo(0, 0);
+
+            // 1. 점수 계산 (정밀 로직)
+            const result = calculateDetailedScore(s1, s2);
+            const score = result.score;
+            
+            // 2. 점수 애니메이션 및 등급 표시
+            animateScore(score);
+            setScoreLevel(score);
+
+            // 3. 차트 그리기
+            drawChart(n1, s1.counts, n2, s2.counts);
+
+            // 4. 상세 텍스트 생성
+            generateAnalysisText(n1, s1, n2, s2, result);
+
+            // 5. 마스터 조언 생성
+            generateMasterAdvice(n1, n2, score, result.relation);
+        }
+
+        function calculateDetailedScore(s1, s2) {
+            let score = 70; // 기본 점수
+            let relation = ''; // 관계 (생, 극, 비)
+
+            // 일간 관계 (가치관)
+            const r = getRelation(s1.stem, s2.stem);
+            relation = r;
+            if(r === '생') score += 20; // 상생 (+20)
+            else if(r === '비') score += 10; // 비견 (+10)
+            else score -= 5; // 상극 (-5)
+
+            // 일지 관계 (소통/갈등) - 속궁합 대신 사용
+            const zResult = checkZhiRelation(s1.branch, s2.branch);
+            score += zResult.point;
+
+            // 오행 보완 점수 (내가 없는걸 상대가 가지면 +)
+            let bonus = 0;
+            for(let k in s1.counts) if(s1.counts[k]===0 && s2.counts[k]>=1) bonus += 5;
+            for(let k in s2.counts) if(s2.counts[k]===0 && s1.counts[k]>=1) bonus += 5;
+            score += Math.min(bonus, 15); // 최대 15점
+
+            if(score > 100) score = 100;
+            if(score < 0) score = 0;
+
+            return { score, relation, zType: zResult.type, zDesc: zResult.desc };
+        }
+
+        function setScoreLevel(score) {
+            let msg = "";
+            let sub = "";
+            
+            if (score >= 95) {
+                msg = "천명(天命): 하늘이 맺어준 운명";
+                sub = "수만 번의 인연 끝에 만난 영혼의 단짝입니다.";
+            } else if (score >= 85) {
+                msg = "대길(大吉): 서로를 성장시키는 귀인";
+                sub = "함께할수록 시너지가 폭발하는 훌륭한 파트너입니다.";
+            } else if (score >= 75) {
+                msg = "길(吉): 안정적이고 편안한 사이";
+                sub = "큰 기복 없이 친구처럼 평생을 함께할 수 있는 궁합입니다.";
+            } else if (score >= 60) {
+                msg = "평(平): 조율과 이해가 필요한 관계";
+                sub = "매력은 느끼지만 서로의 다름을 인정하는 노력이 필요합니다.";
+            } else if (score >= 40) {
+                msg = "충(沖): 강렬하지만 위태로운 사랑";
+                sub = "끌림은 강하나 다툼이 잦습니다. 인내심이 시험받을 수 있습니다.";
+            } else {
+                msg = "흉(凶): 엇갈린 인연의 끈";
+                sub = "서로에게 상처가 될 수 있습니다. 신중한 접근이 필요합니다.";
+            }
+
+            document.getElementById('scoreMsg').innerText = msg;
+            document.getElementById('scoreSub').innerText = sub;
+        }
+
+        function generateAnalysisText(n1, s1, n2, s2, res) {
+            const e1 = GAN[s1.stem];
+            const e2 = GAN[s2.stem];
+            
+            let html = `<p><span class="highlight">${n1}</span>님은 <span class="gold-text">${e1}</span>의 기운을, <span class="highlight">${n2}</span>님은 <span class="gold-text">${e2}</span>의 기운을 타고났습니다.</p>`;
+            
+            html += `<p style="margin-top:15px;">`;
+            if(res.relation === '생') {
+                html += `두 분의 에너지는 서로를 <span class="highlight">돕고 키워주는 상생(相生)의 흐름</span>입니다. 한 사람이 지치면 다른 사람이 자연스럽게 기운을 북돋아 주며, 대화가 끊이지 않고 물 흐르듯 이어집니다. 가치관이 비슷하여 큰 갈등 없이 같은 방향을 바라볼 수 있습니다.`;
+            } else if(res.relation === '비') {
+                html += `두 분은 <span class="highlight">친구처럼 동등하고 편안한 비견(比肩)의 관계</span>입니다. 서로의 생각을 굳이 말하지 않아도 이해하는 공감 능력이 뛰어납니다. 다만, 너무 편안하다 보니 설렘이 빨리 사라질 수 있으니 주의해야 합니다.`;
+            } else {
+                html += `두 분은 <span class="warn-text">서로 다른 매력에 강하게 끌리는 상극(相剋)의 관계</span>입니다. 처음에는 나와 정반대인 모습에 반해 불같이 사랑하지만, 시간이 지날수록 주도권 싸움이나 성격 차이로 인한 갈등이 발생할 수 있습니다.`;
+            }
+            html += `</p>`;
+
+            html += `<p style="margin-top:15px; border-top:1px dashed rgba(255,255,255,0.2); padding-top:15px;">`;
+            html += `<strong>[갈등 해결 스타일]</strong><br>${res.zDesc}`;
+            html += `</p>`;
+
+            document.getElementById('analysisText').innerHTML = html;
+        }
+
+        function generateMasterAdvice(n1, n2, score, relation) {
+            let advice = "";
+            
+            if(score >= 90) {
+                advice = `두 사람의 인연은 실로 귀합니다. 사주학적으로 보았을 때, 서로의 부족한 오행을 완벽하게 채워주는 형국이라 결혼을 하거나 사업을 같이 해도 대성할 운입니다. <br><br>하지만 '당연함'이 가장 큰 적입니다. 상대가 나에게 맞춰주는 것을 권리로 착각하지 마세요. 이 정도의 궁합은 살면서 다시 만나기 힘듭니다. 지금 옆에 있는 사람을 귀하게 여기고, 작은 감사라도 말로 표현한다면 평생 흔들림 없는 행복을 누릴 것입니다.`;
+            } else if(score >= 75) {
+                advice = `아주 건강하고 긍정적인 관계입니다. 특별한 악연의 고리가 보이지 않으며, 시간이 지날수록 신뢰가 쌓이는 구조입니다. <br><br>다만, 관계의 '재미' 요소를 놓치지 마세요. 안정감이 자칫 지루함으로 변질될 수 있습니다. 함께 새로운 취미를 배우거나 낯선 곳으로 여행을 떠나는 등 주기적으로 신선한 자극을 주는 것이 사랑을 오래 유지하는 비결입니다.`;
+            } else if(score >= 60) {
+                advice = `서로 사랑하지만, 소통 방식에서 '통역'이 필요한 사이입니다. 나는 'A'라고 말했는데 상대는 'B'로 듣는 경우가 종종 있을 것입니다. 이는 누가 잘못한 것이 아니라 타고난 사고 회로가 다르기 때문입니다. <br><br>상대를 내 방식대로 고치려 하지 마세요. 그것이 불화의 시작입니다. "당신 생각은 그렇구나"라고 쿨하게 인정하는 자세가 필요합니다. 적당한 거리두기와 존중이 있다면 충분히 멋진 커플이 될 수 있습니다.`;
+            } else {
+                advice = `솔직히 말씀드리면, 순탄하기만 한 길은 아닙니다. 서로의 고집이 강하게 부딪치거나, 한쪽이 일방적으로 참아야 하는 상황이 올 수 있습니다. <br><br>하지만 사주보다 강한 것이 사람의 의지입니다. 이 관계를 유지하고 싶다면 '지는 것이 이기는 것'이라는 마음가짐이 필수입니다. 자존심을 내려놓고 상대방의 입장에서 한 번만 더 생각한다면, 나쁜 운도 피해 갈 수 있습니다. 정말로 사랑한다면 치열하게 맞춰가야 합니다.`;
+            }
+
+            document.getElementById('masterAdvice').innerHTML = advice;
+        }
+
+        // --- 유틸리티 함수 ---
+        function getSaju(num) {
+            const y = document.getElementById(`year${num}`).value;
+            const m = document.getElementById(`month${num}`).value;
+            const d = document.getElementById(`day${num}`).value;
+            const h = document.getElementById(`time${num}`).value;
+            
+            if (typeof Solar === 'undefined') return null;
+            const solar = Solar.fromYmdHms(parseInt(y), parseInt(m), parseInt(d), parseInt(h), 0, 0);
+            const lunar = Lunar.fromSolar(solar);
+            const baZi = lunar.getEightChar();
+
+            return {
+                stem: baZi.getDay().charAt(0),
+                branch: baZi.getDay().charAt(1),
+                counts: countElements(baZi)
+            };
+        }
+
+        function countElements(baZi) {
+            const counts = { '목':0, '화':0, '토':0, '금':0, '수':0 };
+            const chars = [baZi.getYear(), baZi.getMonth(), baZi.getDay(), baZi.getTime()].join('');
+            for(let c of chars) {
+                let elem = GAN[c] || ZHI[c];
+                if(elem) counts[elem]++;
+            }
+            return counts;
+        }
+
+        function getRelation(s1, s2) {
+            const e1 = GAN[s1]; const e2 = GAN[s2];
+            const rule = {
+                '목': { '수':'생', '화':'생', '목':'비', '토':'극', '금':'극' },
+                '화': { '목':'생', '토':'생', '화':'비', '금':'극', '수':'극' },
+                '토': { '화':'생', '금':'생', '토':'비', '수':'극', '목':'극' },
+                '금': { '토':'생', '수':'생', '금':'비', '목':'극', '화':'극' },
+                '수': { '금':'생', '목':'생', '수':'비', '화':'극', '토':'극' }
+            };
+            if(rule[e1][e2] === '생' || rule[e2][e1] === '생') return '생';
+            if(rule[e1][e2] === '비') return '비';
+            return '극';
+        }
+
+        function checkZhiRelation(b1, b2) {
+            const pair = [b1, b2].sort().join('');
+            const sixHap = [['子','丑'], ['寅','亥'], ['卯','戌'], ['辰','酉'], ['巳','申'], ['午','未']];
+            const chung = [['子','午'], ['丑','未'], ['寅','申'], ['卯','酉'], ['辰','戌'], ['巳','亥']];
+            const wonjin = [['子','未'], ['丑','午'], ['寅','酉'], ['卯','申'], ['辰','亥'], ['巳','戌']];
+
+            for(let h of sixHap) if(h.sort().join('') === pair) return { point: 15, type: '육합', desc: "두 분은 속마음이 찰떡같이 잘 맞습니다. 싸워도 금방 화해하며, 서로에 대한 애착이 매우 강해 쉽게 헤어지지 못합니다." };
+            for(let c of chung) if(c.sort().join('') === pair) return { point: -10, type: '충', desc: "의견 차이가 생기면 불꽃이 튀는 구조입니다. 서로의 자존심을 건드리면 큰 싸움이 되니, 논쟁보다는 감정을 먼저 어루만져야 합니다." };
+            for(let w of wonjin) if(w.sort().join('') === pair) return { point: -5, type: '원진', desc: "서로 사랑하지만 가끔 이유 없이 밉거나 서운할 때가 있습니다. 사소한 오해가 쌓이지 않도록 그때그때 대화로 푸는 것이 중요합니다." };
+
+            return { point: 5, type: '평', desc: "특별히 부딪히는 부분 없이 무난하고 안정적인 관계입니다. 격정적인 드라마는 없어도 평온한 일상을 함께할 수 있습니다." };
+        }
+
+        function animateScore(finalScore) {
+            let current = 0;
+            const elem = document.getElementById('totalScore');
+            const interval = setInterval(() => {
+                current += 1;
+                elem.innerText = current;
+                if(current >= finalScore) clearInterval(interval);
+            }, 10);
+        }
+
+        let myChart = null;
+        function drawChart(n1, c1, n2, c2) {
+            const ctx = document.getElementById('elementChart').getContext('2d');
+            if(myChart) myChart.destroy();
+            myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['목(木)', '화(火)', '토(土)', '금(金)', '수(水)'],
+                    datasets: [
+                        { label: n1, data: Object.values(c1), backgroundColor: 'rgba(0, 230, 118, 0.6)', borderColor: '#00e676', borderWidth: 1 },
+                        { label: n2, data: Object.values(c2), backgroundColor: 'rgba(255, 215, 0, 0.6)', borderColor: '#ffd700', borderWidth: 1 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#b2dfdb' } },
+                        x: { grid: { display: false }, ticks: { color: '#b2dfdb' } }
+                    },
+                    plugins: { legend: { labels: { color: '#fff' } } }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

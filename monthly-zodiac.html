@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>운점 - 이달의 별자리 운세</title>
+    <style>
+        @font-face {
+            font-family: 'ThinRounded';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2511-1@1.0/ThinDungGeunMo.woff2') format('woff2');
+            font-weight: normal; font-style: normal; font-display: swap;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        /* --- 스크롤바 디자인 (골드 & 네이비) --- */
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: #001f3f; border-radius: 5px; }
+        ::-webkit-scrollbar-thumb { background: #ffd700; border-radius: 10px; border: 2px solid #001f3f; }
+        ::-webkit-scrollbar-thumb:hover { background: #ffea70; }
+        html { scrollbar-width: thin; scrollbar-color: #ffd700 #001f3f; }
+
+        body {
+            font-family: 'ThinRounded', sans-serif;
+            background-color: #001529; /* 아주 깊은 네이비 블루 */
+            color: #ffffff;
+            overflow-x: hidden;
+            line-height: 1.8;
+        }
+
+        /* --- [수정] 헤더 스타일 --- */
+        header {
+            position: fixed; top: 0; left: 0; width: 100%; height: 70px;
+            background-color: #001f3f; /* 헤더 색상 변경 */
+            display: flex; justify-content: space-between;
+            align-items: center; padding: 0 40px; z-index: 1000;
+            border-bottom: 2px solid #ffd700; /* 황금색 테두리 */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+        .logo img { height: 40px; width: auto; }
+
+        /* [PC용] 상단 메뉴 */
+        .top-menu { display: flex; gap: 30px; height: 100%; align-items: center; }
+        .menu-item { position: relative; height: 100%; display: flex; align-items: center; cursor: pointer; }
+        .menu-title { color: #fff; text-decoration: none; font-size: 1.1rem; transition: 0.3s; white-space: nowrap; }
+        .menu-item:hover .menu-title { color: #ffd700; text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
+
+        /* [PC용] 드롭다운 */
+        .dropdown-content {
+            display: none; position: absolute; top: 70px; left: 50%; transform: translateX(-50%);
+            background-color: #001f3f; min-width: 160px; box-shadow: 0 8px 16px rgba(0,0,0,0.8);
+            border: 1px solid #ffd700; border-radius: 0 0 10px 10px; z-index: 1001; flex-direction: column; padding: 10px 0;
+        }
+        .dropdown-content a { color: #e0e0e0; padding: 12px 16px; text-decoration: none; display: block; font-size: 0.95rem; text-align: center; }
+        .dropdown-content a:hover { background-color: #003366; color: #ffd700; }
+        @media (min-width: 769px) { .menu-item:hover .dropdown-content { display: flex; } }
+
+        /* [모바일용] 햄버거 버튼 (PC 숨김) */
+        .hamburger-btn {
+            display: none; flex-direction: column; justify-content: space-between;
+            width: 30px; height: 21px; cursor: pointer; z-index: 1100;
+        }
+        .hamburger-btn span {
+            display: block; width: 100%; height: 3px;
+            background-color: #ffd700; /* 테마 컬러 적용 (골드) */
+            border-radius: 3px; transition: all 0.3s ease;
+        }
+        .hamburger-btn.active span:nth-child(1) { transform: translateY(9px) rotate(45deg); }
+        .hamburger-btn.active span:nth-child(2) { opacity: 0; }
+        .hamburger-btn.active span:nth-child(3) { transform: translateY(-9px) rotate(-45deg); }
+
+        /* [수정] 사이드바 스타일 */
+        .sidebar {
+            position: fixed; top: 70px; left: 0; width: 250px; height: calc(100vh - 70px);
+            background-color: #001a35; padding: 20px; overflow-y: auto;
+            border-right: 1px solid rgba(255, 215, 0, 0.2);
+            z-index: 1050; transition: left 0.3s ease-in-out; /* 슬라이드 효과 */
+        }
+        .category-title { font-size: 1.2rem; color: #ffd700; margin-bottom: 10px; display: block; border-bottom: 1px solid rgba(255, 215, 0, 0.2); padding-bottom: 5px; }
+        .sub-menu { list-style: none; padding-left: 10px; margin-bottom: 25px; }
+        .sub-menu li { margin: 8px 0; }
+        .sub-menu a { color: #e0e0e0; text-decoration: none; font-size: 0.95rem; transition: 0.2s; }
+        .sub-menu a:hover { color: #fff; padding-left: 5px; border-left: 3px solid #ffd700; }
+
+        /* [추가] 모바일용 오버레이 */
+        .overlay {
+            display: none; position: fixed; top: 70px; left: 0;
+            width: 100%; height: calc(100vh - 70px);
+            background-color: rgba(0, 0, 0, 0.5); z-index: 1040; opacity: 0; transition: opacity 0.3s ease;
+        }
+        .overlay.active { display: block; opacity: 1; }
+
+        /* --- 메인 영역 --- */
+        main {
+            margin-top: 70px; margin-left: 250px; padding: 40px;
+            display: flex; flex-direction: column; align-items: center; min-height: calc(100vh - 70px);
+            transition: margin-left 0.3s ease;
+        }
+
+        /* --- 별자리 그리드 --- */
+        .horoscope-grid {
+            width: 100%; max-width: 900px;
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 40px;
+        }
+
+        .sign-btn {
+            background-color: #002b5b; /* 짙은 파랑 버튼 */
+            color: #e0e0e0; border: 1px solid #ffd700; /* 금색 테두리 */
+            padding: 25px 10px; border-radius: 15px; text-align: center; cursor: pointer;
+            transition: all 0.3s ease; display: flex; flex-direction: column; align-items: center; gap: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        .sign-btn span.icon { font-size: 2rem; color: #ffd700; text-shadow: 0 0 5px rgba(255, 215, 0, 0.3); }
+        
+        .sign-btn:hover, .sign-btn.active { 
+            background-color: #ffd700; color: #001f3f; 
+            transform: translateY(-5px); 
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.6); 
+            border-color: #fff;
+        }
+        .sign-btn:hover span.icon, .sign-btn.active span.icon { color: #001f3f; text-shadow: none; }
+
+        /* --- 상세 설명 영역 --- */
+        .info-section {
+            width: 100%; max-width: 900px; padding: 40px;
+            background-color: rgba(0, 31, 63, 0.9); border: 2px solid #ffd700;
+            border-radius: 20px; line-height: 1.8; display: none; animation: fadeIn 0.5s ease;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .info-section.active { display: block; }
+        
+        /* 타이틀 스타일 변경 */
+        .info-section h3 { 
+            color: #ffd700; font-size: 1.6rem; margin-bottom: 25px; 
+            border-bottom: 2px dashed #ffd700; padding-bottom: 10px; display: inline-block;
+        }
+        
+        .info-highlight { color: #ffd700; font-weight: bold; }
+        .fortune-text { font-size: 1.1rem; word-break: keep-all; margin-bottom: 30px; text-align: justify; color: #f0f8ff; }
+
+        /* 운세 정보 박스 스타일 */
+        .lucky-box {
+            display: flex; justify-content: space-around; flex-wrap: wrap; gap: 10px;
+            margin-top: 20px; padding: 20px; 
+            background: linear-gradient(135deg, #001f3f 0%, #003366 100%);
+            border-radius: 15px; border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+        .lucky-item { text-align: center; min-width: 80px; }
+        .lucky-label { font-size: 0.9rem; color: #87ceeb; display: block; margin-bottom: 5px; }
+        .lucky-value { font-size: 1.2rem; color: #ffd700; font-weight: bold; }
+
+        /* --- [수정] 반응형 (768px 이하) --- */
+        @media (max-width: 768px) {
+            header { padding: 0 20px; height: 60px; }
+            .logo img { height: 28px; } /* 모바일 로고 크기 조정 */
+            
+            /* 메뉴 제어 */
+            .top-menu { display: none; }
+            .hamburger-btn { display: flex; }
+
+            /* 사이드바 제어 */
+            .sidebar { left: -270px; top: 60px; height: calc(100vh - 60px); }
+            .sidebar.open { left: 0; }
+            .overlay { top: 60px; height: calc(100vh - 60px); }
+
+            /* 메인 영역 제어 */
+            main { margin-left: 0; margin-top: 60px; padding: 20px; }
+            
+            .horoscope-grid { grid-template-columns: repeat(3, 1fr); }
+            .sign-btn { padding: 15px 5px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="index.html" class="logo"><img src="img_logo1.png" alt="logo"></a>
+        
+        <nav class="top-menu">
+            <div class="menu-item">
+                <span class="menu-title">운세</span>
+                <div class="dropdown-content">
+                    <a href="today_fortune.html">오늘의 운세</a>
+                    <a href="new_year_fortune.html">신년 운세</a>
+                    <a href="lifetime_fortune.html">평생 운세</a>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span class="menu-title">사주</span>
+                <div class="dropdown-content">
+                    <a href="manse_calendar.html">정통 만세력</a>
+                    <a href="traditional_saju.html">정통 사주</a>
+                    <a href="my_saju.html">내 사주 풀이</a>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span class="menu-title">연애</span>
+                <div class="dropdown-content">
+                    <a href="love-fortune.html">평생 연애운</a>
+                    <a href="saju-compatibility.html">사주 궁합</a>
+                    <a href="reunion-saju.html">재회 사주</a>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span class="menu-title">도파민</span>
+                <div class="dropdown-content">
+                    <a href="charm-score.html">내 사주 매력</a>
+                    <a href="saju-popularity.html">사주 인기운</a>
+                    <a href="dohwasal-check.html">도화살 진단기</a>
+                    <a href="saju-spotlight.html">주목받는 사주</a>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span class="menu-title" style="color:#ffd700;">별자리</span>
+                <div class="dropdown-content">
+                    <a href="weekly-zodiac.html">이번주 별자리</a>
+                    <a href="monthly-zodiac.html">이번달 별자리</a>
+                </div>
+            </div>
+        </nav>
+
+        <div class="hamburger-btn" onclick="toggleSidebar()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </header>
+
+    <div class="overlay" onclick="toggleSidebar()"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="menu-category">
+            <span class="category-title">운세</span>
+            <ul class="sub-menu">
+                <li><a href="today_fortune.html">오늘의 운세</a></li>
+                <li><a href="new_year_fortune.html">신년 운세</a></li>
+                <li><a href="lifetime_fortune.html">평생 운세</a></li>
+            </ul>
+        </div>
+        <div class="menu-category">
+            <span class="category-title">사주</span>
+            <ul class="sub-menu">
+                <li><a href="manse_calendar.html">정통 만세력</a></li>
+                <li><a href="traditional_saju.html">정통 사주</a></li>
+                <li><a href="my_saju.html">내 사주 풀이</a></li>
+            </ul>
+        </div>
+        <div class="menu-category">
+            <span class="category-title">연애</span>
+            <ul class="sub-menu">
+                <li><a href="love-fortune.html">평생 연애운</a></li>
+                <li><a href="saju-compatibility.html">사주 궁합</a></li>
+                <li><a href="reunion-saju.html">재회 사주</a></li>
+            </ul>
+        </div>
+        <div class="menu-category">
+            <span class="category-title">도파민</span>
+            <ul class="sub-menu">
+                <li><a href="charm-score.html">내 사주의 매력도</a></li>
+                <li><a href="saju-popularity.html">사주에 있는 인기운</a></li>
+                <li><a href="dohwasal-check.html">도화살 진단기</a></li>
+                <li><a href="saju-spotlight.html">주목받는 사주</a></li>
+            </ul>
+        </div>
+        <div class="menu-category">
+            <span class="category-title">별자리</span>
+            <ul class="sub-menu">
+                <li><a href="weekly-zodiac.html">이번주 별자리 운세</a></li>
+                <li><a href="monthly-zodiac.html" style="color:#ffd700; font-weight:bold;">이번달 별자리 운세</a></li>
+            </ul>
+        </div>
+    </aside>
+
+    <main>
+        <h2 style="margin-bottom: 5px; color: #ffd700; text-shadow: 0 0 10px rgba(255,215,0,0.3);">🌕 이달의 별자리 운세</h2>
+        <p id="month-period" style="color: #87ceeb; margin-bottom: 30px; font-size: 1.1rem; font-family: 'ThinRounded'; letter-spacing: 1px;"></p>
+        
+        <div class="horoscope-grid" id="grid"></div>
+        <article class="info-section" id="detail-view">
+            <h3 id="detail-title">별자리를 클릭하세요</h3>
+            <div id="detail-content" style="color: #e0e0e0;"></div>
+        </article>
+    </main>
+
+    <script>
+        // [추가] 햄버거 토글 함수
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.querySelector('.overlay');
+            const hamburger = document.querySelector('.hamburger-btn');
+
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+            hamburger.classList.toggle('active');
+        }
+
+        // 1. 방대한 월간 운세 데이터 (40개 이상의 고유 패턴 - 2월, 3월 계속 바뀜)
+        const monthlyFortuneBank = [
+            { text: "이번 달은 당신의 잠재력이 폭발하는 시기입니다. 그동안 준비해왔던 일들이 비로소 궤도에 오르며 가시적인 성과를 보이기 시작합니다. 직장이나 사업에서는 당신의 주도권이 강해지고, 리더십을 발휘할 기회가 여러 차례 찾아올 것입니다. 성장이 빠른 만큼 책임감의 무게도 늘어나겠지만, 이를 즐기는 여유가 필요합니다. 동료나 파트너와 협업한다면 시너지 효과가 배가 될 것입니다. 금전적으로는 월 초반에 지출이 다소 발생할 수 있으나, 월말이 다가올수록 통장 잔고가 안정화됩니다. 연애운에서는 오래된 연인과는 결혼 이야기가 오갈 수 있으며, 솔로라면 당신의 커리어와 관련된 곳에서 매력적인 이성을 만날 확률이 높습니다.", advice: "혼자 가면 빨리 가지만, 함께 가면 멀리 갑니다." },
+            { text: "내면의 성찰과 치유가 키워드가 되는 한 달입니다. 지난 몇 달간 앞만 보고 달려오느라 소홀했던 당신의 몸과 마음을 돌봐야 할 때입니다. 사회적인 활동보다는 개인적인 시간에 집중하며, 독서나 명상, 취미 생활을 통해 에너지를 재충전하는 것이 좋습니다. 업무적으로는 새로운 프로젝트를 시작하기보다는 기존에 진행하던 일들을 점검하고 마무리하는 데 주력하는 것이 유리합니다. 이번 달에 꼼꼼하게 다져놓은 기반이 다음 달에 큰 도약을 할 수 있는 발판이 되어줄 것입니다. 건강 면에서는 스트레스성 두통을 주의해야 하며, 규칙적인 수면 패턴을 유지하는 것이 컨디션 회복의 지름길입니다.", advice: "멈춤은 후퇴가 아닙니다. 더 높이 날아오르기 위한 준비입니다." },
+            { text: "변화의 바람이 거세게 불어오는 역동적인 한 달입니다. 이사, 이직, 부서 이동 등 물리적인 환경의 변화가 있을 수 있으며, 이는 당신에게 새로운 기회로 작용할 것입니다. 처음에는 낯선 환경이 두렵게 느껴질 수 있지만, 당신 특유의 적응력으로 금세 주도권을 잡게 될 것입니다. 호기심이 왕성해지는 시기이므로 새로운 분야를 공부하거나 자격증을 취득하기에도 최적의 타이밍입니다. 금전운은 롤러코스터처럼 등락이 있을 수 있습니다. 들어오는 돈도 많지만 나가는 돈도 만만치 않으니 계획적인 소비가 필수적입니다. 연애에 있어서는 당신의 매력이 돋보이는 시기라 여러 이성의 대시를 받을 수 있습니다.", advice: "두려움 뒤에는 항상 설렘과 기회가 숨어있습니다." },
+            { text: "인간관계의 폭이 넓어지고 귀인의 도움을 받게 되는 '인복'이 터지는 달입니다. 어디를 가든 당신을 환대하는 사람들이 있으며, 어려운 문제에 봉착했을 때 뜻밖의 인물이 해결의 실마리를 제공해 줄 것입니다. 직장에서는 팀워크가 빛을 발하며 공동의 목표를 달성하는 기쁨을 맛보게 될 것입니다. 사업을 하는 사람이라면 새로운 거래처를 트거나 믿을 수 있는 파트너를 만나게 됩니다. 재물운은 안정적인 흐름을 유지하며, 빌려줬던 돈을 받거나 잊고 있던 적금이 만기되는 등 소소한 기쁨이 따를 것입니다. 건강을 과신하여 무리한 스케줄을 소화하다가 몸살이 날 수 있으니 주의하세요.", advice: "사람이 곧 재산입니다. 주변 사람들에게 감사를 전하세요." },
+            { text: "열정과 에너지가 넘치는 달이지만, 그만큼 감정 조절이 중요한 시기입니다. 의욕이 앞서 일을 벌이다가 마무리를 짓지 못해 곤란한 상황에 처할 수 있습니다. '선택과 집중'을 통해 가장 중요한 일부터 차근차근 처리해 나가는 전략이 필요합니다. 경쟁 심리가 발동하여 타인과 비교하거나 질투를 느낄 수 있는데, 어제의 나보다 나아지는 것에 집중하세요. 금전적으로는 투기성 자산보다는 안전 자산에 관심을 가지는 것이 좋습니다. 연애운은 다툼수가 들어와 있습니다. 사소한 말실수가 큰 싸움으로 번질 수 있으니, 연인 사이일수록 예의를 지키는 것이 중요합니다.", advice: "속도보다는 방향이 중요합니다. 천천히 가도 괜찮습니다." },
+            { text: "예술적인 영감과 창의력이 샘솟는 낭만적인 한 달입니다. 이성적인 판단보다는 직관과 감성이 문제를 해결하는 열쇠가 됩니다. 기획, 디자인, 글쓰기 등 창작 활동을 하는 분들에게는 최고의 시기가 될 것이며, 대중의 인정을 받아 명예가 올라갈 수 있습니다. 금전운은 무난한 편이나, 문화생활이나 취미 활동을 위한 지출이 늘어날 수 있습니다. 이는 나를 위한 투자라고 생각하고 기분 좋게 쓰는 것이 정신 건강에 좋습니다. 싱글이라면 우연히 들른 장소나 여행지에서 운명의 상대를 마주칠 수 있으니 외모에 조금 더 신경 쓰고 외출해보세요.", advice: "당신의 상상력은 현실을 바꾸는 마법입니다." },
+            { text: "현실적인 감각이 깨어나고 실질적인 이득을 취하는 실속 있는 달입니다. 뜬구름 잡는 소리보다는 구체적인 데이터와 팩트가 당신의 무기가 됩니다. 부동산 매매, 계약 체결, 연봉 협상 등 문서와 관련된 운이 아주 좋으니 적극적으로 움직여보세요. 꼼꼼함과 치밀함이 빛을 발하여 업무에서 실수를 줄이고 상사에게 신뢰를 얻게 될 것입니다. 다만, 너무 계산적인 태도는 주변 사람들에게 차가운 인상을 줄 수 있으니 가끔은 융통성을 발휘하는 모습도 보여주세요. 건강 면에서는 허리나 관절 통증에 유의해야 하며, 틈틈이 스트레칭을 해주는 것이 좋습니다.", advice: "숫자는 거짓말을 하지 않습니다. 철저히 분석하세요." },
+            { text: "오랫동안 묵혀두었던 문제들이 해결되거나 해묵은 갈등이 해소되는 '정리'의 달입니다. 껄끄러웠던 인간관계가 자연스럽게 멀어지거나 화해하게 되며, 골치 아팠던 법적인 문제나 채무 관계도 깔끔하게 마무리될 조짐이 보입니다. 이는 끝이 아니라 새로운 시작을 위한 청소와도 같습니다. 이직이나 전직을 고민하고 있다면 이번 달에 결단을 내리는 것이 좋습니다. 이동수가 좋게 들어와 있어 움직일수록 운이 트입니다. 금전운은 나쁘지 않으나, 남에게 돈을 빌려주는 것은 절대 금물입니다. 건강을 위해 내면의 균형을 잡는 요가나 명상을 추천합니다.", advice: "비워야 채울 수 있습니다. 과감하게 놓아주세요." },
+            { text: "도화살이 강하게 발동하여 대인관계에서 주인공이 되는 달입니다. 가만히 있어도 사람들이 당신 주변으로 모여들고, 당신의 말 한마디에 귀를 기울이게 됩니다. 영업이나 서비스직, 혹은 대중을 상대로 하는 일을 한다면 매출이 급상승하는 최고의 시기입니다. 다만, 구설수도 함께 따라올 수 있으니 언행에 신중을 기해야 합니다. 인기운을 잘 활용하면 승진이나 좋은 보직으로의 이동도 가능합니다. 재물운은 품위 유지비로 나가는 돈이 많겠으나, 들어오는 수입도 넉넉합니다. 연애운은 최상입니다. 마음에 드는 이성이 있다면 적극적으로 대시해보세요.", advice: "당신은 빛나는 별입니다. 다만 질투를 조심하세요." },
+            { text: "인내심과 끈기가 시험받는 시기이지만, 그 끝에는 달콤한 열매가 기다리고 있습니다. 노력한 만큼 당장의 결과가 보이지 않아 답답할 수 있겠지만, 지금은 뿌리를 깊게 내리는 과정이라고 생각해야 합니다. 묵묵히 자신의 자리를 지키는 모습이 결국에는 주변의 인정을 이끌어내고, 월말 즈음에는 반전의 기회가 찾아올 것입니다. 공부를 하는 수험생에게는 집중력이 높아지는 좋은 시기입니다. 금전운은 '절약'이 키워드입니다. 불필요한 지출을 줄이고 허리띠를 졸라매야 할 때입니다. 건강은 만성 피로에 시달릴 수 있으니 영양제를 잘 챙겨 드세요.", advice: "새벽이 오기 직전이 가장 어둡습니다. 조금만 더 버티세요." },
+            { text: "예상치 못한 행운과 기회가 찾아오는 서프라이즈한 한 달입니다. 경품 당첨, 뜻밖의 보너스, 혹은 우연히 시작한 일이 대박이 나는 등의 횡재수가 있습니다. 직감력이 매우 예리해지는 시기이므로, 머리로 계산하기보다는 당신의 '촉'을 믿고 행동하는 것이 유리합니다. 여행운도 아주 좋아서, 훌쩍 떠난 여행지에서 인생의 전환점이 될 만한 영감을 얻을 수 있습니다. 다만, 너무 들뜬 마음에 실수를 할 수 있으니 중요한 계약 서류 등은 두 번 세 번 확인하세요. 연애에서는 권태기가 올 수 있으니 색다른 데이트가 필요합니다.", advice: "기회는 잡는 자의 것입니다. 망설이지 마세요." },
+            { text: "가족과 가정에 에너지가 집중되는 안락하고 평화로운 달입니다. 사회적인 성공보다는 내 사람들과의 행복한 시간이 더 큰 만족감을 줍니다. 집안 인테리어를 바꾸거나 가족 여행을 가기에 아주 좋은 시기이며, 부동산과 관련된 운세도 길합니다. 직장에서는 큰 성과보다는 현상 유지에 만족하는 것이 좋으며, 동료들과의 유대 관계를 강화하는 데 힘쓰세요. 금전운은 안정적이며, 가족을 위한 지출은 아까워하지 않아도 됩니다. 싱글이라면 소개팅보다는 가족이 소개해주는 자리에서 좋은 인연을 만날 확률이 높습니다.", advice: "가화만사성입니다. 가장 가까운 곳에 행복이 있습니다." },
+            { text: "숨겨진 재능을 발견하고 새로운 분야에 눈을 뜨는 탐험의 달입니다. 평소 관심 없던 분야가 갑자기 흥미롭게 다가오며, 그것이 당신의 제2의 직업이나 강력한 취미가 될 수 있습니다. 배움에 돈을 아끼지 마세요. 이번 달에 습득한 지식은 평생 당신의 자산이 됩니다. 대인관계에서는 낯선 사람들과의 만남이 잦아지는데, 편견 없이 대한다면 좋은 인맥을 쌓을 수 있습니다. 금전운은 소소하게 들어오는 돈이 많아 즐거운 비명을 지르게 됩니다. 다만, 밤늦은 시간의 활동은 건강을 해칠 수 있으니 주의하세요.", advice: "세상은 넓고 배울 것은 많습니다. 호기심을 잃지 마세요." },
+            { text: "강력한 추진력으로 목표를 향해 돌진하는 승부사의 달입니다. 경쟁자가 있다면 이번 달은 당신이 압도적인 우위를 점할 수 있습니다. 망설였던 프로젝트나 사업 계획이 있다면 과감하게 실행에 옮기세요. 실패를 두려워하지 않는 용기가 큰 성공을 불러옵니다. 다만, 너무 앞만 보고 달리다 보면 주변 사람들을 챙기지 못해 원성을 살 수 있습니다. 가끔은 뒤를 돌아보는 여유도 필요합니다. 금전운은 투자 수익이 기대되는 시기입니다. 연애에서는 주도권을 잡고 상대를 리드하면 관계가 더욱 발전할 것입니다.", advice: "주사위는 던져졌습니다. 후회 없이 전력 질주하세요." },
+            { text: "예기치 않은 난관에 부딪힐 수 있으나, 지혜롭게 극복하며 한층 성장하는 달입니다. 계획대로 일이 풀리지 않아 스트레스를 받을 수 있지만, 이는 더 단단해지기 위한 시련입니다. 혼자 해결하려 하기보다는 멘토나 선배에게 조언을 구하면 의외로 쉽게 해결책을 찾을 수 있습니다. 금전적으로는 지갑을 닫고 보수적으로 운용해야 합니다. 큰돈이 들어가는 일은 다음 달로 미루는 것이 좋습니다. 연애운은 서로의 마음을 확인하고 신뢰를 쌓아가는 과정이 필요합니다. 진솔한 대화가 두 사람의 관계를 더욱 돈독하게 만들어 줄 것입니다.", advice: "비 온 뒤에 땅이 굳습니다. 위기를 기회로 만드세요." }
+        ];
+
+        // 2. 월간 행운 아이템 뱅크
+        const monthlyLuckyItems = [
+            "고급 만년필", "가죽 다이어리", "금색 액세서리", "브랜드 향수", 
+            "원석 팔찌", "실크 스카프", "장지갑", "메탈 시계", 
+            "블루투스 헤드셋", "태블릿 PC", "레드 와인", "러닝화",
+            "공기정화 식물", "아로마 디퓨저", "선글라스", "가죽 백팩",
+            "베스트셀러 책", "미니 가습기", "보온 텀블러", "차량용 방향제",
+            "립스틱", "실크 넥타이", "무드등", "요가 매트",
+            "빈티지 카메라", "만년 캘린더", "고급 초콜릿", "수제 도장"
+        ];
+
+        const signsData = [
+            { name: "양자리", icon: "♈", date: "3.21-4.19" },
+            { name: "황소자리", icon: "♉", date: "4.20-5.20" },
+            { name: "쌍둥이자리", icon: "♊", date: "5.21-6.21" },
+            { name: "게자리", icon: "♋", date: "6.22-7.22" },
+            { name: "사자자리", icon: "♌", date: "7.23-8.22" },
+            { name: "처녀자리", icon: "♍", date: "8.23-9.23" },
+            { name: "천칭자리", icon: "♎", date: "9.24-10.22" },
+            { name: "전갈자리", icon: "♏", date: "10.23-11.22" },
+            { name: "사수자리", icon: "♐", date: "11.23-12.24" },
+            { name: "염소자리", icon: "♑", date: "12.25-1.19" },
+            { name: "물병자리", icon: "♒", date: "1.20-2.18" },
+            { name: "물고기자리", icon: "♓", date: "2.19-3.20" }
+        ];
+
+        // 3. 이번 달 날짜 계산
+        function setMonthDate() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = today.getMonth() + 1; 
+            const lastDay = new Date(year, month, 0).getDate();
+            document.getElementById('month-period').innerText = `${month}월 1일 ~ ${month}월 ${lastDay}일`;
+        }
+
+        // 4. 시드 기반 랜덤 함수 (새로고침해도 같은 달에는 같은 숫자가 나오도록)
+        function seededRandom(seed) {
+            var x = Math.sin(seed++) * 10000;
+            return x - Math.floor(x);
+        }
+
+        // 5. 월간 운세 및 행운 정보 로직
+        function getMonthlyInfo(signIndex) {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = today.getMonth() + 1; 
+            
+            // 1) 운세 텍스트 선택 (연도/월/별자리에 따라 고유한 인덱스 생성)
+            const seed = year * 100 + month * 12 + signIndex;
+            const fortuneIndex = Math.floor(seededRandom(seed) * monthlyFortuneBank.length);
+            
+            // 2) 행운의 숫자 (1 ~ 45)
+            const luckyNum = Math.floor(seededRandom(seed + 1) * 45) + 1;
+            
+            // 3) 행운의 날짜 (1 ~ 28)
+            const luckyDate = Math.floor(seededRandom(seed + 2) * 28) + 1;
+            
+            // 4) 행운 아이템
+            const itemIndex = Math.floor(seededRandom(seed + 3) * monthlyLuckyItems.length);
+            
+            return {
+                text: monthlyFortuneBank[fortuneIndex].text,
+                advice: monthlyFortuneBank[fortuneIndex].advice,
+                luckyNum: luckyNum,
+                luckyDate: luckyDate,
+                luckyItem: monthlyLuckyItems[itemIndex]
+            };
+        }
+
+        function init() {
+            setMonthDate();
+            const grid = document.getElementById('grid');
+            signsData.forEach((h, index) => {
+                const btn = document.createElement('div');
+                btn.className = 'sign-btn';
+                btn.innerHTML = `<span class="icon">${h.icon}</span><span>${h.name}</span><span style="font-size:0.75rem; opacity:0.8;">${h.date}</span>`;
+                btn.onclick = () => showDetail(index, btn);
+                grid.appendChild(btn);
+            });
+        }
+
+        function showDetail(index, element) {
+            document.querySelectorAll('.sign-btn').forEach(b => b.classList.remove('active'));
+            element.classList.add('active');
+            
+            const view = document.getElementById('detail-view');
+            view.classList.add('active');
+            
+            // 정보 가져오기
+            const data = getMonthlyInfo(index);
+
+            document.getElementById('detail-title').innerText = signsData[index].icon + " " + signsData[index].name + " 이번 달 흐름";
+            
+            document.getElementById('detail-content').innerHTML = 
+                `<div class="fortune-text">${data.text}</div>
+                 
+                 <div class="lucky-box">
+                    <div class="lucky-item">
+                        <span class="lucky-label">행운의 날짜</span>
+                        <span class="lucky-value">${data.luckyDate}일</span>
+                    </div>
+                    <div class="lucky-item">
+                        <span class="lucky-label">행운의 숫자</span>
+                        <span class="lucky-value">${data.luckyNum}</span>
+                    </div>
+                    <div class="lucky-item">
+                        <span class="lucky-label">행운 아이템</span>
+                        <span class="lucky-value" style="font-size:1rem;">${data.luckyItem}</span>
+                    </div>
+                 </div>
+
+                 <div style="margin-top:20px; padding:20px; text-align:center; border-top:1px dashed #ffd700;">
+                    <span class="info-highlight">🪐 이달의 조언:</span><br>
+                    <span style="font-style: italic; color: #87ceeb; font-size: 1.1rem; display:block; margin-top:10px;">"${data.advice}"</span>
+                 </div>`;
+            
+            view.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>

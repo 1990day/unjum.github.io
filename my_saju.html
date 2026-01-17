@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>운점 - VVIP Grand Master Console</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lunar-javascript/1.6.12/lunar.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-sidebar: #1e293b;
+            --gold: #d4af37;
+            --gold-light: #f3e5ab;
+            --text-main: #1a1a1a;
+            --text-gray: #4b5563;
+            --bg-paper: #ffffff;
+            --font-serif: 'Nanum Myeongjo', serif;
+            --font-sans: 'Noto Sans KR', sans-serif;
+            --sidebar-w: 260px;
+            --header-h: 70px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: var(--font-serif);
+            background-color: #f1f5f9;
+            color: var(--text-main);
+            line-height: 1.8;
+            font-size: 16px;
+            overflow-x: hidden;
+            word-break: keep-all;
+        }
+
+        /* 로딩 스크린 */
+        #loading-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-dark); z-index: 9999; display: none;
+            flex-direction: column; justify-content: center; align-items: center;
+            color: var(--gold);
+        }
+        .spinner {
+            width: 60px; height: 60px; border: 5px solid #334155;
+            border-top: 5px solid var(--gold); border-radius: 50%;
+            animation: spin 1.2s infinite linear; margin-bottom: 20px;
+        }
+        @keyframes spin { 100% {transform: rotate(360deg);} }
+
+        /* --- [수정] 헤더 스타일 --- */
+        header {
+            position: fixed; top: 0; left: 0; width: 100%; height: var(--header-h);
+            background-color: var(--bg-dark); display: flex; justify-content: space-between;
+            align-items: center; padding: 0 20px; z-index: 1000;
+            border-bottom: 2px solid var(--gold);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        /* 로고 이미지 복구 */
+        .logo img { height: 40px; width: auto; }
+
+        /* [PC용] 상단 메뉴 */
+        .top-nav { display: flex; gap: 20px; align-items: center; }
+        .top-nav a { 
+            color: #94a3b8; font-size: 0.95rem; text-decoration: none; font-family: var(--font-sans); cursor: pointer; 
+            transition: color 0.3s;
+        }
+        .top-nav a:hover { color: var(--gold); }
+
+        /* [모바일용] 햄버거 버튼 (PC 숨김) */
+        .hamburger-btn {
+            display: none; flex-direction: column; justify-content: space-between;
+            width: 30px; height: 21px; cursor: pointer; z-index: 1100;
+        }
+        .hamburger-btn span {
+            display: block; width: 100%; height: 3px;
+            background-color: var(--gold); /* 테마 컬러 적용 */
+            border-radius: 3px; transition: all 0.3s ease;
+        }
+        .hamburger-btn.active span:nth-child(1) { transform: translateY(9px) rotate(45deg); }
+        .hamburger-btn.active span:nth-child(2) { opacity: 0; }
+        .hamburger-btn.active span:nth-child(3) { transform: translateY(-9px) rotate(-45deg); }
+
+        /* [수정] 사이드바 스타일 */
+        aside.sidebar {
+            position: fixed; top: var(--header-h); left: 0; width: var(--sidebar-w);
+            height: calc(100vh - var(--header-h)); background-color: var(--bg-sidebar);
+            padding: 30px 20px; overflow-y: auto; border-right: 1px solid #333; z-index: 1050;
+            transition: left 0.3s ease-in-out; /* 슬라이드 효과 */
+        }
+        
+        /* 사이드바 메뉴 스타일 추가 */
+        .menu-group-title {
+            font-family: var(--font-sans); font-size: 0.9rem; color: var(--gold); font-weight: 700;
+            margin-bottom: 15px; display: block; opacity: 0.9; 
+            border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; margin-top: 20px;
+        }
+        .menu-list { list-style: none; margin-bottom: 20px; padding: 0; }
+        .menu-list li a {
+            display: block; padding: 12px 10px; color: #cbd5e1; text-decoration: none;
+            font-family: var(--font-sans); font-size: 0.95rem; border-radius: 4px;
+            transition: 0.2s; cursor: pointer;
+        }
+        .menu-list li a:hover, .menu-list li a.active {
+            background: rgba(212, 175, 55, 0.1); color: var(--gold); font-weight: bold;
+        }
+
+        /* [추가] 모바일용 오버레이 */
+        .overlay {
+            display: none; position: fixed; top: var(--header-h); left: 0;
+            width: 100%; height: calc(100vh - var(--header-h));
+            background-color: rgba(0, 0, 0, 0.7); z-index: 90; opacity: 0; transition: opacity 0.3s ease;
+        }
+        .overlay.active { display: block; opacity: 1; }
+
+        /* [수정] 메인 영역 */
+        main {
+            margin-top: var(--header-h); 
+            margin-left: var(--sidebar-w); /* PC: 사이드바 공간 확보 */
+            padding: 40px; 
+            min-height: 100vh; 
+            display: flex; flex-direction: column; align-items: center;
+            transition: margin-left 0.3s ease;
+        }
+
+        /* 입력 패널 */
+        .input-panel {
+            background: #fff; padding: 30px 20px; border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;
+            margin-bottom: 30px; width: 100%; max-width: 800px;
+        }
+        .panel-h1 { text-align: center; font-size: 1.8rem; font-weight: 800; margin-bottom: 30px; color: var(--bg-dark); letter-spacing: -1px; }
+        .form-row { margin-bottom: 20px; }
+        .form-label { display: block; font-weight: 700; margin-bottom: 8px; font-family: var(--font-sans); color: var(--text-gray); font-size: 1rem; }
+        
+        .input-group { display: flex; gap: 8px; }
+        input, select { 
+            flex: 1; padding: 14px; border: 1px solid #cbd5e1; 
+            font-size: 1rem; font-family: var(--font-sans); 
+            background: #f8fafc; border-radius: 6px; 
+            -webkit-appearance: none; 
+        }
+        .btn-option { 
+            flex: 1; padding: 14px; border: 1px solid #cbd5e1; background: #f1f5f9; cursor: pointer; text-align: center; 
+            font-family: var(--font-sans); font-weight: 600; color: var(--text-gray); border-radius: 6px; font-size: 0.95rem;
+        }
+        .btn-option.selected { background: var(--bg-dark); color: #fff; border-color: var(--bg-dark); }
+        .btn-analyze { 
+            width: 100%; padding: 18px; background: linear-gradient(135deg, #c5a059, #927031); 
+            color: #fff; font-size: 1.2rem; font-weight: 800; border: none; cursor: pointer; 
+            margin-top: 20px; font-family: var(--font-sans); border-radius: 8px; 
+            box-shadow: 0 5px 15px rgba(197, 160, 89, 0.3); 
+        }
+
+        /* 결과지 (Paper) */
+        #result-area { display: none; width: 100%; max-width: 800px; }
+        .paper { 
+            background: var(--bg-paper); padding: 40px 20px; 
+            margin-bottom: 50px; box-shadow: 0 5px 20px rgba(0,0,0,0.08); 
+            border: 1px solid #d1d5db; border-top: 6px solid var(--gold); 
+        }
+        .rpt-head { text-align: center; border-bottom: 3px double #cbd5e1; padding-bottom: 20px; margin-bottom: 40px; }
+        .rpt-title { font-size: 2.2rem; font-weight: 900; color: var(--bg-dark); margin-bottom: 10px; line-height: 1.2; }
+        .rpt-meta { font-family: var(--font-sans); color: var(--text-gray); font-size: 0.9rem; }
+        .badge { background: #000; color: var(--gold); padding: 3px 8px; font-size: 0.8rem; font-weight: bold; margin-left: 5px; border-radius: 3px; vertical-align: middle; }
+
+        /* 사주 원국표 */
+        .wonkuk-table { width: 100%; border-collapse: collapse; margin-bottom: 50px; border: 2px solid #334155; table-layout: fixed; }
+        .wonkuk-table th { background: var(--bg-dark); color: #fff; padding: 10px; border: 1px solid #334155; font-size: 1rem; }
+        .wonkuk-table td { text-align: center; padding: 10px 2px; border: 1px solid #cbd5e1; height: 160px; vertical-align: middle; background: #fff; }
+        .txt-hanja { font-size: 2.8rem; font-weight: 900; display: block; margin: 10px 0; color: #000; line-height: 1; }
+        .txt-ten { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 0.8rem; font-family: var(--font-sans); border: 1px solid #999; color: #555; background: #f8f8f8; font-weight: 600; white-space: nowrap; }
+        .me-column { background-color: rgba(197, 160, 89, 0.08) !important; border-left: 2px solid var(--gold); border-right: 2px solid var(--gold); }
+
+        /* 섹션 스타일 */
+        .section { margin-bottom: 80px; }
+        .section-header { display: flex; align-items: flex-end; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
+        .sec-num { font-size: 2.5rem; font-weight: 900; color: #e2e8f0; margin-right: 10px; line-height: 0.8; letter-spacing: -2px; }
+        .sec-title { font-size: 1.5rem; font-weight: 800; color: var(--bg-dark); line-height: 1.2; }
+
+        .text-box { font-size: 1.05rem; text-align: justify; color: #333; line-height: 1.8; }
+        .text-box p { margin-bottom: 20px; word-break: keep-all; }
+
+        .card { 
+            background: #fff; border: 1px solid #e2e8f0; padding: 25px; 
+            margin-bottom: 30px; border-left: 5px solid var(--gold); 
+            box-shadow: 2px 2px 15px rgba(0,0,0,0.03); 
+        }
+        .card-title { font-family: var(--font-sans); font-size: 1.25rem; font-weight: 800; color: var(--bg-dark); margin-bottom: 20px; display: flex; align-items: center; border-bottom: 1px dashed #ccc; padding-bottom: 10px; }
+        .card-title::before { content: '■'; color: var(--gold); margin-right: 8px; font-size: 0.7rem; }
+
+        /* 신살 그리드 */
+        .shinsal-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        .shinsal-item { border: 1px solid #cbd5e1; padding: 20px; background: #fff; }
+        .shinsal-name { font-weight: 800; font-size: 1.2rem; color: #b48b3e; display: block; margin-bottom: 10px; }
+
+        /* Trait Chips */
+        .trait-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; }
+        .trait-chip {
+            background: #f1f5f9; border: 1px solid #cbd5e1; padding: 8px 14px;
+            border-radius: 20px; font-size: 0.95rem; font-family: var(--font-sans); color: #334155;
+            display: flex; align-items: center; justify-content: center; font-weight: 500;
+            flex-grow: 1; text-align: center; 
+        }
+        .trait-chip.highlight { background: var(--bg-dark); color: #fff; border-color: var(--bg-dark); font-weight: 700; }
+        .trait-chip::before { content: '# '; color: var(--gold); font-weight: bold; margin-right: 4px; }
+        
+        .float-save-btn { 
+            position: fixed; bottom: 30px; right: 20px; 
+            background: var(--bg-dark); color: #fff; 
+            padding: 15px 30px; border-radius: 50px; 
+            font-weight: 800; font-size: 1rem; cursor: pointer; 
+            border: 2px solid var(--gold); box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+            z-index: 2000; display: none; 
+        }
+
+        /* --- [수정] 반응형 (768px 이하) --- */
+        @media (max-width: 768px) {
+            header { padding: 0 20px; height: 60px; }
+            .logo img { height: 28px; } /* 모바일에서 로고 크기 조정 */
+            
+            /* 메뉴 제어 */
+            .top-nav { display: none; }
+            .hamburger-btn { display: flex; }
+
+            /* 사이드바 제어 */
+            aside.sidebar { left: -270px; top: 60px; height: calc(100vh - 60px); }
+            aside.sidebar.open { left: 0; }
+            .overlay { top: 60px; height: calc(100vh - 60px); }
+
+            /* 메인 영역 제어 */
+            main { margin-left: 0; margin-top: 60px; padding: 20px; }
+            
+            /* 모바일 최적화 스타일 */
+            .input-group { flex-direction: column; gap: 10px; }
+            .input-group > div[style*="display:flex"] { width: 100%; }
+            .shinsal-grid { grid-template-columns: 1fr; }
+            .section-header { flex-direction: column; align-items: flex-start; gap: 5px; }
+        }
+
+        /* 데스크탑 뷰 */
+        @media (min-width: 1024px) {
+            .paper { padding: 80px; }
+            .rpt-title { font-size: 3rem; margin-bottom: 15px; }
+            .wonkuk-table td { height: 220px; padding: 25px 5px; }
+            .txt-hanja { font-size: 4rem; margin: 15px 0; }
+            .sec-num { font-size: 4rem; }
+            .sec-title { font-size: 2rem; }
+            .trait-chip { flex-grow: 0; padding: 10px 20px; font-size: 1rem; }
+            .float-save-btn { bottom: 40px; right: 40px; padding: 20px 40px; font-size: 1.2rem; }
+            .panel-h1 { font-size: 2.2rem; }
+            .input-panel { padding: 50px; }
+            .shinsal-grid { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loading-screen">
+        <div class="spinner"></div>
+        <div style="font-size:1.3rem; font-weight:800; letter-spacing: 2px; margin-bottom:10px;">VVIP PREMIUM AI</div>
+        <div style="font-family:'Noto Sans KR'; color:#94a3b8; text-align:center; font-size:0.9rem;">일주별 심층 성격 데이터와<br>운명의 흐름을 계산 중입니다.</div>
+    </div>
+
+    <header>
+        <a href="index.html" class="logo"><img src="img_logo1.png" alt="logo"></a>
+        <nav class="top-nav">
+            <a href="today_fortune.html">운세</a>
+            <a href="manse_calendar.html">사주</a>
+            <a href="love-fortune.html">연애</a>
+            <a href="charm-score.html">도파민</a>
+            <a href="weekly-zodiac.html">별자리</a>
+        </nav>
+        
+        <div class="hamburger-btn" onclick="toggleSidebar()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </header>
+
+    <div class="overlay" onclick="toggleSidebar()"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <span class="menu-group-title">운세</span>
+        <ul class="menu-list">
+            <li><a href="today_fortune.html">오늘의 운세</a></li>
+            <li><a href="new_year_fortune.html">신년 운세</a></li>
+            <li><a href="lifetime_fortune.html">평생 운세</a></li>
+        </ul>
+        
+        <span class="menu-group-title">사주</span>
+        <ul class="menu-list">
+            <li><a href="manse_calendar.html">정통 만세력</a></li>
+            <li><a href="traditional_saju.html">정통 사주</a></li>
+            <li><a href="my_saju.html">내 사주 풀이</a></li>
+        </ul>
+
+        <span class="menu-group-title">연애</span>
+        <ul class="menu-list">
+            <li><a href="love-fortune.html">평생 연애운</a></li>
+            <li><a href="saju-compatibility.html">사주 궁합</a></li>
+            <li><a href="reunion-saju.html">재회 사주</a></li>
+        </ul>
+
+        <span class="menu-group-title">도파민</span>
+        <ul class="menu-list">
+            <li><a href="charm-score.html">내 사주 매력</a></li>
+            <li><a href="saju-popularity.html">사주 인기운</a></li>
+            <li><a href="dohwasal-check.html">도화살 진단기</a></li>
+            <li><a href="saju-spotlight.html">주목받는 사주</a></li>
+        </ul>
+
+        <span class="menu-group-title">별자리</span>
+        <ul class="menu-list">
+            <li><a href="weekly-zodiac.html">이번주 별자리</a></li>
+            <li><a href="monthly-zodiac.html">이번달 별자리</a></li>
+        </ul>
+    </aside>
+
+    <main>
+        <div class="input-panel" id="input-form-area">
+            <h1 class="panel-h1">운명(運命) 종합 정밀 감정</h1>
+            <div class="form-row">
+                <label class="form-label">성명 및 성별</label>
+                <div class="input-group">
+                    <input type="text" id="user-name" placeholder="성함 입력">
+                    <div style="display:flex; flex:1; gap:5px;">
+                        <div id="btn-male" class="btn-option selected" onclick="ui.setGender('m')">남성</div>
+                        <div id="btn-female" class="btn-option" onclick="ui.setGender('f')">여성</div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-row">
+                <label class="form-label">생년월일</label>
+                <div class="input-group">
+                    <select id="sel-year"></select>
+                    <select id="sel-month"></select>
+                    <select id="sel-day"></select>
+                </div>
+                <div class="input-group" style="margin-top:8px;">
+                    <div id="btn-solar" class="btn-option selected" onclick="ui.setCal('solar')">양력</div>
+                    <div id="btn-lunar" class="btn-option" onclick="ui.setCal('lunar')">음력</div>
+                </div>
+            </div>
+            <div class="form-row">
+                <label class="form-label">태어난 시간</label>
+                <select id="sel-hour">
+                    <option value="0">자시 (23:30 ~ 01:29)</option>
+                    <option value="2">축시 (01:30 ~ 03:29)</option>
+                    <option value="4">인시 (03:30 ~ 05:29)</option>
+                    <option value="6">묘시 (05:30 ~ 07:29)</option>
+                    <option value="8">진시 (07:30 ~ 09:29)</option>
+                    <option value="10">사시 (09:30 ~ 11:29)</option>
+                    <option value="12">오시 (11:30 ~ 13:29)</option>
+                    <option value="14">미시 (13:30 ~ 15:29)</option>
+                    <option value="16">신시 (15:30 ~ 17:29)</option>
+                    <option value="18">유시 (17:30 ~ 19:29)</option>
+                    <option value="20">술시 (19:30 ~ 21:29)</option>
+                    <option value="22">해시 (21:30 ~ 23:29)</option>
+                </select>
+            </div>
+            <button class="btn-analyze" onclick="app.analyze()">VVIP 정밀 분석 시작하기</button>
+        </div>
+
+        <div id="result-area">
+            <div class="paper" id="print-target">
+                <div class="rpt-head">
+                    <h1 class="rpt-title">Premium Grand Master Report</h1>
+                    <div class="rpt-meta">수신인: <strong id="res-name"></strong> 님 | 발행일: <span id="res-date"></span><br>문서번호: <span id="res-doc-id"></span> <span class="badge">VVIP BLACK</span></div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header"><span class="sec-num">01</span><span class="sec-title">사주 원국 구조<br><span style="font-size:0.6em; color:#666; font-weight:400;">(The Four Pillars)</span></span></div>
+                    <table class="wonkuk-table">
+                        <thead><tr><th>시주</th><th style="background:#1e293b; color:#c5a059;">일주</th><th>월주</th><th>년주</th></tr></thead>
+                        <tbody id="wonkuk-body"></tbody>
+                    </table>
+                </div>
+
+                <div class="section">
+                    <div class="section-header"><span class="sec-num">02</span><span class="sec-title">핵심 운명 코드</span></div>
+                    <div id="result-core-analysis" class="text-box"></div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header"><span class="sec-num">03</span><span class="sec-title">오행 및 십성 에너지</span></div>
+                    <div id="result-ohaeng" class="text-box"></div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header"><span class="sec-num">04</span><span class="sec-title">심층 성격 정밀 태그</span></div>
+                    <div id="result-personality-detail"></div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header"><span class="sec-num">05</span><span class="sec-title">심층 자아 및 기질</span></div>
+                    <div id="result-identity" class="text-box"></div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header"><span class="sec-num">06</span><span class="sec-title">신살(神殺) 및 특수 기운</span></div>
+                    <div id="result-shinsal"></div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header"><span class="sec-num">07</span><span class="sec-title">영역별 입체적 운세</span></div>
+                    <div id="result-detail" class="text-box"></div>
+                </div>
+
+                <div class="section" style="margin-bottom:0;">
+                    <div class="section-header"><span class="sec-num">08</span><span class="sec-title">마스터 총평</span></div>
+                    <div id="result-total" class="text-box"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <button class="float-save-btn" id="btn-save" onclick="app.saveImage()">📥 리포트 저장</button>
+
+<script>
+    // [추가] 햄버거 토글 함수
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.querySelector('.overlay');
+        const hamburger = document.querySelector('.hamburger-btn');
+
+        sidebar.classList.toggle('open');
+        overlay.classList.toggle('active');
+        hamburger.classList.toggle('active');
+    }
+
+/**
+ * [VVIP MASTER DATABASE]
+ */
+const DB_OHEANG = {
+    "목": { desc: "목(Wood)은 시작과 창조, 솟구치는 생명력을 상징합니다. 인자함(仁)을 바탕으로 하며 교육, 기획, 건축 등 무에서 유를 만드는 분야에 강합니다.", excess: "고집이 세고 남의 말을 듣지 않으며, 마무리가 약한 용두사미 기질이 나타날 수 있습니다.", lack: "추진력이 약하고 시작을 두려워하며, 낯선 환경 적응에 어려움을 겪을 수 있습니다." },
+    "화": { desc: "화(Fire)는 열정과 확산, 화려한 표현력을 상징합니다. 예의(禮)를 중시하며 방송, 예술, 마케팅 등 자신을 드러내는 분야에 적합합니다.", excess: "성격이 급하고 감정 기복이 심하며, 실속보다는 겉치레에 치중할 위험이 있습니다.", lack: "매사에 열정이 부족하고 냉소적이며, 표현력이 부족해 능력을 저평가받기 쉽습니다." },
+    "토": { desc: "토(Earth)는 포용과 중재, 믿음(信)을 상징합니다. 부동산, 중개, 농업 등 기반을 다지고 연결하는 역할에 탁월합니다.", excess: "고집이 황소 같고 융통성이 없으며, 생각이 너무 많아 실행 시기를 놓칠 수 있습니다.", lack: "삶의 기반이 불안정하여 한곳에 정착하지 못하고 떠돌 수 있으며 마무리가 약합니다." },
+    "금": { desc: "금(Metal)은 결단과 원칙, 의리(義)를 상징합니다. 금융, 법조, 군경, 의료 등 냉철한 이성과 정확성이 필요한 분야에 강합니다.", excess: "너무 날카로워 인덕을 잃기 쉽고, 강박적인 완벽주의로 스스로를 괴롭힐 수 있습니다.", lack: "우유부단하여 맺고 끊음이 불분명하고, 거절을 못 해 손해를 보는 경우가 많습니다." },
+    "수": { desc: "수(Water)는 지혜(智)와 유연함, 흐름을 상징합니다. 유통, 무역, 외교, 연구 등 정신적인 영역이나 해외 관련 일에 능합니다.", excess: "생각이 너무 많아 우울감에 빠지기 쉽고, 음흉하다는 오해를 받거나 색정 문제에 주의해야 합니다.", lack: "융통성이 없고 빡빡하며, 임기응변이 부족해 돌발 상황 대처 능력이 떨어집니다." }
+};
+
+const DB_ILJU = {
+    "甲子": "하얀 쥐 - 우두머리 기질이 있으며, 이상이 높고 도덕적이며 학문에 능통한 리더형", "乙丑": "겨울 소 - 근면 성실하고 끈기가 대단하며, 결국 자수성가하여 부를 이루는 대기만성형", "丙寅": "붉은 호랑이 - 화려하고 정열적이며, 대중을 이끄는 카리스마와 추진력을 겸비한 영웅형", "丁卯": "달빛 토끼 - 감수성이 풍부하고 예민하며, 뛰어난 미적 감각으로 예술과 기획 분야의 천재형", "戊辰": "거대한 산맥 - 스케일이 크고 포용력이 있으며, 뚝심 있게 자신의 왕국을 건설하는 제왕형",
+    "己巳": "황금 뱀 - 지략이 뛰어나고 수완이 좋으며, 어떤 환경에서도 살아남는 처세술의 달인", "庚午": "백마 - 공명정대하고 원칙을 중시하며, 명예를 목숨처럼 아끼는 고귀한 관리자형", "辛未": "하얀 양 - 겉은 온순해 보이나 속은 단단한 보석 같아, 섬세하고 치밀한 전문가형", "壬申": "재주꾼 원숭이 - 다재다능하고 임기응변이 뛰어나며, 넓은 무대에서 활약하는 글로벌 인재", "癸酉": "샘가의 닭 - 머리가 비상하고 직관력이 뛰어나며, 순수한 이상을 추구하는 정신적 지도자",
+    "甲戌": "산 위의 거목 - 홀로 우뚝 선 고독한 리더로, 신의가 두텁고 재물에 밝은 실속파", "乙亥": "호수의 연꽃 - 청초하고 인덕이 많으며, 어려움 속에서도 귀인의 도움으로 일어나는 복덩이", "丙子": "물 위의 태양 - 명랑하고 긍정적이며, 공적인 일에서 능력을 발휘하여 명예를 얻는 귀격", "丁丑": "용광로 - 내면에 뜨거운 열정을 품은 외유내강형으로, 전문 기술로 세상을 놀라게 할 장인", "戊寅": "산 호랑이 - 권위적이고 자존심이 매우 강하며, 큰 조직을 이끌어가는 강력한 우두머리",
+    "己卯": "정원 토끼 - 재주가 많고 사람을 다루는 능력이 뛰어나 교육이나 관리직에서 성공하는 인재", "庚辰": "황금 용 - 기백이 넘치고 강한 리더십을 가졌으며, 난세를 평정하고 큰일을 도모하는 혁명가", "辛巳": "빛나는 뱀 - 세련된 매너와 예리한 지성을 겸비하여, 고위직이나 전문직에서 빛을 발하는 귀족", "壬午": "흑마 - 역동적이고 활동적이며, 재물 감각이 뛰어나 사업이나 투자에서 성공하는 활동가", "癸未": "단비 - 자애롭고 희생정신이 강하며, 타인을 위해 봉사하고 존경받는 따뜻한 치유자",
+    "甲申": "바위 소나무 - 어떤 시련도 견뎌내는 강인한 생명력과 혁신적인 마인드를 가진 개척자", "乙酉": "보석함 속 꽃 - 예민하고 깔끔하며, 완벽주의 성향으로 자신만의 분야에서 최고가 되는 장인", "丙戌": "노을 산 - 중후하고 포용력이 있으며, 철학적이고 종교적인 깊이가 있는 정신적 지주", "丁亥": "등대 - 어둠을 밝히는 지혜와 헌신적인 태도로 만인의 사랑과 존경을 받는 성인군자", "戊子": "산속 시냇물 - 재물복이 타고났으며, 현실적이고 계산이 빨라 알짜 부자가 되는 실속파",
+    "己丑": "겨울 흙 - 우직하고 인내심이 강하며, 한 번 마음먹은 일은 끝까지 해내는 뚝심의 소유자", "庚寅": "바위 호랑이 - 용맹하고 독립적이며, 남에게 굽히기 싫어하여 스스로 창업해 성공하는 사업가", "辛卯": "보석 칼 - 예민하고 치밀하며, 정교한 기술이나 예술적 감각으로 인정받는 섬세한 능력자", "壬辰": "바다 용 - 변화무쌍하고 스케일이 크며, 원대한 꿈을 가지고 세상을 호령하는 야망가", "癸巳": "빗속 뱀 - 지혜롭고 재물운이 좋으며, 천을귀인의 도움으로 평생 의식주 걱정이 없는 복인",
+    "甲午": "야생마 - 자유롭고 열정적이며, 화려한 언변과 표현력으로 인기를 얻는 예술가형", "乙未": "선인장 - 척박한 환경에서도 살아남는 끈질긴 생명력과 생활력으로 자수성가하는 노력파", "丙申": "저녁 노을 - 다재다능하고 사교적이며, 화려한 매력으로 사람들의 시선을 사로잡는 스타형", "丁酉": "밤하늘 별 - 반짝이는 재능과 고귀한 품성을 지녔으며, 예능이나 학술 분야에서 빛나는 인재", "戊戌": "첩첩산중 - 신의를 중시하고 보수적이며, 묵묵히 자신의 자리를 지켜 큰 성취를 이루는 거목",
+    "己亥": "평원 돼지 - 타고난 식복과 재물복이 있으며, 호탕하고 인정이 많아 따르는 사람이 많은 호인", "庚子": "차가운 바위 - 냉철한 이성과 비판적 사고를 지녔으며, 학문이나 연구 분야에서 두각을 나타내는 지성인", "辛丑": "눈 속 보석 - 고고하고 자존심이 강하며, 시련을 겪을수록 더욱 빛나는 인격으로 완성되는 대기만성", "壬寅": "강가 호랑이 - 지혜와 용기를 겸비하고 문무에 능통하여, 큰 조직의 리더나 교육자로 대성하는 인물", "癸卯": "숲속 시냇물 - 맑고 순수하며 창의력이 뛰어나, 문학이나 예술 분야에서 천부적인 재능을 보이는 영재",
+    "甲辰": "청룡 - 이상이 높고 권력욕이 강하며, 강력한 추진력으로 자신의 분야를 평정하는 지배자", "乙巳": "꽃 뱀 - 화려하고 매력적이며, 뛰어난 언변과 처세술로 사람의 마음을 사로잡는 매력덩어리", "丙午": "한여름 태양 - 가장 강력한 양기를 지녔으며, 불같은 열정과 솔직함으로 세상을 압도하는 장군", "丁未": "들판 촛불 - 겉은 부드러우나 속은 강인하며, 희생정신과 따뜻함으로 세상을 밝히는 봉사자", "戊申": "바위 원숭이 - 다재다능하고 스케일이 크며, 획기적인 아이디어로 세상을 바꾸는 혁신가",
+    "己酉": "들판 닭 - 부지런하고 꼼꼼하며, 실속 있게 자신의 것을 챙겨 부를 축적하는 알부자", "庚戌": "석양 개 - 의리가 깊고 강직하며, 한 번 맺은 인연을 소중히 여기고 큰일을 도모하는 의리파", "辛亥": "씻긴 보석 - 총명하고 예민하며, 뛰어난 감수성과 표현력으로 예술적 성취를 이루는 예능인", "壬子": "거대 바다 - 깊은 지혜와 포용력을 지녔으나, 때로는 거친 파도처럼 세상을 뒤흔드는 승부사", "癸丑": "겨울비 - 겉은 차가워 보이나 속은 따뜻하며, 고난을 이겨내고 마침내 뜻을 이루는 불굴의 의지",
+    "甲寅": "거목 - 굽히지 않는 자존심과 강력한 주관으로, 타인의 간섭을 거부하고 독자적인 길을 가는 리더", "乙卯": "봄 화초 - 싱그러운 생명력과 끈기를 지녔으며, 유연한 태도로 어떤 환경에서도 살아남는 적응력의 귀재", "丙辰": "승천하는 용 - 변화무쌍하고 재주가 많으며, 화려한 언변과 사교성으로 대중의 인기를 얻는 스타", "丁巳": "용광로 - 집요하고 열정적이며, 한 번 목표를 정하면 끝을 보는 집중력으로 성공하는 집념가", "戊午": "불타는 산 - 묵직한 카리스마와 고집을 지녔으며, 타협하지 않는 신념으로 조직을 장악하는 제왕",
+    "己未": "마른 흙 - 인내심과 끈기의 상징으로, 묵묵히 자신의 길을 걸어 결국 정상에 오르는 은근한 실력자", "庚申": "거대 바위 - 의리와 결단력의 화신으로, 쇠도 자를 듯한 강한 추진력으로 세상을 개혁하는 혁명가", "辛酉": "다이아몬드 - 가장 예리하고 섬세하며, 완벽주의적 성향으로 자신의 분야에서 독보적인 존재가 되는 장인", "壬戌": "바다 품은 산 - 스케일이 크고 포용력이 있으며, 재물을 다루는 능력이 탁월하여 큰 부를 이루는 사업가", "癸亥": "망망대해 - 모든 것을 포용하는 바다처럼 지혜롭고 깊으며, 보이지 않는 곳에서 세상을 움직이는 전략가"
+};
+
+/* [NEW] Detailed Personality Database for All 60 Iljus */
+const DB_ILJU_TRAITS = {
+    "甲子": ["리더십이 탁월함", "자비롭고 도덕적임", "학문을 좋아함", "시작은 잘하나 마무리가 약함", "독립심이 강함", "남의 간섭을 싫어함"],
+    "乙丑": ["성실하고 근면함", "은근한 고집이 있음", "대기만성형 부자", "현실적인 감각 탁월", "인내심이 강함", "남모르는 내적 갈등"],
+    "丙寅": ["적극적이고 활동적", "화려한 언변", "예의 바르고 밝음", "급한 성격", "추진력이 좋음", "자기 과시욕이 있음"],
+    "丁卯": ["섬세하고 예술적 감각", "인정 많고 다정함", "눈치가 빠름", "변덕이 심할 수 있음", "미적 센스가 탁월함", "깔끔한 성격"],
+    "戊辰": ["스케일이 크고 통이 큼", "강직하고 신의가 있음", "리더십과 포용력", "자존심이 매우 셈", "자기 주관이 뚜렷함", "현실적인 이익 중시"],
+    "己巳": ["조용하나 실속파", "다재다능함", "기억력이 좋음", "의심이 많을 수 있음", "환경 적응력 뛰어남", "비밀이 많음"],
+    "庚午": ["원칙과 명예 중시", "깔끔하고 단정함", "공직에 적합", "잔소리가 있을 수 있음", "행동이 반듯함", "사리분별이 명확함"],
+    "辛未": ["외유내강의 전형", "치밀하고 꼼꼼함", "인내심이 강함", "신경이 예민함", "자기 방어적 기질", "예술적 재능"],
+    "壬申": ["임기응변의 달인", "다방면에 재주가 많음", "사교성이 좋음", "시작은 창대하나 끝이 미약", "역마 기질로 활동적", "두뇌 회전이 빠름"],
+    "癸酉": ["총명하고 직관력 좋음", "결벽증적 깔끔함", "기억력이 비상함", "예술과 종교에 관심", "고집이 세고 냉정함", "순수한 이상 추구"],
+    "甲戌": ["책임감이 강함", "신의를 목숨처럼 여김", "독립심이 투철함", "현실적인 경제 관념", "남에게 굽히기 싫어함", "활달하고 호탕함"],
+    "乙亥": ["착하고 순수함", "인덕이 많음", "창의력이 풍부함", "끈기가 부족할 수 있음", "여행과 방랑을 즐김", "타인에게 잘 베풂"],
+    "丙子": ["명랑하고 쾌활함", "예의 바르고 사교적", "외모가 수려함", "성격이 급함", "감정 기복이 있음", "이성에게 인기가 많음"],
+    "丁丑": ["재물 욕심이 있음", "은근한 끈기", "손재주가 좋음", "감정을 숨김", "현실적인 판단력", "자상하지만 냉정함"],
+    "戊寅": ["권위적이고 카리스마", "명예욕이 강함", "추진력이 대단함", "독선적일 수 있음", "큰일을 도모함", "자존심의 화신"],
+    "己卯": ["부드러운 카리스마", "꼼꼼하고 세밀함", "신경이 예민함", "타인을 잘 챙김", "실속을 잘 챙김", "환경에 민감함"],
+    "庚辰": ["의리가 있고 강직함", "스케일이 크고 대범함", "경쟁심이 강함", "고집불통", "리더십이 있음", "개혁적인 성향"],
+    "辛巳": ["세련되고 품위 있음", "냉철한 판단력", "의심이 많음", "변화에 민감함", "깔끔한 일처리", "비밀스러운 면모"],
+    "壬午": ["활동적이고 사교적", "재물 감각이 탁월", "다정다감함", "변덕이 심함", "이성 문제가 발생 가능", "순발력이 좋음"],
+    "癸未": ["조용하고 차분함", "인내심과 희생정신", "치밀한 계획성", "소심할 수 있음", "예술적 감각", "속마음을 잘 안 드러냄"],
+    "甲申": ["다재다능함", "혁신적인 사고", "이동과 변화를 즐김", "마음이 불안정할 수 있음", "리더십이 있음", "손재주가 좋음"],
+    "乙酉": ["원칙주의자", "깔끔하고 예민함", "자기 관리가 철저함", "차가운 면모", "정확성을 추구함", "의리가 있음"],
+    "丙戌": ["솔직하고 화끈함", "인정이 많음", "감정 기복이 심함", "철학적 사고", "마무리를 잘함", "가정을 중시함"],
+    "丁亥": ["예의 바르고 지혜로움", "직관력이 뛰어남", "비밀이 많음", "섬세하고 꼼꼼함", "보수적인 성향", "타인을 잘 배려함"],
+    "戊子": ["재물복이 타고남", "현실적이고 계산 빠름", "신중하고 꼼꼼함", "보수적임", "이성에게 약함", "안정을 추구함"],
+    "己丑": ["우직하고 성실함", "고집이 매우 셈", "믿음직스러움", "속을 알 수 없음", "자기 주장이 강함", "명예보다 실속"],
+    "庚寅": ["활동력이 왕성함", "추진력과 결단력", "급하고 욱하는 성격", "스케일이 큼", "공사를 구분함", "지배욕이 있음"],
+    "辛卯": ["감수성이 풍부함", "미적 감각이 뛰어남", "예민하고 까다로움", "변덕이 있음", "의심이 많음", "깔끔한 멋쟁이"],
+    "壬辰": ["포부가 크고 당당함", "리더십과 통솔력", "괴강한 성격", "자신감이 넘침", "독단적일 수 있음", "임기응변에 강함"],
+    "癸巳": ["지혜롭고 총명함", "재물운이 좋음", "활동적임", "변덕이 심함", "이중적인 면모", "처세술이 좋음"],
+    "甲午": ["언변이 화려함", "성격이 급함", "창의력이 좋음", "자유분방함", "지구력이 약함", "솔직담백함"],
+    "乙未": ["현실적응력 최고", "끈기와 집념", "계산이 빠름", "소유욕이 강함", "인정이 있음", "간섭을 싫어함"],
+    "丙申": ["화려하고 다재다능", "예의 바름", "감정이 풍부함", "싫증을 잘 냄", "분위기 메이커", "결단력이 있음"],
+    "丁酉": ["섬세하고 예리함", "미적 감각 탁월", "재물에 밝음", "예민함", "완벽주의 성향", "집중력이 좋음"],
+    "戊戌": ["책임감이 강함", "신의와 원칙 중시", "고집이 황소 같음", "포용력이 큼", "보수적임", "가족을 챙김"],
+    "己亥": ["소탈하고 낙천적", "재물복이 있음", "융통성이 좋음", "우유부단함", "비밀이 많음", "여행을 좋아함"],
+    "庚子": ["냉철하고 비판적", "총명하고 논리적", "순수함", "고독을 즐김", "표현력이 좋음", "예술적 재능"],
+    "辛丑": ["성실하고 근면함", "자존심이 강함", "호불호가 분명함", "복수심이 있음", "전문가 기질", "깔끔함"],
+    "壬寅": ["활동적이고 적극적", "지혜와 용기 겸비", "자기 과시욕", "식복이 있음", "리더십", "낙천적임"],
+    "癸卯": ["다정다감함", "섬세하고 자상함", "창의력과 기획력", "끈기가 부족함", "꾸미는 것을 좋아함", "착한 성품"],
+    "甲辰": ["명예욕이 강함", "추진력과 배짱", "고집이 셈", "투기적인 성향", "리더십", "자기 중심적"],
+    "乙巳": ["표현력이 뛰어남", "활동적이고 명랑함", "변덕이 심함", "매력이 넘침", "허영심이 있음", "언변이 좋음"],
+    "丙午": ["열정적이고 화끈함", "성격이 매우 급함", "솔직하고 뒤끝 없음", "자기 중심적", "강한 추진력", "화려함"],
+    "丁未": ["온화하고 겸손함", "속은 강단이 있음", "인내심이 강함", "희생정신", "감정 기복", "소유욕"],
+    "戊申": ["재주가 많음", "신의가 있음", "고독할 수 있음", "식복이 좋음", "자기 주관 뚜렷", "이동이 잦음"],
+    "己酉": ["꼼꼼하고 정확함", "실속을 챙김", "예민함", "손재주가 좋음", "신용을 중시함", "깔끔한 성격"],
+    "庚戌": ["의리가 강함", "강직하고 용감함", "고집이 셈", "경쟁심", "타협하지 않음", "괴강한 기질"],
+    "辛亥": ["감수성이 풍부", "총명하고 언변 좋음", "깔끔함", "예민함", "상처를 잘 받음", "예술적 감각"],
+    "壬子": ["포용력이 큼", "승부욕이 강함", "지혜로움", "비밀이 많음", "색정이 있음", "리더 기질"],
+    "癸丑": ["인내심의 화신", "묵묵히 일함", "고집이 셈", "폭발적인 성격 잠재", "장애물을 돌파함", "신의가 있음"],
+    "甲寅": ["독립심과 자존심", "추진력 최고", "굽히지 않음", "리더십", "고독함", "솔직 담백"],
+    "乙卯": ["적응력이 뛰어남", "상냥하고 부드러움", "내면의 고집", "질투심이 있음", "창의적임", "이상주의자"],
+    "丙辰": ["성실하고 지혜로움", "화려함과 실속 겸비", "언변이 좋음", "감정 기복", "자존심", "지도자 격"],
+    "丁巳": ["화끈하고 정열적", "집요한 승부근성", "변덕이 있음", "솔직함", "의심이 많음", "활동적"],
+    "戊午": ["카리스마 작렬", "고집이 매우 셈", "성실함", "꼼꼼함", "자기 중심적", "효심이 깊음"],
+    "己未": ["인내심과 끈기", "온순해 보이나 강함", "의심이 많음", "보수적", "신중함", "자존심"],
+    "庚申": ["의리와 결단력", "강한 추진력", "혁명가 기질", "독선적", "재주가 많음", "이동수"],
+    "辛酉": ["섬세하고 예리함", "자존심이 강함", "깔끔하고 단정", "냉철함", "의리가 있음", "고집"],
+    "壬戌": ["포용력과 배짱", "재물복이 큼", "솔직함", "감정 기복", "리더십", "백호의 기상"],
+    "癸亥": ["지혜롭고 총명", "기획력 우수", "비밀이 많음", "생각이 깊음", "우유부단", "포용력"]
+};
+
+/* [오행 물상론 데이터] */
+const DB_ELEMENT_TRAITS = {
+    "목": { 
+        w: "나무가 자라듯 꾸준히 우상향하는 '성장형 재물'입니다. 교육, 출판, 건축, 패션, 기획 등 무에서 유를 창조하고 키워내는 분야에서 부가 축적됩니다. 묘목이나 유목처럼 시작은 작아도 끝은 창대할 수 있습니다.", 
+        c: "새로운 프로젝트를 기획하거나 사람을 가르치고 양성하는 '육성' 관련 직업이 천직입니다. 창의력과 아이디어가 무기이며, 정체된 조직보다는 성장하는 스타트업이나 벤처 정신이 강한 곳이 어울립니다." 
+    },
+    "화": { 
+        w: "불처럼 확 타오르고 확산되는 '발산형 재물'입니다. 방송, 언론, 마케팅, 조명, 전자, IT 등 화려하게 자신을 드러내고 정보를 전달하는 과정에서 큰돈이 오갑니다. 회전율이 빠르고 유동성이 큽니다.", 
+        c: "자신을 표현하고 남들 앞에 서는 무대 체질입니다. 연예인, 강사, 유튜버, 홍보 전문가 등 빛과 소리, 시각적인 요소를 다루는 직업에서 두각을 나타냅니다. 열정이 식지 않는 한 성공은 보장됩니다." 
+    },
+    "토": { 
+        w: "흙이 차곡차곡 쌓이듯 모이는 '저축형 재물'입니다. 부동산, 토지, 건설, 중개업, 숙박업 등 믿음과 신용, 그리고 '터'를 기반으로 한 자산이 거대하게 불어납니다. 현금보다는 문서화된 자산이 유리합니다.", 
+        c: "사람과 사람, 자본과 자본을 연결하는 중개자 역할이나 컨설팅, 농업, 토목 등 기반을 다지는 일이 맞습니다. 변동이 적고 안정적이며 신뢰가 최우선인 공공기관이나 대기업 조직이 어울립니다." 
+    },
+    "금": { 
+        w: "단단한 열매를 맺는 '결실형 재물'입니다. 금융, 주식, 펀드, 금속, 반도체, 정밀 기계 등 정확한 계산과 시스템, 혹은 원자재를 통해 확실한 수익을 냅니다. 맺고 끊음이 확실하여 손해 보는 장사는 안 합니다.", 
+        c: "법조계, 의료(수술), 군인, 경찰, 엔지니어 등 냉철한 판단력과 칼 같은 원칙, 정밀한 기술이 필요한 분야에서 전문가로 대성합니다. 감정을 배제하고 이성적으로 처리하는 업무가 적성입니다." 
+    },
+    "수": { 
+        w: "물처럼 끊임없이 흐르는 '유통형 재물'입니다. 무역, 유통, 운송, 요식업, 카페, 해외 비즈니스 등 사람이나 물건이 흐르는 길목에서 돈맥이 터집니다. 고정된 자산보다 흐르는 현금 흐름이 중요합니다.", 
+        c: "해외 관련 업무, 물류, 심리학, 철학, 종교, 데이터 분석 등 정신적이거나 유동적인 분야에서 유연한 사고로 성공합니다. 한곳에 얽매이기보다 자유롭게 이동하거나 사고하는 직업이 좋습니다." 
+    }
+};
+
+/* [십성 상세 분석 데이터] */
+const DB_STARS_FULL = {
+    "비견": {
+        w: "귀하의 재물운은 '치열한 경쟁 속의 쟁취'로 요약됩니다. 형제, 친구, 동료와 어깨를 나란히 하며 재물을 놓고 경쟁하는 형국입니다. 남의 밑에서 월급을 받으며 안주하기보다는 자신의 능력을 믿고 독립적으로 재물을 성취하려는 욕구가 매우 강합니다. 돈을 벌면 주변 사람들에게 베풀어야 직성이 풀리는 대장부 스타일이라 지출이 많을 수 있으니, 체계적인 자산 관리가 평생의 과제입니다. 특히 사업을 할 경우 동업은 이익 배분 문제로 필연적인 다툼을 야기할 수 있으니 독자적인 노선이 훨씬 유리합니다. 자존심을 지키려다 불필요한 돈을 쓰는 '품위 유지비'가 많이 나가는 편이니 실속을 차려야 합니다.",
+        c: "직업적으로는 강한 독립심과 주체성이 요구되는 분야가 천직입니다. 남의 간섭을 받거나 일일이 지시를 받는 수직적인 조직 문화에서는 능력을 발휘하기 힘들며, 오히려 상사와의 마찰이 잦을 수 있습니다. 따라서 프리랜서, 전문직, 예체능, 혹은 자신의 이름을 건 개인 사업이 가장 적합합니다. 직장 생활을 한다면 개인의 성과가 명확히 드러나고 경쟁이 치열한 영업, 스포츠, 프로젝트 리더 등의 포지션에서 탁월한 능력을 발휘합니다. 귀하는 타고난 리더십이 있어 무리를 이끄는 역할을 좋아하며, 승부욕이 강해 남들에게 뒤처지는 것을 견디지 못합니다. 끊임없이 자기 계발을 통해 대체 불가능한 존재가 되는 것이 직업적 성공의 열쇠입니다.",
+        l: "연애와 결혼에 있어서는 '친구 같은 편안함'과 '동등한 관계'를 최우선으로 칩니다. 상대방에게 일방적으로 의존하거나, 반대로 상대방이 자신에게 너무 기대는 관계를 부담스러워합니다. 서로의 사생활과 영역을 존중해 주는 쿨한 관계를 선호하며, 간섭이나 구속이 심해지면 애정이 급격히 식을 수 있습니다. 자존심이 매우 강하여 연인 간의 사소한 다툼이 자존심 싸움으로 번져 이별로 이어지는 경우가 종종 있으니 주의해야 합니다. 배우자를 선택할 때도 외모나 조건보다는 대화가 잘 통하고 가치관이 맞는지를 중요하게 봅니다.",
+        h: "건강 측면에서는 자신의 체력을 과신하다가 병을 키우는 경향이 있습니다. 비견이 강하면 신체적으로 튼튼한 경우가 많지만, 무리한 활동이나 과로를 대수롭지 않게 여기다 갑자기 건강이 악화될 수 있습니다. 특히 간과 담의 기능이 약해질 수 있으니 음주를 절제하고 충분한 휴식을 취해야 합니다. 또한 승부욕으로 인한 스트레스가 근육 뭉침이나 신경성 질환으로 나타날 수 있으므로, 요가나 명상 같은 이완 운동이 큰 도움이 됩니다. 나이가 들수록 혈압이나 혈관 계통의 관리가 필요하며, 정기적인 건강 검진을 통해 자신의 몸 상태를 객관적으로 체크하는 습관을 들여야 합니다."
+    },
+    "겁재": {
+        w: "재물운의 스케일이 매우 크며 '하이 리스크, 하이 리턴'의 전형입니다. 투기적인 성향이 강해 한 번에 큰돈을 만지거나, 반대로 한순간에 바닥을 칠 수 있는 극단적인 운의 흐름을 지녔습니다. 동물적인 감각으로 돈 냄새를 맡는 능력이 탁월하지만, 재물이 모이면 주변에서 탐내는 사람들이 몰려들거나 예상치 못한 사고로 지출이 발생할 수 있습니다. 따라서 돈을 버는 것보다 지키는 것이 훨씬 중요한 사주입니다. 현금을 쥐고 있으면 물처럼 빠져나가기 쉬우니, 반드시 땅이나 건물 같은 부동 자산으로 묶어두어야 안전합니다. 강력한 승부욕과 경쟁심은 재물을 쟁취하는 원동력이 되지만, 무리한 확장이나 도박성 투자는 패가망신의 지름길이 될 수 있음을 명심하십시오. 기부나 봉사를 통해 재물을 사회에 환원하는 '액땜'을 하면 오히려 더 큰 부가 들어옵니다.",
+        c: "직업적으로는 경쟁이 극심하고 승패가 명확한 분야에서 최고의 성과를 냅니다. 남들과 똑같은 평범한 사무직보다는 영업왕, 스포츠 선수, 투자 전문가, 정치인 등 자신의 능력을 증명하고 쟁취하는 직업이 어울립니다. 강력한 추진력과 야망을 가지고 있어 목표 달성을 위해서라면 수단과 방법을 가리지 않는 대담함이 있습니다. 위기 상황에서 오히려 침착해지고 난관을 돌파하는 에너지가 넘쳐 조직의 해결사 역할을 자처합니다. 일반적인 위계질서가 강한 조직보다는 성과급 제도가 확실하거나, 자신의 능력에 따라 보상이 기하급수적으로 늘어나는 구조에서 일해야 직성이 풀립니다. 타인을 설득하고 조종하는 능력 또한 뛰어납니다.",
+        l: "사랑 또한 쟁취의 대상으로 보는 경향이 있어 드라마틱하고 열정적인 연애를 합니다. 경쟁자가 있는 이성에게 더 강한 끌림을 느끼거나, 남들이 보기에 쟁취하기 어려운 상대를 내 것으로 만드는 과정에서 희열을 느낍니다. 소유욕과 질투심이 매우 강해 연인이나 배우자를 강하게 구속하려 들 수 있으며, 의처증이나 의부증 같은 의심의 씨앗을 주의해야 합니다. 반대로 자신은 자유로움을 추구하면서 상대에게는 엄격한 도덕적 기준을 들이대기 쉬운 이중성을 경계해야 합니다. 결혼 생활에서도 주도권을 쥐려 하기 때문에 마찰이 잦을 수 있으나, 내 편이라고 생각되면 목숨을 바쳐 지키는 헌신적인 면모도 있습니다.",
+        h: "넘치는 에너지를 주체하지 못해 발생하는 안전사고나 외상에 주의해야 합니다. 성격이 급하고 욱하는 기질이 있어 혈압이나 심혈관 계통에 무리가 갈 수 있습니다. 과격한 운동이나 위험한 취미를 즐기는 경향이 있는데, 뼈나 관절을 다치지 않도록 조심해야 합니다. 또한 소화기 계통의 장애나 위장병에 취약할 수 있으니 규칙적인 식습관이 필수입니다. 분노를 조절하고 마음의 평화를 찾는 것이 건강 관리의 핵심이므로, 명상이나 단전호흡 등을 통해 내면의 화(火)를 다스리는 훈련이 필요합니다."
+    },
+    "식신": {
+        w: "평생 의식주가 풍족하고 재물복이 마르지 않는 축복받은 사주입니다. 자신이 좋아하는 일을 꾸준히 즐기면서 하다 보면 자연스럽게 돈이 따라오는 구조입니다. 억지로 돈을 쫓기보다는 자신의 재능이나 창의적인 아이디어를 사업화하여 안정적인 소득을 올리는 것이 가장 유리합니다. 무리한 투기나 일확천금보다는 꾸준한 연구와 생산적인 활동이 부를 축적하는 정석입니다. 특히 요식업, 교육, 제조 등 무언가를 기르고 만드는 분야에서 큰돈을 만질 수 있습니다. 베푸는 만큼 다시 돌아오는 복록이 있으니 주변 사람들에게 인색하지 않아야 합니다. 말년으로 갈수록 재물이 불어나는 안정적인 흐름을 보입니다.",
+        c: "연구원, 예술가, 요리사, 교육자, 개발자 등 한 우물을 파는 장인 정신이 필요한 분야가 천직입니다. 표현력이 뛰어나고 창의적이며, 타인을 가르치거나 기르는 일에서 깊은 보람을 느낍니다. 억압적이고 수직적인 조직 분위기보다는 자신의 전문성을 존중받는 자유로운 환경에서 능력이 극대화됩니다. 기획력이 탁월하여 새로운 상품을 개발하거나 콘텐츠를 제작하는 업무에서도 뛰어난 성과를 거둡니다. 남과 경쟁하기보다는 자신만의 독보적인 영역을 구축하여 전문가로 인정받는 길을 가야 합니다. 언변이 좋고 설득력이 있어 컨설팅이나 강의 활동을 겸하는 것도 매우 좋습니다.",
+        l: "상대방을 자식처럼 챙겨주는 헌신적이고 자상한 연애를 합니다. 아낌없이 퍼주는 스타일이며, 정서적인 안정감과 따뜻한 교감을 최우선으로 합니다. 연애할 때는 매우 낭만적이고 다정다감하여 상대방에게 깊은 신뢰를 줍니다. 맛있는 것을 함께 먹으러 다니는 등 소소한 행복을 즐기는 것을 좋아합니다. 다만, 결혼 후 자녀가 생기면 모든 관심과 사랑이 자녀에게 쏠려 배우자가 소외감을 느낄 수 있으니 균형을 잘 잡아야 합니다. 갈등 상황에서도 감정적으로 대립하기보다는 대화를 통해 부드럽게 해결하려는 성숙한 태도를 보입니다.",
+        h: "식신은 수명과 건강을 관장하는 길신이므로 대체로 건강한 편입니다. 하지만 미식을 즐기는 성향 때문에 비만이나 소화기 계통의 질환에 노출될 위험이 높습니다. 과식이나 야식을 피하고 규칙적인 식습관이 유지하는 것이 장수의 비결입니다. 또한 편안함을 추구하여 운동 부족이 될 수 있으니, 의식적으로 몸을 움직이는 활동을 해야 합니다. 나이가 들면 당뇨나 고혈압 같은 성인병 관리에 신경을 써야 하며, 스트레스를 받으면 폭식으로 푸는 경향을 주의해야 합니다."
+    },
+    "상관": {
+        w: "비상한 아이디어와 화려한 언변으로 남들이 생각지 못한 틈새시장을 공략하여 부를 쌓는 능력자입니다. 돈을 버는 감각이 남다르고 회전율이 빨라 단기간에 거부를 쥘 수도 있습니다. 중개, 유통, 컨설팅, 혹은 트렌디한 플랫폼 사업에서 두각을 나타냅니다. 하지만 소비 성향도 강하고 폼생폼사 기질이 있어 들어오는 돈만큼 나가는 돈도 많습니다. 충동구매를 자제하고 계획적인 소비 습관을 들이는 것이 부를 지키는 핵심입니다. 또한 법적인 테두리를 교묘히 넘나들려다 관재구설에 휘말려 큰돈을 잃을 수 있으니, 정직한 납세와 준법정신이 필수입니다. 재능으로 돈을 버는 사주입니다.",
+        c: "언론인, 방송인, 예술가, 마케터, 로비스트 등 기존의 틀을 깨고 자신을 화려하게 드러내는 직업이 어울립니다. 기존 질서에 대한 비판 정신이 강하고 개혁적인 성향이라, 보수적이고 답답한 조직에서는 견디기 힘들어합니다. 창의력이 번뜩이고 임기응변이 뛰어나 위기 상황의 소방수 역할을 잘 수행합니다. 남을 설득하거나 가르치는 일, 혹은 대중의 인기를 먹고사는 직업에서 대성할 수 있습니다. 반복적인 업무보다는 매일 새로운 자극이 있는 환경이 좋으며, 자신의 이름이나 브랜드를 내세워 활동할 때 가장 빛을 발합니다.",
+        l: "매우 로맨틱하고 분위기를 중요시하며, 상대방을 홀리는 치명적인 매력을 가졌습니다. 하지만 감정 기복이 심하고 직설적인 화법으로 인해 말로써 상대방에게 씻을 수 없는 상처를 주기 쉽습니다. 나쁜 남자나 묘한 매력이 있는 이성에게 끌리는 경향이 있으며, 구속받는 것을 극도로 싫어해 자유로운 연애 관계를 추구합니다. 결혼 후에도 배우자가 자신의 사회적 활동이나 취미 생활을 간섭하는 것을 못 견뎌 하므로, 이를 이해해 줄 수 있는 넓은 포용력을 가진 상대를 만나야 합니다. 권태기를 잘 느끼므로 항상 새로운 이벤트를 추구합니다.",
+        h: "예민한 신경과 과도한 두뇌 회전으로 인해 불면증이나 신경성 위염, 편두통에 시달릴 수 있습니다. 에너지를 폭발적으로 쓰고 방전되는 스타일이라 만성 피로를 달고 살 수 있습니다. 호흡기나 갑상선 계통이 약해질 수 있으니 주의해야 합니다. 스트레스를 받으면 말로 풀어야 직성이 풀리므로, 수다를 떨거나 노래를 부르는 등 발산하는 취미가 건강에 도움이 됩니다. 감정의 기복을 다스리는 명상이나 요가가 정신 건강에 매우 좋습니다."
+    },
+    "편재": {
+        w: "월급처럼 꼬박꼬박 들어오는 돈보다는 사업 소득, 투자 수익, 횡재수 등 스케일이 큰 재물을 쫓습니다. '돈은 굴려야 제맛'이라는 확고한 철학이 있어 저축보다는 재투자에 과감하며, 전국 혹은 전 세계를 무대로 활동할 때 막대한 부를 쌓을 수 있습니다. 공간 지각 능력이 뛰어나 부동산 투자나 유통망 확장에 탁월한 감각을 보입니다. 하지만 한순간의 무리한 투기나 도박성 투자로 공들여 쌓은 자산을 한방에 날릴 위험도 늘 공존합니다. 들어오는 돈의 단위도 크지만 나가는 단위도 크니, 현금 흐름 관리에 만전을 기해야 합니다. 유흥이나 이성 문제로 인한 지출을 경계하십시오.",
+        c: "책상에 앉아 있는 사무직보다는 현장을 누비고 사람들을 만나는 역동적인 직업이 체질입니다. 무역업, 대규모 유통, 금융 투자, 사업가 등 활동 범위가 넓은 업무에서 능력을 발휘합니다. 전체적인 판을 읽는 통찰력이 뛰어나고 계산이 빨라, 복잡한 경영 상황을 한눈에 파악하고 과감한 결단을 내립니다. 협상 능력이 탁월하여 비즈니스 거래에서 유리한 고지를 점하는 데 능수능란합니다. 조직에 속해 있더라도 영업이나 해외 파트 등 자유로운 활동이 보장되는 부서가 맞습니다. 통제받기보다는 통제하려는 욕구가 강해 결국은 자신의 사업을 하게 될 운명입니다.",
+        l: "유머 감각이 뛰어나고 통이 커서 이성에게 인기가 매우 많습니다. 다정다감하고 즐거운 연애를 주도하여 상대방을 즐겁게 해주지만, 여러 이성에게 여지를 주는 바람둥이 기질을 스스로 경계해야 합니다. 물질적인 공세나 화려한 데이트를 통해 상대의 환심을 사는 데 능숙합니다. 연애 기간에는 최고의 파트너이지만, 한 사람에게 정착하는 데 시간이 걸릴 수 있습니다. 결혼 후에도 밖으로 나도는 성향이 있고, 가정보다는 바깥일에 더 신경을 쓸 수 있어 배우자의 불만을 살 수 있습니다. 가정의 평화를 위해 노력해야 합니다.",
+        h: "활동량이 많고 술자리나 접대가 잦을 수 있어 간 기능 저하나 만성 피로에 주의해야 합니다. 불규칙한 생활 패턴으로 인해 생체 리듬이 깨지기 쉬우니 충분한 수면이 보약입니다. 급한 성격으로 인한 사고나 부상을 조심해야 하며, 특히 운전할 때 주의가 필요합니다. 나이가 들면 관절이나 척추 건강에 신경을 써야 합니다. 과로를 피하고 주기적으로 자연 속에서 휴식을 취하며 에너지를 재충전하는 것이 건강을 유지하는 비결입니다."
+    },
+    "정재": {
+        w: "성실함과 꼼꼼함을 무기로 티끌 모아 태산을 이루는 정석적인 알부자 사주입니다. 10원 하나도 허투루 쓰지 않는 경제 관념이 투철하며, 일확천금보다는 확실한 데이터와 근거가 있는 안전 자산 위주의 투자를 선호합니다. 남의 돈을 탐내거나 무리한 욕심을 부리지 않고, 내 것을 확실히 지키는 수성(守成) 능력이 탁월하여 큰 손실을 볼 위험이 적습니다. 시간이 갈수록 복리로 불어나는 자산을 보며 행복을 느끼는 타입입니다. 비록 부자가 되는 속도는 더딜지 모르나, 한 번 모은 재물은 절대 흩어지지 않아 말년에는 가장 여유로운 삶을 누리게 됩니다.",
+        c: "재무, 회계, 은행원, 세무사, 공무원 등 숫자를 다루고 정확성이 요구되는 직업이 천직입니다. 성실함과 책임감이 타의 추종을 불허하여 조직 내에서 깊은 신뢰를 받습니다. 변화가 심하거나 모험적인 일보다는, 정해진 매뉴얼과 시스템이 갖춰진 안정적인 환경에서 일하는 것을 좋아합니다. 세밀한 분석과 데이터 관리에 뛰어나며, 실수를 용납하지 않는 완벽주의 성향으로 업무의 완성도를 높입니다. 창업을 하더라도 모험적인 벤처보다는 안정적인 프랜차이즈나 임대업 등 수익 구조가 확실한 분야를 선택하는 것이 성공 확률을 높입니다.",
+        l: "매우 가정적이고 헌신적인 최고의 배우자감입니다. 보수적이고 신중한 연애관을 가져 가볍게 만나기보다는 결혼을 전제로 진지하게 만나는 경우가 대부분입니다. 신뢰를 최우선으로 하며, 약속 시간이나 사소한 규칙을 어기는 것을 매우 싫어합니다. 깜짝 이벤트나 화려한 언변은 부족할 수 있지만, 변치 않는 사랑과 안정적인 울타리를 제공하는 데는 최고입니다. 연애할 때도 데이트 비용을 계획적으로 지출하여 알뜰하게 결혼 자금을 마련하는 실속파입니다. 배우자의 건강이나 식사를 세심하게 챙겨주는 따뜻한 면모가 있습니다.",
+        h: "규칙적인 생활을 하는 편이라 건강 상태가 양호하지만, 지나치게 꼼꼼한 성격 탓에 소화 불량이나 신경성 위장 장애를 겪을 수 있습니다. 작은 건강 이상에도 민감하게 반응하여 건강염려증이 생길 수 있으니 마음을 편안하게 먹는 것이 중요합니다. 너무 앉아만 있는 생활을 하기 쉬우니 의식적으로 유산소 운동을 해야 합니다. 손발이 차거나 혈액 순환이 잘 안 될 수 있으니 따뜻한 음식을 섭취하는 것이 좋습니다. 스트레스를 속으로 삭이는 경향이 있어 화병이 생길 수 있으니 적절한 해소법을 찾아야 합니다."
+    },
+    "편관": {
+        w: "재물보다는 명예와 '가오'를 중시하는 스타일이지만, 권력을 얻으면 재물은 자연스럽게 따라오는 구조입니다. 난관을 돌파하고 위험을 감수하는 프로젝트에서 큰 보상을 얻습니다. 돈을 벌어도 자신을 위해 쓰기보다는 부하 직원을 챙기거나 체면을 치레하는 데 많이 지출하여 실속이 없을 수 있습니다. 하지만 큰 조직이나 공공 기관과 연계된 사업을 통해 거금을 만질 기회가 옵니다. 자잘한 돈보다는 굵직한 한 방을 노리는 경향이 있으며, 위기 관리 능력이 뛰어나 부도 직전의 회사를 살려내거나 험지에서 성과를 내어 막대한 인센티브를 챙기기도 합니다.",
+        c: "군인, 경찰, 검찰, 경호원, 의사(외과), 특수 기술직 등 생사여탈권을 다루거나 규율이 엄격한 조직의 리더가 제격입니다. 강력한 카리스마와 추진력으로 조직을 장악하고 이끄는 힘이 있습니다. 힘들고 어려운 일을 도맡아 처리하는 해결사 본능이 있어, 남들이 기피하는 부서나 현장에서 오히려 능력을 인정받습니다. 명예욕이 강해 승진과 감투에 목숨을 거는 경향이 있으며, 자신을 알아주는 주군을 만나면 충성을 다하는 의리파입니다. 정치계나 권력 기관에 진출하여 난세를 평정하는 영웅이 될 자질을 갖추고 있습니다.",
+        l: "나를 휘어잡는 강한 상대, 혹은 내가 전적으로 보호해 줘야 할 가련한 상대에게 매력을 느낍니다. 연애도 불같이 뜨겁고 싸울 때도 격렬하게 싸우는 드라마틱한 사랑을 합니다. 남성의 경우 현모양처보다는 사회적으로 능력 있고 기센 여성을 원하며, 여성의 경우 자신을 강하게 리드해 줄 '나쁜 남자' 스타일이나 마초적인 남성에게 끌립니다. 사랑을 쟁취하는 과정에서의 짜릿함을 즐기지만, 결혼 후에는 가부장적이거나 강압적인 태도로 인해 배우자와 갈등을 빚을 수 있으니 상호 존중하는 태도가 필요합니다.",
+        h: "과도한 책임감과 스트레스로 인해 만성 두통이나 신경통에 시달릴 수 있습니다. 욱하는 성질이 있어 혈압이 급상승하거나 뇌혈관 질환에 유의해야 합니다. 자신의 몸을 돌보지 않고 일에 몰두하다가 과로사할 위험이 있으니, 반드시 휴식 시간을 강제로라도 가져야 합니다. 외상이나 사고수도 따르므로 위험한 활동은 자제하는 것이 좋습니다. 술과 담배를 즐기는 경우가 많은데, 간과 폐 건강을 위해 절제해야 합니다. 명상이나 심호흡을 통해 내면의 화기를 다스리는 것이 장수의 비결입니다."
+    },
+    "정관": {
+        w: "가장 안정적이고 모범적인 재물운입니다. 일확천금이나 투기보다는 꼬박꼬박 들어오는 월급, 연금, 임대 소득 등 고정적인 수입을 선호합니다. 명예를 실추시키면서까지 돈을 쫓지 않으며, 사회적 지위에 걸맞은 품위를 유지할 만큼의 재물을 자연스럽게 얻게 됩니다. 탈세나 불법적인 일에는 결벽증에 가까운 거부감을 느끼며, 정직하게 번 돈만을 내 돈으로 인정합니다. 자산이 급격히 늘지는 않지만, 평생 경제적인 어려움 없이 안정된 생활을 영위할 수 있는 복받은 운입니다. 부동산이나 국공채 등 안전한 투자처에 묻어두는 것이 가장 좋습니다.",
+        c: "공무원, 공기업, 대기업 관리직, 교사 등 신분이 보장되고 체계가 잡힌 조직 사회가 가장 잘 어울립니다. 원칙과 절차를 중요시하며, 공과 사를 명확히 구분하는 태도로 상사와 부하 직원 모두에게 신망을 얻습니다. 승진과 명예를 최고의 가치로 여기며, 조직의 규칙을 준수하고 질서를 유지하는 관리자로서 탁월한 역량을 발휘합니다. 행정, 인사, 총무 등 관리 업무에서 두각을 나타내며, 리더가 되더라도 독단적이지 않고 합리적인 의사결정을 내립니다. 변화보다는 안정을 추구하므로 창업보다는 조직 내 임원으로 성장하는 것이 유리합니다.",
+        l: "반듯하고 예의 바른 사람을 선호하며, 보수적인 연애관을 가집니다. 남들의 시선을 의식하여 부모님이나 주변에서 인정받을 수 있는 조건의 상대를 찾습니다. 결혼을 전제로 한 진지한 만남을 추구하며, 배우자로서의 책임과 의무를 다하려고 노력합니다. 남편은 가장으로서의 권위를, 아내는 현모양처로서의 역할을 중요하게 생각합니다. 재미는 조금 없을 수 있지만, 한눈팔지 않고 가정만을 위해 헌신하는 믿음직한 배우자입니다. 결혼 생활의 안정을 최우선으로 하므로 이혼율이 가장 낮은 유형이기도 합니다.",
+        h: "지나친 원칙주의와 체면 치레로 인한 정신적인 스트레스가 상당할 수 있습니다. 겉으로는 태연해 보이지만 속으로 끙끙 앓는 경우가 많아 위장병이나 화병에 주의해야 합니다. 규칙적인 생활을 하므로 육체적인 건강은 좋은 편이나, 운동 부족이 되기 쉽습니다. 너무 긴장하고 사는 경향이 있으니, 가끔은 일탈을 즐기거나 취미 생활을 통해 긴장을 풀어주는 것이 필요합니다. 어깨나 목의 뭉침 등 근육통을 자주 호소할 수 있으니 스트레칭을 생활화하세요."
+    },
+    "편인": {
+        w: "남들이 거들떠보지 않는 특수한 분야나 전문 지식, 자격증, 지적 재산권을 통해 비범한 부를 축적합니다. 대중적인 사업보다는 매니아층을 겨냥하거나, 고도의 기술력이 필요한 틈새시장에서 큰돈을 법니다. 아이디어 하나로 세상을 놀라게 하거나, 부동산 경매, 주식 투자 등에서 남다른 직관으로 수익을 냅니다. 하지만 생각이 너무 많아 결정적인 투자 타이밍을 놓치거나, 사기를 당할 위험도 있으니 계약 서류를 꼼꼼히 확인해야 합니다. 재물이 들어올 때와 나갈 때의 기복이 심할 수 있으니, 잘 벌릴 때 확실하게 묶어두는 지혜가 필요합니다.",
+        c: "철학자, 종교인, 예술가, 의료인, 역술가, IT 개발자, 디자이너 등 독창적이고 전문적인 지식이 필요한 분야가 적합합니다. 눈치가 매우 빠르고 직관력이 대단하여 기획이나 전략 업무, 혹은 미스터리한 문제를 해결하는 일에서 빛을 발합니다. 상대를 꿰뚫어 보는 통찰력이 있어 심리 상담가나 수사관으로서도 대성합니다. 일반적인 직장 생활은 답답해할 수 있으며, 자신만의 세계가 뚜렷하여 독립적인 전문직이나 프리랜서로 활동하는 것이 정신 건강에 좋습니다. 남들이 생각지 못한 기발한 발상으로 혁신을 이끄는 인재입니다.",
+        l: "신비롭고 정신적인 교감을 나눌 수 있는 소울메이트를 원합니다. 외모나 조건보다는 대화가 통하고 가치관이 일치하는지를 최우선으로 봅니다. 자신의 속마음을 잘 드러내지 않는 신비주의 전략으로 상대의 호기심을 자극합니다. 독특하고 4차원적인 매력이 있지만, 때로는 지나치게 예민하거나 혼자만의 동굴로 들어가 버려 상대를 지치게 할 수 있습니다. 구속받는 것을 싫어하고 개인적인 시간과 공간을 존중받기를 원합니다. 결혼 후에도 각방을 쓰거나 주말부부를 하는 등 적당한 거리를 두는 것이 관계 유지에 도움이 될 수 있습니다.",
+        h: "생각이 꼬리에 꼬리를 물어 불면증이나 신경쇠약에 걸리기 쉽습니다. 예민한 성격 탓에 소화 불량이나 편식을 할 수 있어 영양 불균형에 주의해야 합니다. 활동량이 적고 실내에 있는 것을 좋아하여 비타민D 부족이나 우울감이 올 수 있습니다. 햇볕을 쬐며 산책을 하거나 명상을 통해 머릿속을 비우는 연습이 필요합니다. 여성의 경우 자궁이나 유방 쪽 건강 검진을 정기적으로 받는 것이 좋습니다. 정신적인 안정이 육체 건강의 핵심입니다."
+    },
+    "정인": {
+        w: "조상이나 부모의 덕을 보거나, 문서와 자격증을 통해 편안하게 부를 누리는 귀족적인 사주입니다. 부동산, 임대업, 인세, 저작권료 등 가만히 있어도 들어오는 불로소득의 성격이 강합니다. 배우는 것이 곧 돈이 되므로 자기 계발에 투자하는 비용은 아끼지 말아야 합니다. 투자 감각도 안정적이며, 특히 부동산 문서 운이 매우 강력하여 땅이나 건물을 통해 자산을 불립니다. 남에게 베푸는 인덕이 있어, 어려울 때 주변의 도움으로 금전적인 문제를 해결하기도 합니다. 평생 의식주 걱정 없이 우아하게 살 수 있는 복을 타고났습니다.",
+        c: "교수, 학자, 교사, 연구원, 작가 등 지식을 전달하고 사회적으로 존경받는 직업이 천직입니다. 도덕성과 인품을 중요시하며, 배우고 가르치는 일에서 큰 보람을 느낍니다. 결재권을 가진 관리자나 고위 공직자로서 조직을 안정적으로 이끄는 능력이 있습니다. 수동적인 자세보다는 능동적으로 지식을 습득하고 체계화하여 후학을 양성하거나 사회에 기여하는 업무에서 최상의 성과를 냅니다. 보수적이고 안정적인 환경을 선호하며, 명예를 먹고사는 직업에서 롱런할 수 있습니다.",
+        l: "사랑받기를 원하고 모성애나 부성애를 자극하는 포근한 사랑을 합니다. 나를 엄마나 아빠처럼 챙겨주고 이해해 주는, 마음이 넓고 도덕적인 상대를 원합니다. 정신적인 사랑을 추구하며, 고상하고 품격 있는 데이트를 즐깁니다. 배우자 복이 매우 좋아 결혼 후 경제적, 정신적으로 더욱 안정된 삶을 누리게 됩니다. 다소 의존적인 면이 있어 상대에게 기대려는 경향이 있지만, 그만큼 상대에게 정서적인 안정감과 따뜻함을 줍니다. 고부 갈등이나 처가와의 갈등을 지혜롭게 중재하는 능력이 있습니다.",
+        h: "움직이는 것을 싫어하고 맛있는 것을 즐겨 먹어 비만이나 대사 증후군에 주의해야 합니다. 게으름이 건강의 최대 적이므로, 꾸준한 운동 습관을 들이는 것이 중요합니다. 심장이나 혈관 계통의 질환을 조심해야 하며, 나이가 들수록 치매 예방을 위해 두뇌 활동을 지속해야 합니다. 낙천적인 성격이라 스트레스는 적게 받지만, 한 번 아프면 엄살이 심할 수 있습니다. 정기적인 건강 검진과 소식(小食)하는 습관이 장수를 돕습니다."
+    }
+};
+
+const DB_SHINSAL = {
+    "cheon": { name: "천을귀인(天乙貴人)", desc: "하늘이 내린 최고의 길신으로, 온갖 흉을 길로 바꾸고 인덕과 후원이 따르는 별입니다. 인생의 고비마다 반드시 귀인이 나타나 돕습니다. 사고나 재난을 피하게 해주며, 사회적인 성공을 보장하는 강력한 힘이 있습니다. 이 귀인이 있으면 인품이 고결하고 총명하여 많은 사람의 존경을 받습니다." },
+    "mun": { name: "문창귀인(文昌貴人)", desc: "학문과 예술에 뛰어난 재능을 부여하는 길신입니다. 총명하고 글재주가 뛰어나며, 교육이나 학술, 예술 분야에서 명성을 떨칩니다. 추리력과 발표력이 좋아 말로써 천냥 빚을 갚는 능력도 있습니다. 시험운이 강하여 입시나 자격증 취득에 유리합니다." },
+    "hyeon": { name: "현침살(懸針殺)", desc: "예리한 바늘과 같은 기운으로, 정밀한 기술이나 사람을 살리는 의술, 미용, 패션, IT 분야에서 독보적인 능력을 발휘합니다. 성격이 예민하고 날카로울 수 있으나, 이를 전문성으로 승화시키면 대성합니다. 남의 아픈 곳을 찌르는 말을 조심해야 합니다." },
+    "gwi": { name: "귀문관살(鬼門關殺)", desc: "남다른 직관력과 천재성을 의미합니다. 신경이 예민할 수 있으나, 예술이나 정신적 분야, 상담, 종교 철학 분야에서 타의 추종을 불허하는 성과를 냅니다. 집중력이 대단하여 한 가지 일에 미친 듯이 몰입합니다. 스트레스 관리가 중요합니다." },
+    "do": { name: "도화살(桃花殺)", desc: "대중의 인기를 한 몸에 받는 매력의 별입니다. 과거에는 흉살로 보았으나, 현대 사회에서는 연예인이나 인플루언서, 영업직처럼 자신을 드러내어 성공하는 강력한 무기입니다. 끼와 재능이 넘치며, 이성에게 인기가 많습니다. 다만 자기 관리에 실패하면 구설수에 오를 수 있습니다." },
+    "yeok": { name: "역마살(驛馬殺)", desc: "활동 범위가 넓고 이동이 잦은 기운입니다. 한곳에 머물기보다 글로벌하게 움직일수록 재물과 명예가 커지는 확장의 에너지입니다. 무역, 여행, 운수, 유튜브 등 인터넷을 통한 활동과도 인연이 깊습니다. 변화를 두려워하지 않고 도전하는 진취적인 기상이 있습니다." },
+    "hwa": { name: "화개살(華蓋殺)", desc: "화려함을 덮고 내면을 탐구하는 예술과 철학의 별입니다. 고독 속에서 피어나는 창의력과 종교적 깨달음을 상징합니다. 인생의 굴곡이 있을 수 있으나, 재기하는 능력이 탁월합니다. 만년에는 명예로운 위치에 오르거나 정신적인 지도자가 될 수 있습니다." },
+    "baek": { name: "백호대살(白虎大殺)", desc: "폭발적인 에너지와 프로페셔널한 압력을 상징합니다. 평범한 직업보다는 생사를 다루거나 권력을 쥐는 특수 전문직(의사, 법조인, 군경, 정치)에서 크게 대성합니다. 욱하는 성질을 다스리고 재능으로 승화시킨다면 난세를 평정하는 영웅이 됩니다." },
+    "go": { name: "괴강살(魁罡殺)", desc: "우두머리의 기질을 타고난 강력한 리더십의 별입니다. 결단력이 있고 총명하여 난세를 평정하는 영웅의 기운을 가졌습니다. 미남 미녀가 많으며, 카리스마로 대중을 압도합니다. 극단적인 길흉이 있을 수 있으니 겸손함이 필요합니다." },
+    "geol": { name: "건록(建祿)", desc: "나라의 녹을 먹는다는 뜻으로, 벼슬길에 오르거나 안정적인 직장 운이 따르는 길신입니다. 자수성가형 부자가 많습니다. 의지가 굳고 계획성이 철저하여 실패할 확률이 낮습니다. 부모의 유산보다는 본인의 능력으로 성공합니다." }
+};
+
+/* [마스터 조언 데이터] */
+const DB_MASTER_ADVICE = {
+    "비견": "자수성가형 리더로서 독립적인 비즈니스나 전문 기술 분야에서 독보적인 거장으로 성장하십시오. 남을 믿기보다 본인의 실력을 믿는 것이 최선입니다.",
+    "겁재": "경쟁은 귀하의 연료입니다. 승부사 기질을 발휘하여 치열한 시장에서 승리하고, 투자가 아닌 전략으로 거대한 부를 쟁취하십시오.",
+    "식신": "하늘이 내린 재능과 복록이 있습니다. 한 우물을 파는 장인 정신으로 꾸준히 정진하면, 마르지 않는 샘물처럼 평생 풍요를 누립니다.",
+    "상관": "천재적인 아이디어와 화려한 언변이 무기입니다. 기존의 틀을 깨는 혁신가로서 트렌드를 주도하고 세상을 놀라게 하십시오.",
+    "편재": "작은 돈에 연연하지 말고 큰 판을 짜십시오. 사업적 수완과 통찰력으로 국경을 넘나드는 거상이 되어 세상을 호령할 운명입니다.",
+    "정재": "티끌 모아 태산이 되는 정석을 보여주십시오. 치밀한 관리와 신용을 바탕으로 누구도 넘볼 수 없는 단단한 부의 성을 쌓으십시오.",
+    "편관": "난세의 영웅이 될 상입니다. 고난은 귀하를 강하게 만드는 훈련일 뿐입니다. 강력한 카리스마로 조직을 장악하고 정상에 우뚝 서십시오.",
+    "정관": "명예와 원칙이 귀하의 힘입니다. 안정된 시스템 속에서 최고의 지위에 올라, 만인의 존경을 받는 지도자가 되십시오.",
+    "편인": "남들이 보지 못하는 것을 보는 혜안이 있습니다. 특수 분야나 전문 지식으로 틈새시장을 공략하여 독보적인 1인자가 되십시오.",
+    "정인": "지식과 문서가 곧 재물입니다. 끊임없이 배우고 익혀 사람들을 이롭게 하면, 부와 명예는 그림자처럼 자연스럽게 따라옵니다."
+};
+
+/* [일간과 대상의 관계 DB] */
+const DB_RELATION = {
+    "me_controls": "본원이 대상을 강하게 통제하고 요리하는 형국입니다. 주도권을 쥐고 적극적으로 쟁취하십시오.",
+    "element_controls_me": "세상이 본원을 강하게 단련시키는 형국입니다. 압박감이 있을 수 있으나 이를 견디면 큰 그릇이 됩니다.",
+    "me_births": "본원의 재능이 밖으로 표출되는 형국입니다. 즐기면서 일할 때 최고의 성과가 나옵니다.",
+    "element_births_me": "주변 환경이 본원을 돕고 후원하는 형국입니다. 인덕과 문서를 적극 활용하십시오.",
+    "same": "본원과 같은 에너지가 모인 형국입니다. 협력과 경쟁이 공존하니 사람 관리에 힘쓰십시오."
+};
+
+/**
+ * [APPLICATION LOGIC]
+ */
+const app = {
+    getTenGod: function(me, target) {
+        if(me === target) return "비견";
+        const map = { "甲":"목", "乙":"목", "丙":"화", "丁":"화", "戊":"토", "己":"토", "庚":"금", "辛":"금", "壬":"수", "癸":"수", "寅":"목", "卯":"목", "巳":"화", "午":"화", "辰":"토", "戌":"토", "丑":"토", "未":"토", "申":"금", "酉":"금", "亥":"수", "子":"수" };
+        const yin = { "甲":0, "乙":1, "丙":0, "丁":1, "戊":0, "己":1, "庚":0, "辛":1, "壬":0, "癸":1, "寅":0, "卯":1, "巳":0, "午":1, "辰":0, "戌":0, "丑":1, "未":1, "申":0, "酉":1, "亥":0, "子":1 };
+        const mE = map[me]; const tE = map[target];
+        const same = yin[me] === yin[target];
+        if(mE === tE) return same ? "비견" : "겁재";
+        const rel = { "목":{ "화":"식상", "토":"재성", "금":"관성", "수":"인성" }, "화":{ "토":"식상", "금":"재성", "수":"관성", "목":"인성" }, "토":{ "금":"식상", "수":"재성", "목":"관성", "화":"인성" }, "금":{ "수":"식상", "목":"재성", "화":"관성", "토":"인성" }, "수":{ "목":"식상", "화":"재성", "토":"관성", "금":"인성" } };
+        const r = rel[mE][tE];
+        if(r === "식상") return same ? "식신" : "상관";
+        if(r === "재성") return same ? "편재" : "정재";
+        if(r === "관성") return same ? "편관" : "정관";
+        if(r === "인성") return same ? "편인" : "정인";
+        return "비견";
+    },
+
+    countElements: function(pillars) {
+        const counts = { "목":0, "화":0, "토":0, "금":0, "수":0 };
+        const map = { "甲":"목", "乙":"목", "丙":"화", "丁":"화", "戊":"토", "己":"토", "庚":"금", "辛":"금", "壬":"수", "癸":"수", "寅":"목", "卯":"목", "巳":"화", "午":"화", "辰":"토", "戌":"토", "丑":"토", "未":"토", "申":"금", "酉":"금", "亥":"수", "子":"수" };
+        pillars.forEach(p => { counts[map[p.g]]++; counts[map[p.z]]++; });
+        return counts;
+    },
+
+    countTenGods: function(me, pillars) {
+        const counts = {};
+        pillars.forEach(p => {
+            [p.g, p.z].forEach(char => {
+                if(char !== me) {
+                    const t = this.getTenGod(me, char);
+                    counts[t] = (counts[t] || 0) + 1;
+                }
+            });
+        });
+        return counts;
+    },
+
+    calcShinsal: function(dg, zhis) {
+        let s = new Set();
+        const z = zhis;
+        if((dg==='甲'||dg==='戊'||dg==='庚') && (z.includes('丑')||z.includes('未'))) s.add('cheon');
+        if((dg==='乙'||dg==='己') && (z.includes('子')||z.includes('申'))) s.add('cheon');
+        if((dg==='丙'||dg==='丁') && (z.includes('亥')||z.includes('酉'))) s.add('cheon');
+        if((dg==='辛') && (z.includes('午')||z.includes('寅'))) s.add('cheon');
+        if((dg==='壬'||dg==='癸') && (z.includes('巳')||z.includes('卯'))) s.add('cheon');
+        const munMap = {'甲':'巳','乙':'午','丙':'申','丁':'酉','戊':'申','己':'酉','庚':'亥','辛':'子','壬':'寅','癸':'卯'};
+        if(z.includes(munMap[dg])) s.add('mun');
+        if(z.some(x=>['子','午','卯','酉'].includes(x))) s.add('do');
+        if(z.some(x=>['寅','申','巳','亥'].includes(x))) s.add('yeok');
+        if(z.some(x=>['辰','戌','丑','未'].includes(x))) s.add('hwa');
+        const needles = ['甲','申','卯','午','辛'];
+        if(needles.includes(dg) || z.some(x=>needles.includes(x))) s.add('hyeon');
+        return Array.from(s);
+    },
+
+    /* [NEW ENGINE: ADVANCED TEXT GENERATOR] */
+    generateAdvancedText: function(category, mTen, meElem, targetElem, counts) {
+        let text = "";
+        
+        // 1. 기본 십성 텍스트
+        text += DB_STARS_FULL[mTen][category];
+
+        // 2. 오행 물상론 적용
+        const elemTrait = DB_ELEMENT_TRAITS[targetElem];
+        if(elemTrait) {
+            text += `<br><br><strong style="color:#d4af37;">[오행 물상 정밀 분석]</strong><br>`;
+            text += `귀하에게 이 운은 <strong>'${targetElem}의 물상'</strong>으로 나타납니다. `;
+            text += (category === 'w' || category === 'l') ? elemTrait.w : elemTrait.c;
+        }
+
+        // 3. 일간 관계 분석
+        let relationKey = "same";
+        const cycle = ["목","화","토","금","수"];
+        const meIdx = cycle.indexOf(meElem);
+        const tIdx = cycle.indexOf(targetElem);
+        
+        if((meIdx + 1) % 5 === tIdx) relationKey = "me_births"; // 식상
+        else if((meIdx + 2) % 5 === tIdx) relationKey = "me_controls"; // 재성
+        else if((tIdx + 1) % 5 === meIdx) relationKey = "element_births_me"; // 인성
+        else if((tIdx + 2) % 5 === meIdx) relationKey = "element_controls_me"; // 관성
+        
+        text += `<br><br><strong>[본원(${meElem})과의 관계]</strong><br>${DB_RELATION[relationKey]}`;
+
+        // 4. 강약 조언
+        const targetCount = counts[targetElem];
+        if(targetCount >= 3) text += `<br><br><strong>[주의]</strong> 해당 오행(${targetElem})의 기운이 너무 강합니다. 과유불급이라 하였으니, 욕심을 부리기보다는 조절하고 나누는 지혜가 필요합니다.`;
+        else if(targetCount === 0) text += `<br><br><strong>[조언]</strong> 해당 오행(${targetElem})의 기운이 약하거나 숨어 있습니다. 억지로 쫓기보다는 내실을 다지며 때를 기다리는 것이 현명합니다.`;
+
+        return text;
+    },
+
+    analyze: function() {
+        const name = document.getElementById('user-name').value;
+        if(!name) { alert('성함을 입력해주세요.'); return; }
+        document.getElementById('loading-screen').style.display = 'flex';
+
+        setTimeout(() => {
+            const y = document.getElementById('sel-year').value;
+            const m = document.getElementById('sel-month').value;
+            const d = document.getElementById('sel-day').value;
+            const h = document.getElementById('sel-hour').value;
+            
+            let lunar;
+            try {
+                lunar = (ui.calType === 'solar') 
+                    ? Solar.fromYmdHms(parseInt(y), parseInt(m), parseInt(d), parseInt(h), 0, 0).getLunar()
+                    : Lunar.fromYmdHms(parseInt(y), parseInt(m), parseInt(d), parseInt(h), 0, 0);
+            } catch(e) { alert('날짜 오류'); document.getElementById('loading-screen').style.display = 'none'; return; }
+
+            const eight = lunar.getEightChar();
+            const pillars = [
+                {g:eight.getTimeGan(), z:eight.getTimeZhi()},
+                {g:eight.getDayGan(), z:eight.getDayZhi()},
+                {g:eight.getMonthGan(), z:eight.getMonthZhi()},
+                {g:eight.getYearGan(), z:eight.getYearZhi()}
+            ];
+            const me = pillars[1].g;
+            const mapElem = { "甲":"목","乙":"목","丙":"화","丁":"화","戊":"토","己":"토","庚":"금","辛":"금","壬":"수","癸":"수","寅":"목","卯":"목","巳":"화","午":"화","辰":"토","戌":"토","丑":"토","未":"토","申":"금","酉":"금","亥":"수","子":"수" };
+            const meElem = mapElem[me];
+            const counts = this.countElements(pillars);
+
+            // 월지(환경) 파악
+            const woljiChar = pillars[2].z;
+            const mTen = this.getTenGod(me, woljiChar);
+            const woljiElem = mapElem[woljiChar];
+
+            // 최다 십성 파악
+            const tenCounts = this.countTenGods(me, pillars);
+            let maxTen = mTen; let maxVal = 0;
+            for(let t in tenCounts) { if(tenCounts[t] > maxVal) { maxVal = tenCounts[t]; maxTen = t; } }
+
+            // UI 업데이트
+            document.getElementById('res-name').innerText = name;
+            document.getElementById('res-date').innerText = new Date().toLocaleDateString();
+            document.getElementById('res-doc-id').innerText = "VVIP-" + Math.floor(Math.random()*900000);
+
+            // 원국 테이블
+            let htmlWon = "";
+            pillars.forEach((p,i) => {
+                let ten = (i===1) ? "본원" : this.getTenGod(me, p.g);
+                let zTen = this.getTenGod(me, p.z);
+                let bgStyle = (i===2) ? "background:#fffbeb; border:2px solid #d4af37;" : ""; 
+                if(i===1) bgStyle = "background:rgba(197, 160, 89, 0.08); border-left:2px solid #d4af37; border-right:2px solid #d4af37;";
+                htmlWon += `<td style="${bgStyle}"><span class="txt-ten">${ten}</span><span class="txt-hanja">${p.g}</span><hr style="border:0; border-top:1px dashed #ddd; margin:10px 0;"><span class="txt-hanja">${p.z}</span><span class="txt-ten">${zTen}</span></td>`;
+            });
+            document.getElementById('wonkuk-body').innerHTML = `<tr>${htmlWon}</tr>`;
+
+            // Core Analysis
+            let coreHTML = `
+                <div style="display:flex; justify-content:space-around; align-items:center; flex-wrap:wrap; gap:10px;">
+                    <div style="text-align:center; flex:1; min-width:140px; padding:20px; border:1px solid #ddd; border-radius:8px;">
+                        <span style="font-size:0.85rem; color:#666; display:block; margin-bottom:5px;">사회적 환경 (월지)</span>
+                        <strong style="font-size:1.4rem; color:#d4af37;">${mTen} 격</strong>
+                    </div>
+                    <div style="font-size:1.5rem; color:#ccc;">VS</div>
+                    <div style="text-align:center; flex:1; min-width:140px; padding:20px; border:1px solid #ddd; border-radius:8px; background:#f8fafc;">
+                        <span style="font-size:0.85rem; color:#666; display:block; margin-bottom:5px;">주도적 세력 (다자)</span>
+                        <strong style="font-size:1.4rem; color:#0f172a;">${maxTen} (${maxVal}개)</strong>
+                    </div>
+                </div>
+                <div style="margin-top:20px; padding:15px; background:#fff8e1; border-radius:4px; font-size:0.95rem; text-align:center;">
+                    ${mTen === maxTen ? "✨ <strong>월지와 세력이 일치</strong>하여 겉과 속이 같고 일관성 있는 강력한 운명을 개척합니다." : "⚡ <strong>환경(월지)과 기질(다자)이 다릅니다.</strong><br>사회적으론 <strong>" + mTen + "</strong>의 길을 가야 하지만, 내면엔 <strong>" + maxTen + "</strong>의 욕구가 강하여 갈등할 수 있습니다."}
+                </div>`;
+            document.getElementById('result-core-analysis').innerHTML = coreHTML;
+
+            // 오행 그래프
+            let htmlOh = `<div class="card"><div class="card-title">오행 에너지 정밀 분포도</div>`;
+            ["목","화","토","금","수"].forEach(k => {
+                let w = (counts[k]/8)*100;
+                htmlOh += `<div style="display:flex; align-items:center; margin-bottom:15px;"><span style="width:40px; font-weight:bold; font-size:0.9rem;">${k}</span><div style="flex:1; height:12px; background:#f1f5f9; margin:0 10px; border-radius:10px; overflow:hidden;"><div style="height:100%; width:${w}%; background:#c5a059;"></div></div><span style="font-weight:800; font-size:0.9rem;">${counts[k]}</span></div>`;
+            });
+            htmlOh += `</div><div class="text-box">`;
+            for(let k in counts) {
+                if(counts[k]>=3) htmlOh += `<p><strong>■ ${k} 기운 과다:</strong> ${DB_OHEANG[k].excess}</p>`;
+                else if(counts[k]===0) htmlOh += `<p><strong>□ ${k} 기운 결핍:</strong> ${DB_OHEANG[k].lack}</p>`;
+                else htmlOh += `<p><strong>● ${k} 기운 운용:</strong> ${DB_OHEANG[k].desc}</p>`;
+            }
+            htmlOh += `</div>`;
+            document.getElementById('result-ohaeng').innerHTML = htmlOh;
+
+            // [NEW] Personality Generator (Modified: No sentences, only tags)
+            const iljuKey = pillars[1].g + pillars[1].z;
+            const traits = DB_ILJU_TRAITS[iljuKey] || ["데이터 분석 중..."];
+            let traitHTML = `<div class="card">
+                <div class="card-title">${iljuKey} 일주의 핵심 성격 태그</div>
+                <div class="trait-container">`;
+            
+            traits.forEach((t, i) => {
+                let highlightClass = (i < 2) ? "highlight" : "";
+                traitHTML += `<div class="trait-chip ${highlightClass}">${t}</div>`;
+            });
+            traitHTML += `</div></div>`;
+            
+            document.getElementById('result-personality-detail').innerHTML = traitHTML;
+
+
+            // 상세 운세 (3D Analysis)
+            const elements = ["목","화","토","금","수"];
+            const meIdx = elements.indexOf(meElem);
+            const wealthElem = elements[(meIdx + 2) % 5];
+            const careerElem = elements[(meIdx + 3) % 5];
+            
+            document.getElementById('result-detail').innerHTML = `
+                <div class="card">
+                    <div class="card-title">재물운 (Wealth)</div>
+                    <div class="text-box">${this.generateAdvancedText('w', mTen, meElem, wealthElem, counts)}</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">직업운 (Career)</div>
+                    <div class="text-box">${this.generateAdvancedText('c', mTen, meElem, careerElem, counts)}</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">연애운 (Love)</div>
+                    <div class="text-box">${this.generateAdvancedText('l', mTen, meElem, woljiElem, counts)}</div>
+                </div>`;
+
+            // 일주 & 신살 (Identity section update)
+            document.getElementById('result-identity').innerHTML = `<div class="card"><div class="card-title">${iljuKey} 본연의 자아</div><div class="text-box" style="font-size:1.3rem; font-weight:700; color:#b48b3e; margin-bottom:20px;">"${DB_ILJU[iljuKey]}"</div><p class="text-box">귀하의 태어난 날은 <strong>${iljuKey}</strong>로, 이는 우주의 기운이 귀하라는 존재로 형상화된 날입니다.</p></div>`;
+            
+            let sals = this.calcShinsal(me, pillars.map(p=>p.z));
+            let htmlSal = `<div class="shinsal-grid">`;
+            if(sals.length === 0) htmlSal += `<div class="shinsal-item"><span class="shinsal-name">평온함</span><p class="text-box" style="margin-bottom:0;">특별한 신살의 간섭이 없습니다.</p></div>`;
+            else sals.forEach(s => { if(DB_SHINSAL[s]) htmlSal += `<div class="shinsal-item"><span class="shinsal-name">✦ ${DB_SHINSAL[s].name}</span><p class="text-box" style="font-size:0.95rem; margin-bottom:0;">${DB_SHINSAL[s].desc}</p></div>`; });
+            htmlSal += `</div>`;
+            document.getElementById('result-shinsal').innerHTML = htmlSal;
+
+            // 총평
+            let finalAdvice = `귀하(${meElem} 일간)는 사회적 환경인 <strong>${woljiElem}(${mTen})</strong>의 터전 위에서 살아가게 됩니다. `;
+            if(mTen !== maxTen) finalAdvice += `하지만 내면에는 <strong>${maxTen}</strong>의 욕망이 꿈틀대고 있어 이상과 현실의 조화가 필요합니다. `;
+            else finalAdvice += `겉과 속이 일치하는 강력한 추진력을 가졌습니다. `;
+            
+            document.getElementById('result-total').innerHTML = `
+                <div class="text-box" style="border:4px double #d4af37; padding:30px; background:#fff;">
+                    <h3 style="text-align:center; font-size:1.5rem; color:#1e293b; margin-bottom:30px;">Grand Master's Final Insight</h3>
+                    <p style="font-size:1.1rem; line-height:1.8; text-align:justify;">
+                        ${finalAdvice}
+                        <br><br>
+                        <strong>"${DB_MASTER_ADVICE[mTen]}"</strong>
+                        <br><br>
+                        마스터의 제언: 귀하의 성공 열쇠는 <strong>${mTen}</strong>의 장점을 살리되, <strong>${meElem}</strong> 본연의 기질을 잃지 않는 것입니다. 흐름을 거스르지 말고, 타고난 물상의 흐름대로 나아가십시오.
+                    </p>
+                    <div style="margin-top:40px; text-align:right; font-family:var(--font-serif); font-weight:800; color:var(--gold); font-size:0.9rem;">운점 GRAND MASTER CONSULTING</div>
+                </div>`;
+
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('input-form-area').style.display = 'none';
+            document.getElementById('result-area').style.display = 'block';
+            document.getElementById('btn-save').style.display = 'block';
+            window.scrollTo(0,0);
+        }, 2500);
+    },
+
+    saveImage: function() {
+        window.scrollTo(0,0);
+        html2canvas(document.getElementById('print-target'), {scale:2, useCORS:true}).then(c => {
+            let l = document.createElement('a'); l.download = 'VVIP_Master_Report.png'; l.href = c.toDataURL(); l.click();
+        });
+    }
+};
+
+const ui = {
+    gen: 'm', calType: 'solar',
+    init: function() {
+        const y = document.getElementById('sel-year'), m = document.getElementById('sel-month'), d = document.getElementById('sel-day');
+        for(let i=2026; i>=1940; i--) { let o=document.createElement('option'); o.text=i+'년'; o.value=i; y.add(o); }
+        y.value=1990;
+        for(let i=1; i<=12; i++) { let o=document.createElement('option'); o.text=i+'월'; o.value=i; m.add(o); }
+        for(let i=1; i<=31; i++) { let o=document.createElement('option'); o.text=i+'일'; o.value=i; d.add(o); }
+    },
+    setGender: function(v) { this.gen=v; document.getElementById('btn-male').className=v==='m'?'btn-option selected':'btn-option'; document.getElementById('btn-female').className=v==='f'?'btn-option selected':'btn-option'; },
+    setCal: function(v) { this.calType=v; document.getElementById('btn-solar').className=v==='solar'?'btn-option selected':'btn-option'; document.getElementById('btn-lunar').className=v==='lunar'?'btn-option selected':'btn-option'; }
+};
+
+window.onload = function() { ui.init(); };
+</script>
+</body>
+</html>

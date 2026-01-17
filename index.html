@@ -19,6 +19,13 @@
             box-sizing: border-box;
         }
 
+        /* --- 예쁜 스크롤바 디자인 --- */
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: #1a1a2e; border-radius: 5px; }
+        ::-webkit-scrollbar-thumb { background: #ffd700; border-radius: 10px; border: 2px solid #1a1a2e; }
+        ::-webkit-scrollbar-thumb:hover { background: #ffcc00; }
+        html { scrollbar-width: thin; scrollbar-color: #ffd700 #1a1a2e; }
+
         body {
             font-family: 'ThinRounded', sans-serif;
             background-color: #1a1a2e;
@@ -26,7 +33,7 @@
             overflow-x: hidden;
         }
 
-        /* 상단 헤더 */
+        /* --- 상단 헤더 --- */
         header {
             position: fixed;
             top: 0;
@@ -42,217 +49,345 @@
             border-bottom: 1px solid rgba(255, 215, 0, 0.3);
         }
 
-        .logo {
-            font-size: 2rem;
-            color: #ffd700;
-            text-decoration: none;
-            font-weight: bold;
+        .logo img { height: 40px; width: auto; }
+
+        /* [PC용] 상단 메뉴 (모바일에서는 숨김) */
+        .top-menu { display: flex; gap: 30px; height: 100%; align-items: center; }
+        .menu-item { position: relative; height: 100%; display: flex; align-items: center; cursor: pointer; }
+        .menu-title { color: #fff; text-decoration: none; font-size: 1.1rem; transition: 0.3s; white-space: nowrap; }
+        .menu-item:hover .menu-title { color: #ffd700; }
+
+        /* [PC용] 드롭다운 상세 메뉴 */
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            top: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #16213e;
+            min-width: 160px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+            border: 1px solid #ffd700;
+            border-radius: 0 0 10px 10px;
+            z-index: 1001;
+            flex-direction: column;
+            padding: 10px 0;
+        }
+        .dropdown-content a { color: #e0e0e0; padding: 12px 16px; text-decoration: none; display: block; font-size: 0.95rem; text-align: center; }
+        .dropdown-content a:hover { background-color: #0f3460; color: #ffd700; }
+        
+        /* PC에서는 호버 시 드롭다운 표시 */
+        @media (min-width: 769px) { .menu-item:hover .dropdown-content { display: flex; } }
+
+        /* [모바일용] 햄버거 버튼 (PC에서는 숨김) */
+        .hamburger-btn {
+            display: none; /* 기본 숨김 (PC) */
+            flex-direction: column;
+            justify-content: space-between;
+            width: 30px;
+            height: 21px;
+            cursor: pointer;
+            z-index: 1100;
+        }
+        .hamburger-btn span {
+            display: block;
+            width: 100%;
+            height: 3px;
+            background-color: #ffd700;
+            border-radius: 3px;
             transition: all 0.3s ease;
         }
+        /* 햄버거 버튼 클릭 애니메이션 */
+        .hamburger-btn.active span:nth-child(1) { transform: translateY(9px) rotate(45deg); }
+        .hamburger-btn.active span:nth-child(2) { opacity: 0; }
+        .hamburger-btn.active span:nth-child(3) { transform: translateY(-9px) rotate(-45deg); }
 
-        .top-menu {
-            display: flex;
-            gap: 30px;
-        }
 
-        .top-menu a {
-            color: #fff;
-            text-decoration: none;
-            font-size: 1.1rem;
-            transition: color 0.3s;
-        }
-
-        .top-menu a:hover {
-            color: #ffd700;
-        }
-
-        /* 좌측 사이드바 */
+        /* --- 좌측 사이드바 --- */
         .sidebar {
             position: fixed;
-            top: 70px; /* 헤더 높이만큼 띄움 */
-            left: 0;
+            top: 70px;
+            left: 0; /* PC: 항상 보임 */
             width: 250px;
             height: calc(100vh - 70px);
             background-color: #0f3460;
             padding: 20px;
             overflow-y: auto;
             border-right: 1px solid rgba(255, 215, 0, 0.2);
+            z-index: 1050;
+            transition: left 0.3s ease-in-out; /* 모바일 슬라이드 효과용 */
         }
+        .category-title { font-size: 1.2rem; color: #ffd700; margin-bottom: 10px; display: block; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 5px; }
+        .sub-menu { list-style: none; padding-left: 10px; margin-bottom: 25px; }
+        .sub-menu li { margin: 8px 0; }
+        .sub-menu a { color: #e0e0e0; text-decoration: none; font-size: 0.95rem; transition: 0.2s; }
+        .sub-menu a:hover { color: #fff; padding-left: 5px; }
 
-        .menu-category {
-            margin-bottom: 25px;
+        /* --- 모바일용 배경 오버레이 --- */
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 70px;
+            left: 0;
+            width: 100%;
+            height: calc(100vh - 70px);
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1040;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
+        .overlay.active { display: block; opacity: 1; }
 
-        .category-title {
-            font-size: 1.2rem;
-            color: #ffd700;
-            margin-bottom: 10px;
-            display: block;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding-bottom: 5px;
-        }
-
-        .sub-menu {
-            list-style: none;
-            padding-left: 10px;
-        }
-
-        .sub-menu li {
-            margin: 8px 0;
-        }
-
-        .sub-menu a {
-            color: #e0e0e0;
-            text-decoration: none;
-            font-size: 0.95rem;
-            transition: 0.2s;
-        }
-
-        .sub-menu a:hover {
-            color: #fff;
-            padding-left: 5px;
-        }
-
-        /* 중앙 메인 콘텐츠 구역 */
+        /* --- 메인 영역 --- */
         main {
             margin-top: 70px;
-            margin-left: 250px; /* 사이드바 너비만큼 띄움 */
+            margin-left: 250px; /* PC: 사이드바 공간 확보 */
             padding: 40px;
-            min-height: calc(100vh - 70px);
             display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: calc(100vh - 70px);
+            transition: margin-left 0.3s ease;
+        }
+
+        .main-banner { width: 100%; max-width: 900px; margin-bottom: 40px; }
+        .main-banner img { width: 100%; height: auto; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid rgba(255, 215, 0, 0.1); }
+
+        .bingo-container {
+            width: 100%;
+            max-width: 900px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .bingo-btn {
+            display: flex;
+            align-items: center;
             justify-content: center;
-            align-items: flex-start;
+            text-align: center;
+            text-decoration: none;
+            background-color: #16213e;
+            color: #ffd700;
+            border: 2px solid #ffd700;
+            font-weight: bold;
+            font-size: 1.1rem;
+            padding: 30px 20px;
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
             transition: all 0.3s ease;
         }
+        .bingo-btn:hover { background-color: #ffd700; color: #16213e; transform: translateY(-5px); box-shadow: 0 0 15px rgba(255, 215, 0, 0.5); }
 
-        .main-image-container {
+        /* 사주 설명 영역 */
+        .info-section {
             width: 100%;
-            max-width: 1000px;
-            height: 500px;
-            background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), 
-                        url('https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?ixlib=rb-1.2.1&auto=format&fit=crop&w=1351&q=80');
-            background-size: cover;
-            background-position: center;
+            max-width: 900px;
+            margin-top: 60px;
+            margin-bottom: 40px;
+            padding: 40px;
+            background-color: rgba(22, 33, 62, 0.8);
+            border: 1px solid rgba(255, 215, 0, 0.3);
             border-radius: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            line-height: 1.8;
         }
+        .info-section h3 {
+            color: #ffd700;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            margin-top: 30px;
+            padding-left: 15px;
+            border-left: 4px solid #ffd700;
+        }
+        .info-section h3:first-child { margin-top: 0; }
+        .info-section p { font-size: 1rem; color: #e0e0e0; margin-bottom: 20px; text-align: justify; word-break: keep-all; }
+        .info-highlight { color: #ffd700; font-weight: bold; }
 
-        .main-text {
-            text-align: center;
-            text-shadow: 2px 2px 10px rgba(0,0,0,0.8);
-        }
-
-        .main-text h2 {
-            font-size: 3rem;
-            margin-bottom: 15px;
-        }
+        /* --- [핵심] 모바일 반응형 (768px 이하) --- */
         @media (max-width: 768px) {
-    header {
-        padding: 0 20px;
-        height: 60px; /* 헤더 높이 축소 */
-    }
+            header { padding: 0 20px; height: 60px; }
+            .logo img { height: 28px; }
 
-    .logo {
-        font-size: 1.5rem; /* 로고 작게 */
-    }
+            /* 1. 상단 메뉴 숨기고 햄버거 보이기 */
+            .top-menu { display: none; }
+            .hamburger-btn { display: flex; }
 
-    .top-menu {
-        gap: 12px; /* 메뉴 간격 좁게 */
-    }
+            /* 2. 사이드바 숨기기 (left: -250px) */
+            .sidebar { left: -260px; width: 250px; top: 60px; height: calc(100vh - 60px); }
+            
+            /* 3. 사이드바 열림 상태 (.open 클래스) */
+            .sidebar.open { left: 0; }
 
-    .top-menu a {
-        font-size: 0.9rem; /* 메뉴 글씨 작게 */
-    }
+            /* 4. 메인 영역 여백 제거 (사이드바가 없으므로) */
+            main { margin-left: 0; margin-top: 60px; padding: 20px; }
 
-    .sidebar {
-        display: none; /* 왼쪽 메뉴바 숨김 */
-    }
-
-    main {
-        margin-left: 0; /* 왼쪽 여백 제거 */
-        margin-top: 60px; /* 줄어든 헤더 높이에 맞춤 */
-        padding: 20px;
-    }
-
-    .main-image-container {
-        height: 300px; /* 메인 이미지 높이 조절 */
-    }
-}
-
+            /* 기타 모바일 스타일 */
+            .bingo-container { grid-template-columns: repeat(2, 1fr); gap: 15px; }
+            .bingo-btn { font-size: 0.95rem; padding: 20px 10px; }
+            .info-section { padding: 25px; margin-top: 40px; }
+            .info-section h3 { font-size: 1.3rem; }
+            
+            .overlay { top: 60px; height: calc(100vh - 60px); }
+            
+            /* 모바일 드롭다운 복구 (혹시 필요할 경우를 대비해 display none 처리했던 것을 로직으로 풀거나 여기서 제어) */
+            /* 여기서는 사이드바가 메뉴 역할을 하므로 상단 드롭다운은 아예 display:none 됨 */
+        }
     </style>
 </head>
 <body>
 
     <header>
-        <a href="#" class="logo">운점</a>
+        <a href="#" class="logo"><img src="img_logo1.png" alt="logo"></a>
+        
         <nav class="top-menu">
-            <a href="#">운세</a>
-            <a href="#">사주</a>
-            <a href="#">연애</a>
-            <a href="#">도파민</a>
-            <a href="#">별자리</a>
+            <div class="menu-item">
+                <span class="menu-title">운세</span>
+                <div class="dropdown-content">
+                    <a href="today_fortune.html">오늘의 운세</a>
+                    <a href="new_year_fortune.html">신년 운세</a>
+                    <a href="lifetime_fortune.html">평생 운세</a>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span class="menu-title">사주</span>
+                <div class="dropdown-content">
+                    <a href="manse_calendar.html">정통 만세력</a>
+                    <a href="traditional_saju.html">정통 사주</a>
+                    <a href="my_saju.html">내 사주 풀이</a>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span class="menu-title">연애</span>
+                <div class="dropdown-content">
+                    <a href="love-fortune.html">평생 연애운</a>
+                    <a href="saju-compatibility.html">사주 궁합</a>
+                    <a href="reunion-saju.html">재회 사주</a>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span class="menu-title">도파민</span>
+                <div class="dropdown-content">
+                    <a href="charm-score.html">내 사주 매력</a>
+                    <a href="saju-popularity.html">사주 인기운</a>
+                    <a href="dohwasal-check.html">도화살 진단기</a>
+                    <a href="saju-spotlight.html">주목받는 사주</a>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span class="menu-title">별자리</span>
+                <div class="dropdown-content">
+                    <a href="weekly-zodiac.html">이번주 별자리</a>
+                    <a href="monthly-zodiac.html">이번달 별자리</a>
+                </div>
+            </div>
         </nav>
+
+        <div class="hamburger-btn" onclick="toggleSidebar()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
     </header>
 
-    <aside class="sidebar">
+    <div class="overlay" onclick="toggleSidebar()"></div>
+
+    <aside class="sidebar" id="sidebar">
         <div class="menu-category">
             <span class="category-title">운세</span>
             <ul class="sub-menu">
-                <li><a href="#">오늘의 운세</a></li>
-                <li><a href="#">신년 운세</a></li>
-                <li><a href="#">평생 운세</a></li>
+                <li><a href="today_fortune.html">오늘의 운세</a></li>
+                <li><a href="new_year_fortune.html">신년 운세</a></li>
+                <li><a href="lifetime_fortune.html">평생 운세</a></li>
             </ul>
         </div>
-
         <div class="menu-category">
             <span class="category-title">사주</span>
             <ul class="sub-menu">
-                <li><a href="#">정통 사주</a></li>
-                <li><a href="#">내 사주 풀이</a></li>
-                <li><a href="#">신년 사주</a></li>
+                <li><a href="manse_calendar.html">정통 만세력</a></li>
+                <li><a href="traditional_saju.html">정통 사주</a></li>
+                <li><a href="my_saju.html">내 사주 풀이</a></li>
             </ul>
         </div>
-
         <div class="menu-category">
             <span class="category-title">연애</span>
             <ul class="sub-menu">
-                <li><a href="#">평생 연애운</a></li>
-                <li><a href="#">사주 궁합</a></li>
-                <li><a href="#">재회 사주</a></li>
+                <li><a href="love-fortune.html">평생 연애운</a></li>
+                <li><a href="saju-compatibility.html">사주 궁합</a></li>
+                <li><a href="reunion-saju.html">재회 사주</a></li>
             </ul>
         </div>
-
         <div class="menu-category">
             <span class="category-title">도파민</span>
             <ul class="sub-menu">
-                <li><a href="#">내 사주의 매력도</a></li>
-                <li><a href="#">사주에 있는 인기운</a></li>
-                <li><a href="#">도화살 확인하기</a></li>
-                <li><a href="#">주목받는 사주</a></li>
+                <li><a href="charm-score.html">내 사주의 매력도</a></li>
+                <li><a href="saju-popularity.html">사주에 있는 인기운</a></li>
+                <li><a href="dohwasal-check.html">도화살 진단기</a></li>
+                <li><a href="saju-spotlight.html">주목받는 사주</a></li>
             </ul>
         </div>
-
         <div class="menu-category">
             <span class="category-title">별자리</span>
             <ul class="sub-menu">
-                <li><a href="#">오늘의 별자리 운세</a></li>
-                <li><a href="#">이번주 별자리 운세</a></li>
-                <li><a href="#">이번달 별자리 운세</a></li>
+                <li><a href="weekly-zodiac.html">이번주 별자리 운세</a></li>
+                <li><a href="monthly-zodiac.html">이번달 별자리 운세</a></li>
             </ul>
         </div>
     </aside>
 
     <main>
-        <div class="main-image-container">
-            <div class="main-text">
-                <h2>나를 읽는 시간, 운점</h2>
-                <p>오늘 당신의 운세를 알아보세요</p>
-            </div>
+        <div class="main-banner">
+            <img src="main_image.png" alt="메인 배너">
         </div>
+
+        <div class="bingo-container">
+            <a href="today_fortune.html" class="bingo-btn">오늘의 운세</a>
+            <a href="new_year_fortune.html" class="bingo-btn">신년운세</a>
+            <a href="manse_calendar.html" class="bingo-btn">정통 만세력</a>
+            <a href="traditional_saju.html" class="bingo-btn">정통사주</a>
+            <a href="love-fortune.html" class="bingo-btn">평생 연애운</a>
+            <a href="dohwasal-check.html" class="bingo-btn">도화살 확인하기</a>
+        </div>
+
+        <article class="info-section">
+            <h3>사주팔자(四柱八字)란 무엇인가?</h3>
+            <p>
+                사주(四柱)란 사람이 태어난 <span class="info-highlight">연(年), 월(月), 일(日), 시(時)</span>의 네 가지 기둥을 의미합니다. 이 네 개의 기둥에는 각각 하늘의 기운을 뜻하는 천간(天干)과 땅의 기운을 뜻하는 지지(地支)가 하나씩 배속되어 총 여덟 개의 글자, 즉 팔자(八字)를 이루게 됩니다. 이를 통틀어 우리는 '사주팔자'라고 부릅니다.
+            </p>
+            <p>
+                사주는 단순한 미신이 아닙니다. 이것은 수천 년 동안 동양에서 연구되어 온 <span class="info-highlight">통계학이자 천문학</span>이며, 개인이 태어나는 순간 우주로부터 부여받은 고유한 에너지의 지도를 해석하는 학문입니다. 내가 태어난 순간의 계절, 온도, 시간의 기운이 나의 성향과 길흉화복에 어떠한 영향을 미치는지 분석하는 것이 바로 사주명리학의 핵심입니다.
+            </p>
+
+            <h3>음양오행의 조화</h3>
+            <p>
+                사주를 구성하는 근본 원리는 <span class="info-highlight">음양(陰陽)</span>과 <span class="info-highlight">오행(五行)</span>입니다. 세상 만물은 음과 양의 조화로 이루어져 있으며, 목(나무), 화(불), 토(흙), 금(쇠), 수(물)의 다섯 가지 원소가 서로를 돕거나(상생), 서로를 제어하며(상극) 끊임없이 순환합니다.
+            </p>
+            <p>
+                나의 사주에 불(火)의 기운이 너무 강하다면 물(水)로 다스려야 하고, 나무(木)가 너무 약하다면 물(水)로 길러주어야 합니다. 이처럼 사주 풀이는 내 안에 과한 것은 덜어내고 부족한 것은 채워주며, 내 삶의 균형점을 찾아가는 지혜의 과정입니다.
+            </p>
+
+            <h3>운명은 정해진 것인가?</h3>
+            <p>
+                많은 분들이 "사주가 나쁘면 평생 불행한가요?"라고 묻습니다. 하지만 사주는 정해진 결말을 보여주는 예언서가 아닙니다. 사주는 내가 타고난 <span class="info-highlight">'재료'</span>와 같습니다. 어떤 사람은 단단한 강철을, 어떤 사람은 부드러운 흙을 가지고 태어납니다. 강철은 칼이 될 수도 있고 건물의 뼈대가 될 수도 있으며, 흙은 도자기가 될 수도 있고 비옥한 밭이 될 수도 있습니다.
+            </p>
+            <p>
+                운세(運勢)란 움직이는 형세입니다. 타고난 명(命)은 바꿀 수 없지만, 다가오는 운(運)을 어떻게 활용하느냐에 따라 인생의 흐름은 얼마든지 바뀔 수 있습니다. 비가 오는 것을 막을 수는 없지만, 우산을 준비할 수는 있는 것처럼 말이죠. 운점을 통해 당신의 계절을 미리 알고, 다가올 미래를 현명하게 준비해 보세요.
+            </p>
+        </article>
     </main>
 
+    <script>
+        function toggleSidebar() {
+            // 모바일 화면(768px 이하)에서만 작동하도록 조건 추가 가능하지만,
+            // 햄버거 버튼이 PC에서는 display:none이므로 클릭될 일이 없음.
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.querySelector('.overlay');
+            const hamburger = document.querySelector('.hamburger-btn');
+
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+            hamburger.classList.toggle('active');
+        }
+    </script>
 </body>
 </html>

@@ -13,105 +13,167 @@
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
+
+        :root {
+            /* 인덱스 테마 (Dark Navy & Gold) */
+            --bg-color: #1a1a2e;
+            --header-bg: #16213e;
+            --sidebar-bg: #0f3460;
+            --accent-color: #ffd700; /* 골드 */
+            --highlight-color: #ffcc00;
+            --text-color: #ffffff;
+            --panel-bg: rgba(22, 33, 62, 0.8);
+            --border-color: rgba(255, 215, 0, 0.3);
+            --overlay-bg: rgba(0, 0, 0, 0.7);
+        }
+
         /* 스크롤바 커스텀 */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); }
-        ::-webkit-scrollbar-thumb { background: rgba(255, 215, 0, 0.3); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 215, 0, 0.5); }
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: var(--bg-color); border-radius: 5px; }
+        ::-webkit-scrollbar-thumb { background: var(--accent-color); border-radius: 10px; border: 2px solid var(--bg-color); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--highlight-color); }
+        html { scrollbar-width: thin; scrollbar-color: var(--accent-color) var(--bg-color); }
 
         body {
             font-family: 'ThinRounded', sans-serif;
-            background-color: #1a1a2e; color: #ffffff;
-            line-height: 1.8; overflow-x: hidden; font-size: 19px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.8; overflow-x: hidden; font-size: 18px;
         }
 
-        /* 헤더 스타일 */
+        /* --- [통일] 상단 헤더 --- */
         header {
-            position: fixed; top: 0; left: 0; width: 100%; height: 80px;
-            background-color: #16213e; display: flex; justify-content: space-between;
-            align-items: center; padding: 0 30px; z-index: 1000;
-            border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+            position: fixed; top: 0; left: 0; width: 100%; height: 70px;
+            background-color: var(--header-bg); display: flex; justify-content: space-between; align-items: center;
+            padding: 0 40px; z-index: 1000; border-bottom: 1px solid var(--border-color);
         }
-        .logo { font-size: 2.2rem; color: #ffd700; text-decoration: none; font-weight: bold; }
-        .top-menu { display: flex; gap: 20px; }
-        .top-menu a { color: #fff; text-decoration: none; font-size: 1.1rem; cursor: pointer; }
 
-        /* 사이드바 스타일 (PC 기본) */
+        .logo img { height: 40px; width: auto; }
+
+        /* [PC용] 상단 메뉴 */
+        .top-menu { display: flex; gap: 30px; height: 100%; align-items: center; }
+        .menu-item { position: relative; height: 100%; display: flex; align-items: center; cursor: pointer; }
+        .menu-title { color: #e0e0e0; text-decoration: none; font-size: 1.1rem; transition: 0.3s; white-space: nowrap; }
+        .menu-item:hover .menu-title { color: var(--accent-color); }
+
+        /* [PC용] 드롭다운 */
+        .dropdown-content {
+            display: none; position: absolute; top: 70px; left: 50%; transform: translateX(-50%);
+            background-color: var(--header-bg); min-width: 160px; box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+            border: 1px solid var(--accent-color); border-radius: 0 0 10px 10px; z-index: 1001; flex-direction: column; padding: 10px 0;
+        }
+        .dropdown-content a { color: #e0e0e0; padding: 12px 16px; text-decoration: none; display: block; font-size: 0.95rem; text-align: center; }
+        .dropdown-content a:hover { background-color: var(--sidebar-bg); color: var(--accent-color); }
+        @media (min-width: 769px) { .menu-item:hover .dropdown-content { display: flex; } }
+
+        /* [모바일용] 햄버거 버튼 */
+        .hamburger-btn {
+            display: none; flex-direction: column; justify-content: space-between;
+            width: 30px; height: 21px; cursor: pointer; z-index: 1100;
+        }
+        .hamburger-btn span {
+            display: block; width: 100%; height: 3px;
+            background-color: var(--accent-color);
+            border-radius: 3px; transition: all 0.3s ease;
+        }
+        .hamburger-btn.active span:nth-child(1) { transform: translateY(9px) rotate(45deg); }
+        .hamburger-btn.active span:nth-child(2) { opacity: 0; }
+        .hamburger-btn.active span:nth-child(3) { transform: translateY(-9px) rotate(-45deg); }
+
+        /* --- [통일] 사이드바 --- */
         .sidebar {
-            position: fixed; top: 80px; left: 0; width: 280px;
-            height: calc(100vh - 80px); background-color: #0f3460;
-            padding: 25px; overflow-y: auto; border-right: 1px solid rgba(255, 215, 0, 0.2);
-            transition: transform 0.3s ease; /* 부드러운 전환 효과 */
+            position: fixed; top: 70px; left: 0; width: 250px; height: calc(100vh - 70px);
+            background-color: var(--sidebar-bg); padding: 20px; overflow-y: auto; 
+            border-right: 1px solid rgba(255, 215, 0, 0.2);
+            z-index: 1050; transition: left 0.3s ease-in-out;
         }
-        .menu-category { margin-bottom: 30px; }
-        .category-title { font-size: 1.3rem; color: #ffd700; margin-bottom: 12px; display: block; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 5px; }
-        .sub-menu { list-style: none; padding-left: 10px; }
-        .sub-menu li { margin: 10px 0; }
-        .sub-menu a { color: #e0e0e0; text-decoration: none; font-size: 1.1rem; cursor: pointer; transition: 0.2s; }
-        .sub-menu a:hover { color: #ffd700; padding-left: 5px; }
+        .category-title { font-size: 1.2rem; color: var(--accent-color); margin-bottom: 10px; display: block; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 5px; }
+        .sub-menu { list-style: none; padding-left: 10px; margin-bottom: 25px; }
+        .sub-menu li { margin: 8px 0; }
+        .sub-menu a { color: #e0e0e0; text-decoration: none; font-size: 0.95rem; transition: 0.2s; }
+        .sub-menu a:hover { color: #fff; padding-left: 5px; color: var(--accent-color); }
 
-        /* 메인 콘텐츠 영역 (PC 기본) */
-        main {
-            margin-top: 80px; margin-left: 280px; /* 사이드바 너비만큼 여백 */
-            padding: 50px 30px; display: flex; justify-content: center;
-            transition: all 0.3s ease;
+        /* [모바일용] 오버레이 */
+        .overlay {
+            display: none; position: fixed; top: 70px; left: 0;
+            width: 100%; height: calc(100vh - 70px);
+            background-color: var(--overlay-bg); z-index: 1040; opacity: 0; transition: opacity 0.3s ease;
         }
+        .overlay.active { display: block; opacity: 1; }
+
+        /* --- 메인 영역 --- */
+        main {
+            margin-top: 70px; margin-left: 250px; padding: 40px;
+            display: flex; flex-direction: column; align-items: center; min-height: calc(100vh - 70px);
+            transition: margin-left 0.3s ease;
+        }
+
         .fortune-page { width: 100%; max-width: 800px; text-align: center; }
-        .page-title { font-size: 2.8rem; color: #ffd700; margin-bottom: 35px; }
+        .page-title { font-size: 2.8rem; color: var(--accent-color); margin-bottom: 35px; }
 
         /* 입력 카드 스타일 */
         .input-card {
             background: rgba(255, 255, 255, 0.05); padding: 35px; border-radius: 20px;
-            border: 1px solid rgba(255, 215, 0, 0.2); text-align: left;
+            border: 1px solid var(--border-color); text-align: left;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
         .input-row { margin-bottom: 25px; }
-        .input-row label { display: block; margin-bottom: 12px; color: #ffd700; font-size: 1.2rem; }
+        .input-row label { display: block; margin-bottom: 12px; color: var(--accent-color); font-size: 1.2rem; font-weight: bold; }
         
         .select-group { display: flex; gap: 10px; }
         select, input[type="text"] {
-            flex: 1; padding: 14px; background: rgba(0, 0, 0, 0.5);
+            width: 100%; padding: 14px; background: rgba(0, 0, 0, 0.5);
             border: 1px solid rgba(255, 255, 255, 0.2); color: white;
-            border-radius: 10px; font-family: 'ThinRounded'; font-size: 1.1rem;
+            border-radius: 10px; font-family: 'ThinRounded'; font-size: 1.1rem; outline: none;
         }
+        select:focus, input:focus { border-color: var(--accent-color); }
 
         .type-toggle { display: flex; gap: 10px; margin-top: 10px; }
-        .type-btn { flex: 1; padding: 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px; cursor: pointer; text-align: center; }
-        .type-btn.active { background: #ffd700; color: #1a1a2e; border-color: #ffd700; font-weight: bold; }
+        .type-btn { flex: 1; padding: 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px; cursor: pointer; text-align: center; transition: 0.3s; }
+        .type-btn.active { background: var(--accent-color); color: #1a1a2e; border-color: var(--accent-color); font-weight: bold; }
 
         .submit-btn {
-            width: 100%; padding: 18px; background: #ffd700; color: #1a1a2e;
+            width: 100%; padding: 18px; background: var(--accent-color); color: #1a1a2e;
             border: none; border-radius: 10px; font-size: 1.4rem; font-weight: bold;
-            cursor: pointer; font-family: 'ThinRounded'; margin-top: 15px;
+            cursor: pointer; font-family: 'ThinRounded'; margin-top: 15px; transition: 0.3s;
         }
+        .submit-btn:hover { background: var(--highlight-color); transform: translateY(-2px); }
 
         /* 결과 영역 스타일 */
-        #result-area { margin-top: 50px; display: none; text-align: left; }
-        .score-box { background: rgba(255, 215, 0, 0.1); border-radius: 20px; padding: 25px; text-align: center; margin-bottom: 25px; border: 1px solid #ffd700; }
+        #result-area { margin-top: 50px; display: none; text-align: left; animation: fadeInUp 0.8s ease; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+        .score-box { background: rgba(255, 215, 0, 0.1); border-radius: 20px; padding: 25px; text-align: center; margin-bottom: 25px; border: 1px solid var(--accent-color); }
+        
         .lucky-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; }
         .lucky-item { background: rgba(255,255,255,0.07); padding: 18px 5px; border-radius: 15px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
-        .lucky-label { font-size: 0.9rem; color: #ffd700; display: block; margin-bottom: 8px; }
-        .result-detail { background: rgba(255, 255, 255, 0.04); padding: 30px; border-radius: 20px; white-space: pre-wrap; line-height: 2; font-size: 1.25rem; border-left: 6px solid #ffd700; }
+        .lucky-label { font-size: 0.9rem; color: var(--accent-color); display: block; margin-bottom: 8px; }
+        
+        .result-detail { 
+            background: rgba(255, 255, 255, 0.04); padding: 30px; border-radius: 20px; 
+            white-space: pre-wrap; line-height: 2; font-size: 1.15rem; border-left: 6px solid var(--accent-color); 
+            text-align: justify; word-break: keep-all;
+        }
 
-        /* [중요] 모바일 반응형 처리 */
+        /* --- [통일] 반응형 로직 (768px 이하) --- */
         @media (max-width: 768px) {
-            header { padding: 0 15px; height: 60px; }
-            .logo { font-size: 1.5rem; }
+            header { padding: 0 20px; height: 60px; }
+            .logo img { height: 28px; }
             
-            /* 모바일에서 상단 메뉴 간격 조절 */
-            .top-menu { gap: 10px; }
-            .top-menu a { font-size: 0.9rem; }
+            /* 메뉴 제어 */
+            .top-menu { display: none; }
+            .hamburger-btn { display: flex; }
 
-            /* 모바일에서 사이드바 숨김 */
-            .sidebar { display: none !important; }
+            /* 사이드바 제어 */
+            .sidebar { left: -260px; top: 60px; height: calc(100vh - 60px); width: 250px; }
+            .sidebar.open { left: 0; }
+            .overlay { top: 60px; height: calc(100vh - 60px); }
 
-            /* 모바일에서 메인 영역 여백 제거 (전체 화면 사용) */
+            /* 메인 제어 */
             main { margin-left: 0; margin-top: 60px; padding: 20px; }
             
             .page-title { font-size: 2rem; margin-bottom: 25px; }
             .input-card { padding: 20px; }
-            
-            /* 결과 행운 아이템 그리드 1줄로 변경 */
             .lucky-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
         }
     </style>
@@ -119,25 +181,99 @@
 <body>
 
     <header>
-        <a href="index.html" class="logo">운점</a>
+        <a href="index.html" class="logo"><img src="img_logo1.png" alt="logo"></a>
+        
         <nav class="top-menu">
-            <a>운세</a><a>사주</a><a>연애</a><a>도파민</a><a>별자리</a>
+            <div class="menu-item">
+                <span class="menu-title">운세</span>
+                <div class="dropdown-content">
+                    <a href="today_fortune.html">오늘의 운세</a>
+                    <a href="new_year_fortune.html">신년 운세</a>
+                    <a href="lifetime_fortune.html">평생 운세</a>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span class="menu-title">사주</span>
+                <div class="dropdown-content">
+                    <a href="manse_calendar.html">정통 만세력</a>
+                    <a href="traditional_saju.html">정통 사주</a>
+                    <a href="my_saju.html">내 사주 풀이</a>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span class="menu-title">연애</span>
+                <div class="dropdown-content">
+                    <a href="love-fortune.html">평생 연애운</a>
+                    <a href="saju-compatibility.html">사주 궁합</a>
+                    <a href="reunion-saju.html">재회 사주</a>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span class="menu-title">도파민</span>
+                <div class="dropdown-content">
+                    <a href="charm-score.html">내 사주 매력</a>
+                    <a href="saju-popularity.html">사주 인기운</a>
+                    <a href="dohwasal-check.html">도화살 진단기</a>
+                    <a href="saju-spotlight.html">주목받는 사주</a>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span class="menu-title">별자리</span>
+                <div class="dropdown-content">
+                    <a href="weekly-zodiac.html">이번주 별자리</a>
+                    <a href="monthly-zodiac.html">이번달 별자리</a>
+                </div>
+            </div>
         </nav>
+
+        <div class="hamburger-btn" onclick="toggleSidebar()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
     </header>
 
-    <aside class="sidebar">
+    <div class="overlay" onclick="toggleSidebar()"></div>
+
+    <aside class="sidebar" id="sidebar">
         <div class="menu-category">
             <span class="category-title">운세</span>
             <ul class="sub-menu">
-                <li><a href="today_fortune.html">오늘의 운세</a></li>
-                <li><a>신년 운세</a></li>
+                <li><a href="today_fortune.html" style="color:var(--accent-color);">오늘의 운세</a></li>
+                <li><a href="new_year_fortune.html">신년 운세</a></li>
+                <li><a href="lifetime_fortune.html">평생 운세</a></li>
             </ul>
         </div>
         <div class="menu-category">
             <span class="category-title">사주</span>
             <ul class="sub-menu">
-                <li><a>정통 사주</a></li>
-                <li><a>내 사주 풀이</a></li>
+                <li><a href="manse_calendar.html">정통 만세력</a></li>
+                <li><a href="traditional_saju.html">정통 사주</a></li>
+                <li><a href="my_saju.html">내 사주 풀이</a></li>
+            </ul>
+        </div>
+        <div class="menu-category">
+            <span class="category-title">연애</span>
+            <ul class="sub-menu">
+                <li><a href="love-fortune.html">평생 연애운</a></li>
+                <li><a href="saju-compatibility.html">사주 궁합</a></li>
+                <li><a href="reunion-saju.html">재회 사주</a></li>
+            </ul>
+        </div>
+        <div class="menu-category">
+            <span class="category-title">도파민</span>
+            <ul class="sub-menu">
+                <li><a href="charm-score.html">내 사주의 매력도</a></li>
+                <li><a href="saju-popularity.html">사주에 있는 인기운</a></li>
+                <li><a href="dohwasal-check.html">도화살 진단기</a></li>
+                <li><a href="saju-spotlight.html">주목받는 사주</a></li>
+            </ul>
+        </div>
+        <div class="menu-category">
+            <span class="category-title">별자리</span>
+            <ul class="sub-menu">
+                <li><a href="weekly-zodiac.html">이번주 별자리 운세</a></li>
+                <li><a href="monthly-zodiac.html">이번달 별자리 운세</a></li>
             </ul>
         </div>
     </aside>
@@ -187,11 +323,23 @@
                     <div class="lucky-item"><span class="lucky-label">행운 소품</span><span id="luckItem"></span></div>
                 </div>
                 <div class="result-detail" id="fortuneText"></div>
+                <button class="submit-btn" style="background: #0f3460; border: 1px solid #ffd700; margin-top:20px;" onclick="location.reload()">다시 보기</button>
             </div>
         </div>
     </main>
 
     <script>
+        // [추가] 햄버거 토글 함수
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.querySelector('.overlay');
+            const hamburger = document.querySelector('.hamburger-btn');
+
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+            hamburger.classList.toggle('active');
+        }
+
         let calendarType = 'solar';
         function setCalendar(type) {
             calendarType = type;
@@ -204,11 +352,7 @@
         for(let i=1; i<=12; i++) { ms.add(new Option(i+'월', i)); }
         for(let i=1; i<=31; i++) { ds.add(new Option(i+'일', i)); }
 
-        // [중요] 한자(Chinese Char) 키값 매핑 - 라이브러리 반환값과 일치시킴
         const hanjaGans = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"];
-        const hanjaZhis = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"];
-        
-        // 지지 -> 오행 매핑 (한자 키)
         const zhiToWuxing = {
             "子":"수", "丑":"토", "寅":"목", "卯":"목", "辰":"토", "巳":"화", 
             "午":"화", "未":"토", "申":"금", "酉":"금", "戌":"토", "亥":"수"
@@ -229,16 +373,13 @@
                 }
             } catch(e) { alert("날짜를 확인해 주세요."); return; }
 
-            // 1. 사주 데이터 추출 (한자로 나옴)
-            const meGan = userLunar.getEightChar().getDayGan(); // 예: '丁'
+            const meGan = userLunar.getEightChar().getDayGan();
             const todayLunar = Lunar.fromDate(new Date());
-            const tGan = todayLunar.getEightChar().getDayGan(); // 예: '己'
-            const tZhi = todayLunar.getEightChar().getDayZhi(); // 예: '丑'
+            const tGan = todayLunar.getEightChar().getDayGan();
+            const tZhi = todayLunar.getEightChar().getDayZhi();
 
-            // 2. 오행 및 십신 계산
-            const tZhiWuxing = zhiToWuxing[tZhi]; // 한자 키로 찾으므로 정확함 ('토')
+            const tZhiWuxing = zhiToWuxing[tZhi]; 
             
-            // 십신 계산 (인덱스 로직)
             const meIdx = hanjaGans.indexOf(meGan);
             const tIdx = hanjaGans.indexOf(tGan);
             
@@ -249,7 +390,6 @@
                 shipShen = shipShens[diff];
             }
 
-            // 3. 서술형 데이터 베이스 (한자나 한글 키를 혼용하지 않고 결과값 기준으로 매핑)
             const introSet = [
                 `오늘 ${name}님의 하루에는 '${tGan}${tZhi}'의 기운이 찾아왔습니다.`,
                 `${name}님의 본인 기운인 '${meGan}'이 오늘 '${tGan}'을 만나 반응하는 날입니다.`,
@@ -293,11 +433,9 @@
                 "亥": "넓은 마음으로 상황을 이해하고 포용하면 지혜가 생깁니다."
             };
 
-            // 출력용 컬러맵
             const colorMap = {"목":"초록색","화":"빨간색","토":"노란색","금":"흰색","수":"검정색"};
             const dirMap = {"목":"동쪽","화":"남쪽","토":"중앙","금":"서쪽","수":"북쪽"};
 
-            // 출력
             document.getElementById('scoreDisplay').innerText = `행운 점수: ${Math.floor(Math.random() * 15) + 85}점`;
             
             document.getElementById('luckColor').innerText = colorMap[tZhiWuxing] || "흰색";
