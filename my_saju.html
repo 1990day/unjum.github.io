@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-       <meta charset="UTF-8">
+    <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+    <link rel="icon" href="/favicon.png" type="image/png">
     <title>운점 - VVIP 내 사주 정밀 감정</title>
     <meta name="description" content="운점 - 당신의 모든 운세">
-<meta name="keywords" content="운점, 사주, 무료사주, 오늘의운세, 운점운세, 무료궁합, 신년운세, 병오년운세, 정통만세력, 운점만세력, 무료만세력, 만세력확인, 무료사주풀이, 정통사주, 운점정통사주, 도화살진단, 운점도화살진단, 운점평생운세, 운점별자리운세, 운점사주, 운점사주풀이">
+    <meta name="keywords" content="운점, 사주, 무료사주, 오늘의운세, 운점운세, 무료궁합, 신년운세, 병오년운세, 정통만세력, 운점만세력, 무료만세력, 만세력확인, 무료사주풀이, 정통사주, 운점정통사주, 도화살진단, 운점도화살진단, 운점평생운세, 운점별자리운세, 운점사주, 운점사주풀이">
     <meta property="og:type" content="website"> 
     <meta property="og:title" content="운점 - VVIP 내 사주 정밀 감정">
     <meta property="og:description" content="운점 - VVIP 내 사주 정밀 감정">
@@ -57,34 +57,56 @@
         }
         @keyframes spin { 100% {transform: rotate(360deg);} }
 
-        /* --- [수정] 헤더 스타일 --- */
+        /* --- [수정 완료] 헤더 스타일 --- */
         header {
             position: fixed; top: 0; left: 0; width: 100%; height: var(--header-h);
-            background-color: var(--bg-dark); display: flex; justify-content: space-between;
-            align-items: center; padding: 0 20px; z-index: 1000;
-            border-bottom: 2px solid var(--gold);
+            background-color: var(--bg-dark); 
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 40px; z-index: 1000;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.3);
             box-shadow: 0 4px 20px rgba(0,0,0,0.5);
         }
-        /* 로고 이미지 복구 */
-        .logo img { height: 40px; width: auto; }
 
-        /* [PC용] 상단 메뉴 */
-        .top-nav { display: flex; gap: 20px; align-items: center; }
-        .top-nav a { 
-            color: #94a3b8; font-size: 0.95rem; text-decoration: none; font-family: var(--font-sans); cursor: pointer; 
-            transition: color 0.3s;
+        .logo img { height: 36px; width: auto; }
+
+        /* [PC용] 상단 메뉴 스타일 (드롭다운 적용) */
+        .top-menu { 
+            display: flex; gap: 30px; height: 100%; align-items: center; list-style: none;
         }
-        .top-nav a:hover { color: var(--gold); }
+        .menu-item { 
+            position: relative; height: 100%; display: flex; align-items: center; cursor: pointer; 
+        }
+        .menu-title { 
+            color: #94a3b8; text-decoration: none; font-size: 1rem; font-family: var(--font-sans); 
+            transition: 0.3s; white-space: nowrap; font-weight: 500;
+        }
+        .menu-item:hover .menu-title { color: var(--gold); }
+
+        /* [PC용] 드롭다운 상세 메뉴 */
+        .dropdown-content {
+            display: none; position: absolute; top: var(--header-h); left: 50%; transform: translateX(-50%);
+            background-color: var(--bg-dark); min-width: 160px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+            border: 1px solid var(--gold); border-radius: 0 0 8px 8px;
+            z-index: 1001; flex-direction: column; padding: 10px 0;
+        }
+        .dropdown-content a { 
+            color: #e0e0e0; padding: 12px 16px; text-decoration: none; display: block; 
+            font-size: 0.95rem; text-align: center; font-family: var(--font-sans);
+        }
+        .dropdown-content a:hover { background-color: #1e293b; color: var(--gold); }
+        
+        /* PC에서는 호버 시 드롭다운 표시 */
+        @media (min-width: 769px) { .menu-item:hover .dropdown-content { display: flex; } }
 
         /* [모바일용] 햄버거 버튼 (PC 숨김) */
         .hamburger-btn {
             display: none; flex-direction: column; justify-content: space-between;
-            width: 30px; height: 21px; cursor: pointer; z-index: 1100;
+            width: 26px; height: 20px; cursor: pointer; z-index: 1100;
         }
         .hamburger-btn span {
             display: block; width: 100%; height: 3px;
-            background-color: var(--gold); /* 테마 컬러 적용 */
-            border-radius: 3px; transition: all 0.3s ease;
+            background-color: var(--gold); border-radius: 2px; transition: all 0.3s ease;
         }
         .hamburger-btn.active span:nth-child(1) { transform: translateY(9px) rotate(45deg); }
         .hamburger-btn.active span:nth-child(2) { opacity: 0; }
@@ -95,30 +117,29 @@
             position: fixed; top: var(--header-h); left: 0; width: var(--sidebar-w);
             height: calc(100vh - var(--header-h)); background-color: var(--bg-sidebar);
             padding: 30px 20px; overflow-y: auto; border-right: 1px solid #333; z-index: 1050;
-            transition: left 0.3s ease-in-out; /* 슬라이드 효과 */
+            transition: left 0.3s ease-in-out; 
         }
         
-        /* 사이드바 메뉴 스타일 추가 */
         .menu-group-title {
             font-family: var(--font-sans); font-size: 0.9rem; color: var(--gold); font-weight: 700;
-            margin-bottom: 15px; display: block; opacity: 0.9; 
-            border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; margin-top: 20px;
+            margin-bottom: 10px; display: block; opacity: 0.9; 
+            border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; margin-top: 20px;
         }
         .menu-list { list-style: none; margin-bottom: 20px; padding: 0; }
         .menu-list li a {
-            display: block; padding: 12px 10px; color: #cbd5e1; text-decoration: none;
+            display: block; padding: 10px 10px; color: #cbd5e1; text-decoration: none;
             font-family: var(--font-sans); font-size: 0.95rem; border-radius: 4px;
             transition: 0.2s; cursor: pointer;
         }
-        .menu-list li a:hover, .menu-list li a.active {
+        .menu-list li a:hover {
             background: rgba(212, 175, 55, 0.1); color: var(--gold); font-weight: bold;
         }
 
-        /* [추가] 모바일용 오버레이 */
+        /* 오버레이 */
         .overlay {
             display: none; position: fixed; top: var(--header-h); left: 0;
             width: 100%; height: calc(100vh - var(--header-h));
-            background-color: rgba(0, 0, 0, 0.7); z-index: 90; opacity: 0; transition: opacity 0.3s ease;
+            background-color: rgba(0, 0, 0, 0.7); z-index: 900; opacity: 0; transition: opacity 0.3s ease;
         }
         .overlay.active { display: block; opacity: 1; }
 
@@ -147,8 +168,10 @@
             flex: 1; padding: 14px; border: 1px solid #cbd5e1; 
             font-size: 1rem; font-family: var(--font-sans); 
             background: #f8fafc; border-radius: 6px; 
-            -webkit-appearance: none; 
+            -webkit-appearance: none; outline: none;
         }
+        input:focus, select:focus { border-color: var(--gold); }
+
         .btn-option { 
             flex: 1; padding: 14px; border: 1px solid #cbd5e1; background: #f1f5f9; cursor: pointer; text-align: center; 
             font-family: var(--font-sans); font-weight: 600; color: var(--text-gray); border-radius: 6px; font-size: 0.95rem;
@@ -223,21 +246,21 @@
             z-index: 2000; display: none; 
         }
 
-        /* --- [수정] 반응형 (768px 이하) --- */
+        /* --- [수정 완료] 반응형 (768px 이하) --- */
         @media (max-width: 768px) {
             header { padding: 0 20px; height: 60px; }
-            .logo img { height: 28px; } /* 모바일에서 로고 크기 조정 */
+            .logo img { height: 28px; }
             
-            /* 메뉴 제어 */
-            .top-nav { display: none; }
+            /* 1. 상단 메뉴 숨기고 햄버거 보이기 */
+            .top-menu { display: none; }
             .hamburger-btn { display: flex; }
 
-            /* 사이드바 제어 */
+            /* 2. 사이드바 숨기기 */
             aside.sidebar { left: -270px; top: 60px; height: calc(100vh - 60px); }
             aside.sidebar.open { left: 0; }
             .overlay { top: 60px; height: calc(100vh - 60px); }
 
-            /* 메인 영역 제어 */
+            /* 3. 메인 영역 제어 */
             main { margin-left: 0; margin-top: 60px; padding: 20px; }
             
             /* 모바일 최적화 스타일 */
@@ -273,12 +296,50 @@
 
     <header>
         <a href="index.html" class="logo"><img src="img_logo1.png" alt="logo"></a>
-        <nav class="top-nav">
-            <a href="today_fortune.html">운세</a>
-            <a href="manse_calendar.html">사주</a>
-            <a href="love-fortune.html">연애</a>
-            <a href="charm-score.html">도파민</a>
-            <a href="weekly-zodiac.html">별자리</a>
+        
+        <nav class="top-menu">
+            <div class="menu-item">
+                <span class="menu-title">운세</span>
+                <div class="dropdown-content">
+                    <a href="today_fortune.html">오늘의 운세</a>
+                    <a href="new_year_fortune.html">신년 운세</a>
+                    <a href="lifetime_fortune.html">평생 운세</a>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span class="menu-title">사주</span>
+                <div class="dropdown-content">
+                    <a href="manse_calendar.html">정통 만세력</a>
+                    <a href="traditional_saju.html">정통 사주</a>
+                    <a href="my_saju.html">내 사주 풀이</a>
+                    <a href="positive-saju.html">좋은 말만 하는 사주</a>
+                    <a href="negative-saju.html">나쁜 말만 하는 사주</a>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span class="menu-title">연애</span>
+                <div class="dropdown-content">
+                    <a href="love-fortune.html">평생 연애운</a>
+                    <a href="saju-compatibility.html">사주 궁합</a>
+                    <a href="reunion-saju.html">재회 사주</a>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span class="menu-title">도파민</span>
+                <div class="dropdown-content">
+                    <a href="charm-score.html">내 사주 매력</a>
+                    <a href="saju-popularity.html">사주 인기운</a>
+                    <a href="dohwasal-check.html">도화살 진단기</a>
+                    <a href="saju-spotlight.html">주목받는 사주</a>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span class="menu-title">별자리</span>
+                <div class="dropdown-content">
+                    <a href="weekly-zodiac.html">이번주 별자리</a>
+                    <a href="monthly-zodiac.html">이번달 별자리</a>
+                </div>
+            </div>
         </nav>
         
         <div class="hamburger-btn" onclick="toggleSidebar()">
@@ -303,6 +364,8 @@
             <li><a href="manse_calendar.html">정통 만세력</a></li>
             <li><a href="traditional_saju.html">정통 사주</a></li>
             <li><a href="my_saju.html">내 사주 풀이</a></li>
+            <li><a href="positive-saju.html">좋은 말만 하는 사주</a></li>
+            <li><a href="negative-saju.html">나쁜 말만 하는 사주</a></li>
         </ul>
 
         <span class="menu-group-title">연애</span>
@@ -428,7 +491,7 @@
     <button class="float-save-btn" id="btn-save" onclick="app.saveImage()">📥 리포트 저장</button>
 
 <script>
-    // [추가] 햄버거 토글 함수
+    // 햄버거 토글 함수
     function toggleSidebar() {
         const sidebar = document.getElementById('sidebar');
         const overlay = document.querySelector('.overlay');
@@ -582,7 +645,7 @@ const DB_STARS_FULL = {
     "편재": {
         w: "월급처럼 꼬박꼬박 들어오는 돈보다는 사업 소득, 투자 수익, 횡재수 등 스케일이 큰 재물을 쫓습니다. '돈은 굴려야 제맛'이라는 확고한 철학이 있어 저축보다는 재투자에 과감하며, 전국 혹은 전 세계를 무대로 활동할 때 막대한 부를 쌓을 수 있습니다. 공간 지각 능력이 뛰어나 부동산 투자나 유통망 확장에 탁월한 감각을 보입니다. 하지만 한순간의 무리한 투기나 도박성 투자로 공들여 쌓은 자산을 한방에 날릴 위험도 늘 공존합니다. 들어오는 돈의 단위도 크지만 나가는 단위도 크니, 현금 흐름 관리에 만전을 기해야 합니다. 유흥이나 이성 문제로 인한 지출을 경계하십시오.",
         c: "책상에 앉아 있는 사무직보다는 현장을 누비고 사람들을 만나는 역동적인 직업이 체질입니다. 무역업, 대규모 유통, 금융 투자, 사업가 등 활동 범위가 넓은 업무에서 능력을 발휘합니다. 전체적인 판을 읽는 통찰력이 뛰어나고 계산이 빨라, 복잡한 경영 상황을 한눈에 파악하고 과감한 결단을 내립니다. 협상 능력이 탁월하여 비즈니스 거래에서 유리한 고지를 점하는 데 능수능란합니다. 조직에 속해 있더라도 영업이나 해외 파트 등 자유로운 활동이 보장되는 부서가 맞습니다. 통제받기보다는 통제하려는 욕구가 강해 결국은 자신의 사업을 하게 될 운명입니다.",
-        l: "유머 감각이 뛰어나고 통이 커서 이성에게 인기가 매우 많습니다. 다정다감하고 즐거운 연애를 주도하여 상대방을 즐겁게 해주지만, 여러 이성에게 여지를 주는 바람둥이 기질을 스스로 경계해야 합니다. 물질적인 공세나 화려한 데이트를 통해 상대의 환심을 사는 데 능숙합니다. 연애 기간에는 최고의 파트너이지만, 한 사람에게 정착하는 데 시간이 걸릴 수 있습니다. 결혼 후에도 밖으로 나도는 성향이 있고, 가정보다는 바깥일에 더 신경을 쓸 수 있어 배우자의 불만을 살 수 있습니다. 가정의 평화를 위해 노력해야 합니다.",
+        l: "유머 감각이 뛰어나고 통이 커서 이성에게 인기가 매우 많습니다. 다정다감하고 즐거운 연애를 주도하여 상대방을 즐겁게 해주지만, 여러 이성에게 여지를 주는 바람둥이 기질을 스스로 경계해야 합니다. 물질적인 공세나 화려한 데이트를 통해 상대의 환심을 사는 데 능숙합니다. 연애 기간에는 최고의 파트너이지만, 한 사람에게 정착하는 데 시간이 걸릴 수 있습니다. 결혼 후에도 밖으로 나도는 성향이 있고, 가정보다는 바깥일에 더 신경을 써서 배우자의 불만을 살 수 있습니다. 가정의 평화를 위해 노력해야 합니다.",
         h: "활동량이 많고 술자리나 접대가 잦을 수 있어 간 기능 저하나 만성 피로에 주의해야 합니다. 불규칙한 생활 패턴으로 인해 생체 리듬이 깨지기 쉬우니 충분한 수면이 보약입니다. 급한 성격으로 인한 사고나 부상을 조심해야 하며, 특히 운전할 때 주의가 필요합니다. 나이가 들면 관절이나 척추 건강에 신경을 써야 합니다. 과로를 피하고 주기적으로 자연 속에서 휴식을 취하며 에너지를 재충전하는 것이 건강을 유지하는 비결입니다."
     },
     "정재": {

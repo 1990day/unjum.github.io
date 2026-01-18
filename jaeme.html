@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HIPHAN AI 관상 테스트</title>
+    <style>
+        :root {
+            --hip-gradient: linear-gradient(135deg, #833ab4 0%, #fd1d1d 50%, #fcb045 100%);
+            --aurora-gradient: linear-gradient(135deg, #FF00CC 0%, #333399 100%);
+            --text-main: #262626;
+            --text-sub: #8e8e8e;
+            --bg-color: #fafafa;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg-color); margin: 0; padding: 20px;
+            min-height: 100vh; display: flex; justify-content: center; align-items: center;
+        }
+
+        .container {
+            background: #ffffff; border: 1px solid #dbdbdb;
+            border-radius: 15px; width: 100%; max-width: 450px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05); overflow: hidden;
+        }
+
+        .section { display: none; padding: 40px 20px; text-align: center; }
+        .section.active { display: block; animation: fadeEffect 0.6s ease; }
+        @keyframes fadeEffect { from {opacity: 0; transform: translateY(10px);} to {opacity: 1; transform: translateY(0);} }
+
+        h1 {
+            font-size: 1.8rem; margin-bottom: 10px;
+            background: var(--aurora-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            font-weight: 900; letter-spacing: -0.5px;
+        }
+        .sub-text { color: var(--text-sub); margin-bottom: 30px; font-size: 0.95rem; line-height: 1.6; }
+
+        .circle-img {
+            width: 180px; height: 180px; border-radius: 50%; object-fit: cover;
+            margin-bottom: 30px; padding: 4px; background: var(--aurora-gradient);
+        }
+        
+        /* 버튼 스타일 */
+        .btn {
+            background: var(--aurora-gradient); color: white; border: none; padding: 16px 0;
+            font-size: 1.1rem; font-weight: 700; border-radius: 30px; cursor: pointer; width: 100%;
+            transition: 0.3s; box-shadow: 0 5px 15px rgba(255, 0, 204, 0.3); margin-bottom: 10px;
+        }
+        .btn:active { transform: scale(0.98); }
+        .btn-save { background: #262626; color: white; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .btn-outline { background: white; border: 2px solid #e0e0e0; color: var(--text-main); box-shadow: none; }
+
+        #file-upload { display: none; }
+        .upload-box {
+            border: 2px dashed #dcb0ff; padding: 50px 20px; border-radius: 20px;
+            cursor: pointer; background: #fdfaff; transition: 0.3s;
+        }
+        .upload-box:hover { border-color: #FF00CC; background: #fff0fa; }
+
+        /* 결과 페이지 스타일 */
+        #result-section { padding: 0; text-align: left; }
+        
+        /* ★ 캡처 대상 영역 (이 부분만 이미지로 저장됨) ★ */
+        #capture-target {
+            background: white; /* 투명 배경 방지 */
+            padding-bottom: 20px;
+        }
+
+        .insta-header {
+            padding: 15px; display: flex; align-items: center; border-bottom: 1px solid #eee;
+        }
+        .header-avatar {
+            width: 35px; height: 35px; border-radius: 50%; margin-right: 10px;
+            padding: 2px; background: var(--hip-gradient);
+        }
+        .header-text { font-weight: 700; font-size: 0.95rem; }
+
+        .result-img-wrapper {
+            width: 100%; aspect-ratio: 1/1; overflow: hidden;
+            display: flex; justify-content: center; align-items: center; background: #000;
+        }
+        #result-photo { width: 100%; height: 100%; object-fit: cover; }
+
+        .result-info-area {
+            padding: 25px 20px; text-align: center;
+            background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,0,204,0.05) 100%);
+        }
+        .job-title {
+            font-size: 2.2rem; font-weight: 900; margin: 0; line-height: 1.2;
+            background: var(--aurora-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            word-break: keep-all; letter-spacing: -1px;
+        }
+        .age-info {
+            font-size: 1rem; color: #888; margin-top: 10px; font-weight: 500;
+            display: inline-block; padding: 5px 15px; background: #f5f5f5; border-radius: 20px;
+        }
+
+        .caption-area { padding: 0 20px; font-size: 0.95rem; line-height: 1.6; color: #333; }
+        .caption-id { font-weight: 800; margin-right: 6px; }
+
+        .loader {
+            border: 4px solid #f3f3f3; border-top: 4px solid #FF00CC; border-radius: 50%;
+            width: 45px; height: 45px; animation: spin 1s linear infinite; margin: 30px auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+    
+    <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+</head>
+<body>
+
+<div class="container">
+    <div id="loading-section" class="section active">
+        <div class="loader"></div>
+        <h2 style="font-size:1.2rem;">AI 데이터 로딩 중...</h2>
+    </div>
+
+    <div id="main-section" class="section">
+        <h1>HIPHAN<br>AI 관상 테스트</h1>
+        <p class="sub-text">내 얼굴에 숨겨진 힙한 직업과<br>소름 돋는 운명을 확인해보세요.</p>
+        <img src="https://images.unsplash.com/photo-1516575334481-f85287c2c81d?w=500&auto=format&fit=crop&q=60" class="circle-img" alt="main">
+        <button class="btn" onclick="goToUpload()">테스트 시작하기</button>
+    </div>
+
+    <div id="upload-section" class="section">
+        <h2 style="margin-bottom:10px;">Face Check</h2>
+        <p class="sub-text">정면 사진을 올려주세요.</p>
+        <label for="file-upload" class="upload-box" style="display:block;">
+            <span style="font-size: 2.5rem;">📸</span><br>
+            <span style="font-weight:bold; color:#FF00CC;">사진 선택하기</span>
+        </label>
+        <input type="file" id="file-upload" accept="image/*" onchange="previewImage(event)">
+        <div id="preview-area" style="display:none; margin-top:20px;">
+            <img id="preview-img" class="circle-img" style="width:120px; height:120px;">
+            <button id="analyze-btn" class="btn" onclick="analyzeFace()">이 사진으로 분석</button>
+        </div>
+    </div>
+
+    <div id="result-section" class="section">
+        
+        <div id="capture-target">
+            <div class="insta-header">
+                <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" class="header-avatar" crossorigin="anonymous">
+                <span class="header-text">ai_face_scanner</span>
+                <span style="margin-left:auto; font-size:1.5rem;">🔥</span>
+            </div>
+
+            <div class="result-img-wrapper">
+                <img id="result-photo" src="" crossorigin="anonymous">
+            </div>
+
+            <div class="result-info-area">
+                <h2 id="res-job" class="job-title">직업 분석 중...</h2>
+                <div class="age-info">관상 나이: <span id="res-age">20</span>세</div>
+            </div>
+
+            <div style="padding: 0 20px 10px 20px; font-size:1.6rem;">
+                <span>❤️</span> <span>💬</span> <span>✈️</span>
+            </div>
+
+            <div class="caption-area">
+                <p>
+                    <span class="caption-id">ai_face_scanner</span>
+                    <span id="res-desc"></span>
+                </p>
+                <p style="color:#8e8e8e; font-size:0.8rem; margin-top:10px;">
+                    #관상 #AI #힙한관상 #성격테스트
+                </p>
+            </div>
+        </div>
+        <div style="padding: 20px;">
+            <button class="btn btn-save" onclick="saveImage()">📥 결과 이미지 저장하기</button>
+            <button class="btn btn-outline" onclick="location.reload()">다시 하기</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const MODEL_URL = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights';
+
+    const JOBS = {
+        youth: ["전교회장", "아이돌 센터상", "만능 엔터테이너", "체육부장", "웹툰 작가 지망생", "유튜브 실버버튼 보유자", "전교 1등", "천재 해커", "패션 인플루언서", "쇼미더머니 우승 후보", "핵인싸 동아리 회장", "엄친아/엄친딸"],
+        money: ["청담동 건물주", "비트코인 대박난 부자", "유니콘 기업 CEO", "다이아 수저", "명품 브랜드 VIP", "사모펀드 매니저", "영앤리치 래퍼", "강남 큰손", "호텔 체인 오너", "프랜차이즈 대표", "석유 재벌"],
+        art: ["칸 영화제 초청 감독", "천재 타투이스트", "힙합 프로듀서", "베스트셀러 작가", "성수동 힙한 카페 사장", "패션 디자이너", "인디밴드 보컬", "메이크업 아티스트", "현대미술 작가", "스트릿 댄서", "뮤지컬 배우"],
+        power: ["청와대 비서실장급", "대기업 최연소 임원", "카리스마 강력계 반장", "국가대표 감독", "협상 전문가", "뉴스 앵커", "스타 변호사", "노조 위원장", "대학 총장", "정치계 거물"],
+        service: ["미슐랭 3스타 셰프", "퍼스널 쇼퍼", "반려동물 행동교정사", "일타 강사", "승무원", "연애 컨설턴트", "심리 상담가", "와인 소믈리에", "호텔 지배인", "웨딩 플래너", "필라테스 원장님"],
+        tech: ["판교 AI 개발자", "NASA 연구원", "화이트 해커", "천재 외과의사", "건축가", "프로파일러", "블록체인 전문가", "신약 개발자", "천체 물리학자", "로봇 공학자"]
+    };
+
+    const DESC_PARTS = {
+        eyes: ["눈빛에 깊은 서사가 담겨있으며,", "상대를 꿰뚫어 보는 통찰력 있는 눈매와,", "웃을 때 세상을 무장해제 시키는 눈웃음과,", "야망이 이글거리는 강렬한 눈빛과,", "도화살이 흘러넘치는 치명적인 눈매와,"],
+        nose: ["복을 불러오는 둥글고 도톰한 코,", "자존심이 느껴지는 오똑하고 날렵한 코,", "재물운이 쏟아져 들어올 튼튼한 콧대,", "지적인 이미지를 완성하는 세련된 코 라인,"],
+        vibe_happy: ["주변을 환하게 밝히는 '인간 비타민' 같은 에너지가 느껴집니다.", "사람을 끌어당기는 자석 같은 매력의 소유자입니다.", "어딜 가나 주인공이 되는 타고난 연예인 기질이 보입니다."],
+        vibe_calm: ["어떤 상황에서도 흔들리지 않는 '강철 멘탈'의 소유자입니다.", "지적이고 차분한 아우라로 신뢰감을 주는 리더형입니다.", "남들은 못 보는 1%를 발견하는 천재적인 감각이 느껴집니다."],
+        vibe_strong: ["한번 물면 절대 놓지 않는 무서운 집념과 승부욕이 보입니다.", "세상을 바꿀만한 혁명가의 기질과 카리스마가 넘칩니다.", "작은 물에서 놀기엔 그릇이 너무나 큰 '대물' 관상입니다."]
+    };
+
+    let isLoaded = false;
+    window.onload = async () => {
+        try {
+            await Promise.all([
+                faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
+                faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+                faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL),
+                faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL)
+            ]);
+            isLoaded = true;
+            document.getElementById('loading-section').classList.remove('active');
+            document.getElementById('main-section').classList.add('active');
+        } catch(e) { console.error(e); alert("로딩 에러! 새로고침 해주세요."); }
+    };
+
+    function goToUpload() {
+        document.querySelector('.section.active').classList.remove('active');
+        document.getElementById('upload-section').classList.add('active');
+    }
+
+    function previewImage(event) {
+        const reader = new FileReader();
+        reader.onload = e => {
+            document.getElementById('preview-img').src = e.target.result;
+            document.getElementById('preview-area').style.display = 'block';
+        };
+        if(event.target.files[0]) reader.readAsDataURL(event.target.files[0]);
+    }
+
+    function getRandomDesc(mood) {
+        const eye = DESC_PARTS.eyes[Math.floor(Math.random() * DESC_PARTS.eyes.length)];
+        const nose = DESC_PARTS.nose[Math.floor(Math.random() * DESC_PARTS.nose.length)];
+        let vibe = DESC_PARTS.vibe_calm;
+        if(['happy', 'surprised'].includes(mood)) vibe = DESC_PARTS.vibe_happy;
+        else if(['angry', 'fearful', 'disgusted'].includes(mood)) vibe = DESC_PARTS.vibe_strong;
+        return `${eye} ${nose} 특히 ${vibe[Math.floor(Math.random() * vibe.length)]}`;
+    }
+
+    async function analyzeFace() {
+        if(!isLoaded) return;
+        const btn = document.getElementById('analyze-btn');
+        btn.innerText = "분석 중...";
+        
+        try {
+            const img = document.getElementById('preview-img');
+            const detections = await faceapi.detectSingleFace(img).withFaceLandmarks().withAgeAndGender().withFaceExpressions();
+            if(!detections) throw new Error("얼굴 인식 실패");
+
+            const age = Math.round(detections.age);
+            const ex = detections.expressions;
+            const mood = Object.keys(ex).reduce((a, b) => ex[a] > ex[b] ? a : b);
+
+            let cat = 'service';
+            if(age < 20) cat = 'youth';
+            else if(['angry', 'disgusted'].includes(mood)) cat = 'power';
+            else if(['happy'].includes(mood)) cat = 'money';
+            else if(['sad', 'fearful'].includes(mood)) cat = 'art';
+            else cat = 'tech';
+            
+            if(age >= 50 && Math.random() > 0.5) cat = 'money';
+
+            const jobList = JOBS[cat];
+            const finalJob = jobList[Math.floor(Math.random() * jobList.length)];
+            const desc = getRandomDesc(mood);
+
+            // 결과 업데이트
+            document.getElementById('result-photo').src = img.src;
+            document.getElementById('res-job').innerText = finalJob;
+            document.getElementById('res-age').innerText = age;
+            document.getElementById('res-desc').innerHTML = `
+                <b>[AI 관상 분석표]</b><br>
+                ${desc}<br><br>
+                당신의 얼굴 골격과 분위기를 종합했을 때,<br>
+                <b>"${finalJob}"</b>의 운명을 타고났습니다.
+            `;
+
+            document.querySelector('.section.active').classList.remove('active');
+            document.getElementById('result-section').classList.add('active');
+        } catch(e) {
+            alert("얼굴을 찾을 수 없어요. 정면 사진으로 다시 시도!");
+            btn.innerText = "이 사진으로 분석";
+        }
+    }
+
+    // ★ 이미지 저장 함수 (HTML2CANVAS) ★
+    function saveImage() {
+        const target = document.getElementById('capture-target');
+        const btn = document.querySelector('.btn-save');
+        btn.innerText = "저장 중...";
+        
+        html2canvas(target, { 
+            useCORS: true, // 외부 이미지 로딩 허용
+            scale: 2 // 고화질 저장
+        }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = 'hip-face-test.png';
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+            btn.innerText = "📥 결과 이미지 저장하기";
+        }).catch(err => {
+            console.error(err);
+            alert("이미지 저장에 실패했습니다.");
+            btn.innerText = "📥 결과 이미지 저장하기";
+        });
+    }
+</script>
+</body>
+</html>

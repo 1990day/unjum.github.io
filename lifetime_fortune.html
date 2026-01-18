@@ -1,148 +1,172 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-       <meta charset="UTF-8">
+    <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+    <link rel="icon" href="/favicon.png" type="image/png">
     <title>운점 - 평생 운세 분석</title>
-    <meta name="description" content="운점 - 평생 운세 분석">
-<meta name="keywords" content="운점, 사주, 무료사주, 오늘의운세, 운점운세, 무료궁합, 신년운세, 병오년운세, 정통만세력, 운점만세력, 무료만세력, 만세력확인, 무료사주풀이, 정통사주, 운점정통사주, 도화살진단, 운점도화살진단, 운점평생운세, 운점별자리운세, 운점사주, 운점사주풀이">
-    <meta property="og:type" content="website"> 
-    <meta property="og:title" content="운점 - 평생 운세 분석">
-    <meta property="og:description" content="운점 - 평생 운세 분석">
-    <meta property="og:url" content="https://unjum.co.kr/lifetime_fortune">
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700&family=Noto+Serif+KR:wght@700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lunar-javascript/1.6.12/lunar.js"></script>
     <style>
+        /* --- 폰트 및 기본 설정 (보내주신 코드 기준) --- */
+        @font-face {
+            font-family: 'ThinRounded';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2511-1@1.0/ThinDungGeunMo.woff2') format('woff2');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
+
+        /* 스크롤바 디자인 */
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: #1a1a2e; border-radius: 5px; }
+        ::-webkit-scrollbar-thumb { background: #ffd700; border-radius: 10px; border: 2px solid #1a1a2e; }
+        ::-webkit-scrollbar-thumb:hover { background: #ffcc00; }
+        html { scrollbar-width: thin; scrollbar-color: #ffd700 #1a1a2e; }
+
         body {
-            font-family: 'Noto Sans KR', sans-serif;
-            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
-            color: #e0e0e0;
-            line-height: 1.8; overflow-x: hidden; font-size: 16px;
+            font-family: 'ThinRounded', sans-serif;
+            background-color: #1a1a2e; /* 배경색 통일 */
+            color: #ffffff;
+            overflow-x: hidden;
         }
 
-        h1, h2, h3, .logo, .category-title, .section-title, .page-title, .info-label, .graph-label {
-            font-family: 'Noto Serif KR', serif;
-        }
-
-        /* --- [수정] 헤더 스타일 --- */
+        /* --- [요청하신 부분] 상단 헤더 (보내주신 코드 그대로 적용) --- */
         header {
-            position: fixed; top: 0; left: 0; width: 100%; height: 75px;
-            background-color: rgba(15, 32, 39, 0.98);
-            display: flex !important; justify-content: space-between !important;
-            align-items: center !important; padding: 0 40px; z-index: 1000 !important;
-            border-bottom: 2px solid #cd7f32;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            position: fixed; top: 0; left: 0; width: 100%; height: 70px;
+            background-color: #16213e;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 40px; z-index: 1000;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.3);
         }
 
-        /* 로고 이미지 스타일 복구 */
         .logo img { height: 40px; width: auto; }
-        
-        /* [PC용] 상단 메뉴 */
-        .top-menu { 
-            display: flex !important; gap: 30px !important; list-style: none !important; margin-left: auto;
-        }
-        .top-menu a { 
-            color: #d1d1d1 !important; text-decoration: none !important; 
-            font-size: 1.1rem !important; font-weight: bold !important; cursor: pointer !important; display: block !important;
-        }
-        .top-menu a:hover { color: #cd7f32 !important; }
 
-        /* [모바일용] 햄버거 버튼 (PC 숨김) */
+        /* [PC용] 상단 메뉴 */
+        .top-menu { display: flex; gap: 30px; height: 100%; align-items: center; }
+        .menu-item { position: relative; height: 100%; display: flex; align-items: center; cursor: pointer; }
+        .menu-title { color: #fff; text-decoration: none; font-size: 1.1rem; transition: 0.3s; white-space: nowrap; }
+        .menu-item:hover .menu-title { color: #ffd700; }
+
+        /* [PC용] 드롭다운 상세 메뉴 */
+        .dropdown-content {
+            display: none; position: absolute; top: 70px; left: 50%; transform: translateX(-50%);
+            background-color: #16213e; min-width: 160px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+            border: 1px solid #ffd700; border-radius: 0 0 10px 10px;
+            z-index: 1001; flex-direction: column; padding: 10px 0;
+        }
+        .dropdown-content a { color: #e0e0e0; padding: 12px 16px; text-decoration: none; display: block; font-size: 0.95rem; text-align: center; }
+        .dropdown-content a:hover { background-color: #0f3460; color: #ffd700; }
+        
+        @media (min-width: 769px) { .menu-item:hover .dropdown-content { display: flex; } }
+
+        /* [모바일용] 햄버거 버튼 */
         .hamburger-btn {
             display: none; flex-direction: column; justify-content: space-between;
             width: 30px; height: 21px; cursor: pointer; z-index: 1100;
         }
         .hamburger-btn span {
             display: block; width: 100%; height: 3px;
-            background-color: #cd7f32; /* 테마 컬러 적용 */
-            border-radius: 3px; transition: all 0.3s ease;
+            background-color: #ffd700; border-radius: 3px; transition: all 0.3s ease;
         }
         .hamburger-btn.active span:nth-child(1) { transform: translateY(9px) rotate(45deg); }
         .hamburger-btn.active span:nth-child(2) { opacity: 0; }
         .hamburger-btn.active span:nth-child(3) { transform: translateY(-9px) rotate(-45deg); }
 
-        /* [수정] 사이드바 스타일 */
+        /* --- 좌측 사이드바 (보내주신 코드 그대로 적용) --- */
         .sidebar {
-            position: fixed; top: 75px; left: 0; width: 260px;
-            height: calc(100vh - 75px); background-color: #14282f;
-            padding: 25px; overflow-y: auto; border-right: 1px solid #2c3e50; z-index: 100;
-            transition: left 0.3s ease-in-out; /* 슬라이드 효과 추가 */
+            position: fixed; top: 70px; left: 0; /* PC: 항상 보임 */
+            width: 250px; height: calc(100vh - 70px);
+            background-color: #0f3460; padding: 20px; overflow-y: auto;
+            border-right: 1px solid rgba(255, 215, 0, 0.2); z-index: 1050;
+            transition: left 0.3s ease-in-out;
         }
-        .menu-category { margin-bottom: 35px; }
-        .category-title { font-size: 1.3rem; color: #cd7f32; margin-bottom: 15px; display: block; border-bottom: 1px solid #444; padding-bottom: 8px; font-weight: bold; }
-        .sub-menu { list-style: none; padding-left: 10px; }
-        .sub-menu a { color: #aab7b8; text-decoration: none; font-size: 1rem; display: block; margin-bottom: 12px; cursor: pointer; transition: all 0.3s; }
-        .sub-menu a:hover { color: #fff; transform: translateX(5px); color: #cd7f32; }
+        .category-title { font-size: 1.2rem; color: #ffd700; margin-bottom: 10px; display: block; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 5px; }
+        .sub-menu { list-style: none; padding-left: 10px; margin-bottom: 25px; }
+        .sub-menu li { margin: 8px 0; }
+        .sub-menu a { color: #e0e0e0; text-decoration: none; font-size: 0.95rem; transition: 0.2s; }
+        .sub-menu a:hover { color: #fff; padding-left: 5px; }
 
-        /* [추가] 모바일용 오버레이 */
+        /* 모바일용 오버레이 */
         .overlay {
-            display: none; position: fixed; top: 75px; left: 0;
-            width: 100%; height: calc(100vh - 75px);
-            background-color: rgba(0, 0, 0, 0.7); z-index: 90; opacity: 0; transition: opacity 0.3s ease;
+            display: none; position: fixed; top: 70px; left: 0;
+            width: 100%; height: calc(100vh - 70px);
+            background-color: rgba(0, 0, 0, 0.5); z-index: 1040;
+            opacity: 0; transition: opacity 0.3s ease;
         }
         .overlay.active { display: block; opacity: 1; }
 
-        /* 메인 영역 */
-        main { margin-top: 80px; margin-left: 260px; padding: 40px 20px; display: flex; justify-content: center; transition: margin-left 0.3s ease; }
-        .fortune-page { width: 100%; max-width: 950px; }
-        .page-title { font-size: 2.2rem; color: #cd7f32; margin-bottom: 40px; text-align: center; font-weight: bold; text-shadow: 0 0 15px rgba(205, 127, 50, 0.2); }
+        /* --- [수정] 메인 컨텐츠 영역 (운세 입력폼) --- */
+        main {
+            margin-top: 70px; margin-left: 250px; padding: 40px;
+            display: flex; flex-direction: column; align-items: center;
+            min-height: calc(100vh - 70px); transition: margin-left 0.3s ease;
+        }
 
+        .fortune-page { width: 100%; max-width: 900px; }
+        .page-title { font-size: 2.2rem; color: #ffd700; margin-bottom: 40px; text-align: center; text-shadow: 0 0 10px rgba(255, 215, 0, 0.3); }
+
+        /* 입력 카드 스타일 (테마에 맞게 조정) */
         .input-card {
-            background: #1c333a; padding: 40px; border-radius: 20px;
-            border: 1px solid #cd7f32; margin-bottom: 50px;
-            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+            background: #16213e; padding: 40px; border-radius: 20px;
+            border: 1px solid rgba(255, 215, 0, 0.3); margin-bottom: 50px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
         .input-row { margin-bottom: 25px; }
-        .input-row label { display: block; margin-bottom: 10px; color: #cd7f32; font-weight: bold; font-size: 1.1rem; }
+        .input-row label { display: block; margin-bottom: 10px; color: #ffd700; font-size: 1.1rem; }
         .select-group { display: flex; gap: 10px; }
+        
         select, input[type="text"] { 
-            flex: 1; padding: 12px; background: #264047; border: 1px solid #4a636a; 
-            color: #fff; border-radius: 8px; font-family: 'Noto Sans KR', sans-serif !important; font-size: 1rem; 
+            flex: 1; padding: 12px; background: #0f3460; border: 1px solid #ffd700; 
+            color: #fff; border-radius: 8px; font-family: 'ThinRounded', sans-serif !important; font-size: 1rem; 
         }
+        select:focus, input:focus { outline: none; box-shadow: 0 0 5px #ffd700; }
         
         .gender-toggle, .type-toggle { display: flex; gap: 10px; margin-top: 10px; }
         .gender-btn, .type-btn { 
-            flex: 1; padding: 12px; background: #264047; border: 1px solid #4a636a; 
-            color: #aab7b8; border-radius: 8px; cursor: pointer; text-align: center; font-weight: bold; 
+            flex: 1; padding: 12px; background: #0f3460; border: 1px solid #ffd700; 
+            color: #ccc; border-radius: 8px; cursor: pointer; text-align: center; 
         }
-        .gender-btn.active, .type-btn.active { background: #cd7f32; color: #1a1a2e; border-color: #cd7f32; }
+        .gender-btn.active, .type-btn.active { background: #ffd700; color: #16213e; font-weight: bold; }
 
         .submit-btn { 
             width: 100%; padding: 18px; 
-            background: linear-gradient(45deg, #cd7f32, #f4a460); 
-            color: #0f2027; border: none; border-radius: 12px; font-size: 1.3rem; font-weight: bold; cursor: pointer; margin-top: 30px; 
-            box-shadow: 0 5px 15px rgba(205, 127, 50, 0.3);
+            background: #ffd700; color: #16213e; 
+            border: none; border-radius: 12px; font-size: 1.3rem; font-weight: bold; cursor: pointer; margin-top: 30px; 
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3); transition: 0.3s;
         }
+        .submit-btn:hover { transform: translateY(-3px); box-shadow: 0 0 20px rgba(255, 215, 0, 0.6); }
 
+        /* 결과 영역 스타일 */
         #result-area { margin-top: 60px; display: none; }
         
         .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 50px; }
         .info-card {
-            background: linear-gradient(145deg, #1c333a, #14282f);
-            padding: 25px; border-radius: 20px; border: 2px solid #cd7f32;
-            text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            background: #16213e; padding: 25px; border-radius: 20px; border: 1px solid #ffd700;
+            text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.3);
         }
-        .info-label { font-size: 1.1rem; color: #cd7f32; display: block; margin-bottom: 10px; font-weight: bold; }
-        .info-value { font-size: 1.4rem; font-weight: bold; color: #fff; border-bottom: 2px solid rgba(205, 127, 50, 0.3); padding-bottom: 5px;}
+        .info-label { font-size: 1.1rem; color: #ffd700; display: block; margin-bottom: 10px; }
+        .info-value { font-size: 1.4rem; color: #fff; border-bottom: 1px solid rgba(255, 215, 0, 0.3); padding-bottom: 5px;}
 
         .section-card { 
-            background: #1c333a; padding: 35px; border-radius: 25px; margin-bottom: 35px; 
-            box-shadow: 0 5px 20px rgba(0,0,0,0.2); border-left: 5px solid #cd7f32; 
+            background: #16213e; padding: 35px; border-radius: 25px; margin-bottom: 35px; 
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2); border: 1px solid rgba(255, 215, 0, 0.2);
+            border-left: 5px solid #ffd700; 
         }
         .section-title { 
-            font-size: 1.6rem; color: #f4a460; margin-bottom: 25px; 
-            border-bottom: 1px solid #4a636a; padding-bottom: 10px; font-weight: bold; 
+            font-size: 1.5rem; color: #ffd700; margin-bottom: 25px; 
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 10px; 
         }
         .section-content { 
-            font-size: 1.1rem; color: #dcdcdc; text-align: justify; 
+            font-size: 1.1rem; color: #e0e0e0; text-align: justify; 
             white-space: pre-wrap; word-break: keep-all; line-height: 2.1; 
         }
 
-        .life-graph-card { background: #1c333a; padding: 40px; border-radius: 25px; border: 1px solid #4a636a; margin-top: 50px; }
+        /* 그래프 스타일 */
+        .life-graph-card { background: #16213e; padding: 40px; border-radius: 25px; border: 1px solid #ffd700; margin-top: 50px; }
         .chart-container { 
             display: flex; align-items: flex-end; justify-content: space-between; 
             height: 300px; margin: 50px 0; border-bottom: 2px solid #555; padding: 0 5px; 
@@ -153,29 +177,31 @@
         }
         .bar { 
             width: 40%; border-radius: 6px 6px 0 0; transition: height 1s; 
-            background: linear-gradient(to top, #cd7f32, #f4a460); 
-            box-shadow: 0 0 8px rgba(205, 127, 50, 0.4);
+            background: #ffd700; 
+            box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
         }
-        .score-val { font-size: 0.8rem; font-weight: bold; margin-bottom: 8px; color: #f4a460; }
-        .graph-label { margin-top: 15px; font-size: 0.9rem; font-weight: bold; color: #ccc; }
+        .score-val { font-size: 0.9rem; margin-bottom: 8px; color: #ffd700; }
+        .graph-label { margin-top: 15px; font-size: 0.9rem; color: #ccc; }
 
-        /* --- [수정] 반응형 (768px 이하) --- */
+        /* --- 모바일 반응형 (768px 이하) --- */
         @media (max-width: 768px) {
             header { padding: 0 20px; height: 60px; }
-            .logo img { height: 28px; } /* 모바일에서 로고 크기 조정 */
-            
-            /* 메뉴 제어 */
-            .top-menu { display: none !important; }
+            .logo img { height: 28px; }
+
+            /* 1. 상단 메뉴 숨기고 햄버거 보이기 */
+            .top-menu { display: none; }
             .hamburger-btn { display: flex; }
 
-            /* 사이드바 제어 */
-            .sidebar { left: -270px; top: 60px; height: calc(100vh - 60px); }
+            /* 2. 사이드바 숨기기 (left: -260px) */
+            .sidebar { left: -260px; width: 250px; top: 60px; height: calc(100vh - 60px); }
+            
+            /* 3. 사이드바 열림 상태 (.open 클래스) */
             .sidebar.open { left: 0; }
             .overlay { top: 60px; height: calc(100vh - 60px); }
 
-            /* 메인 영역 제어 */
-            main { margin-left: 0; margin-top: 60px; padding: 30px 15px; }
-            
+            /* 4. 메인 영역 여백 제거 */
+            main { margin-left: 0; margin-top: 60px; padding: 20px; }
+
             .info-grid { grid-template-columns: 1fr; }
             .section-card { padding: 25px; }
             .input-card { padding: 25px; }
@@ -187,11 +213,48 @@
         <a href="index.html" class="logo"><img src="img_logo1.png" alt="logo"></a>
         
         <nav class="top-menu">
-            <a href="today_fortune.html">운세</a>
-            <a href="manse_calendar.html">사주</a>
-            <a href="love-fortune.html">연애</a>
-            <a href="charm-score.html">도파민</a>
-            <a href="weekly-zodiac.html">별자리</a>
+            <div class="menu-item">
+                <span class="menu-title">운세</span>
+                <div class="dropdown-content">
+                    <a href="today_fortune.html">오늘의 운세</a>
+                    <a href="new_year_fortune.html">신년 운세</a>
+                    <a href="lifetime_fortune.html">평생 운세</a>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span class="menu-title">사주</span>
+                <div class="dropdown-content">
+                    <a href="manse_calendar.html">정통 만세력</a>
+                    <a href="traditional_saju.html">정통 사주</a>
+                    <a href="my_saju.html">내 사주 풀이</a>
+                    <a href="positive-saju.html">좋은 말만 하는 사주</a>
+                    <a href="negative-saju.html">나쁜 말만 하는 사주</a>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span class="menu-title">연애</span>
+                <div class="dropdown-content">
+                    <a href="love-fortune.html">평생 연애운</a>
+                    <a href="saju-compatibility.html">사주 궁합</a>
+                    <a href="reunion-saju.html">재회 사주</a>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span class="menu-title">도파민</span>
+                <div class="dropdown-content">
+                    <a href="charm-score.html">내 사주 매력</a>
+                    <a href="saju-popularity.html">사주 인기운</a>
+                    <a href="dohwasal-check.html">도화살 진단기</a>
+                    <a href="saju-spotlight.html">주목받는 사주</a>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span class="menu-title">별자리</span>
+                <div class="dropdown-content">
+                    <a href="weekly-zodiac.html">이번주 별자리</a>
+                    <a href="monthly-zodiac.html">이번달 별자리</a>
+                </div>
+            </div>
         </nav>
 
         <div class="hamburger-btn" onclick="toggleSidebar()">
@@ -218,6 +281,8 @@
                 <li><a href="manse_calendar.html">정통 만세력</a></li>
                 <li><a href="traditional_saju.html">정통 사주</a></li>
                 <li><a href="my_saju.html">내 사주 풀이</a></li>
+                <li><a href="positive-saju.html">좋은 말만 하는 사주</a></li>
+                <li><a href="negative-saju.html">나쁜 말만 하는 사주</a></li>
             </ul>
         </div>
         <div class="menu-category">
@@ -395,12 +460,11 @@
                 return "비겁";
             };
 
-            // 5. 텍스트 생성 엔진 (고정 멘트 0%, 100% 로직 기반)
+            // 5. 텍스트 생성 엔진
             const buildDynamicText = (period) => {
                 let lines = [];
                 let dwData = null; 
                 
-                // 시기별 대운 매핑
                 if (period === 'early') dwData = manualDaewoon[0];
                 else if (period === 'middle') dwData = manualDaewoon[3];
                 else if (period === 'late') dwData = manualDaewoon[6];
@@ -415,12 +479,9 @@
                     tenGod = getTenGods(dwEle);
                 }
 
-                // **[Total 섹션] 완전 동적 로직**
                 if (period === 'total') {
-                    // 1. 일간 분석
                     lines.push(`${name}님의 평생 사주는 '${myGan}'(${myEle}) 일간을 중심으로 형성되어 있으며, 사주 전체에서 가장 영향력이 큰 기운은 '${Object.keys(eleCount).reduce((a, b) => eleCount[a] > eleCount[b] ? a : b)}'입니다.`);
                     
-                    // 2. 신강/신약 처세술
                     if(isStrong) {
                         lines.push(`귀하는 본인의 기운이 강한 '신강(身强)' 사주로, 주관이 뚜렷하고 추진력이 강합니다. 운에서 힘을 빼주는 식상이나 재성 운이 올 때 발복합니다.`);
                         lines.push(`남의 도움을 받기보다 본인의 능력으로 성취하는 자수성가형이며, 고집을 꺾고 타협하는 유연함이 성공의 열쇠입니다.`);
@@ -429,7 +490,6 @@
                         lines.push(`혼자 모든 것을 감당하기보다 주변의 도움을 적극적으로 활용하고, 멘토나 협력자와 함께할 때 시너지가 납니다.`);
                     }
 
-                    // 3. 용신(부족한 오행) 조언
                     lines.push(`귀하에게 가장 필요한 기운(용신)은 '${lackEle}'입니다.`);
                     if(lackEle === '木') lines.push(`목(木) 기운이 부족하므로, 새로운 시작, 기획, 교육, 인자함과 관련된 활동을 할 때 삶이 윤택해집니다.`);
                     else if(lackEle === '火') lines.push(`화(火) 기운이 부족하므로, 열정을 표현하고, 밝고 화려한 곳에서 활동하며 예의를 갖추는 것이 개운법입니다.`);
@@ -437,11 +497,10 @@
                     else if(lackEle === '金') lines.push(`금(金) 기운이 부족하므로, 결단력을 기르고 맺고 끊음을 확실히 하며, 의리를 지키는 것이 중요합니다.`);
                     else if(lackEle === '水') lines.push(`수(水) 기운이 부족하므로, 지혜와 유연한 사고를 기르고, 해외나 유통, 휴식과 관련된 활동이 도움이 됩니다.`);
 
-                    // 4. 대운 흐름 분석 (초년 vs 말년 비교)
                     let firstEle = ganToEle[manualDaewoon[0].gan];
                     let lastEle = ganToEle[manualDaewoon[7].gan];
-                    let firstGood = (firstEle === lackEle); // 초년이 용신운인가?
-                    let lastGood = (lastEle === lackEle);   // 말년이 용신운인가?
+                    let firstGood = (firstEle === lackEle);
+                    let lastGood = (lastEle === lackEle); 
 
                     if(firstGood && lastGood) lines.push(`평생에 걸쳐 귀한 운이 흐르는 복된 구조로, 초년의 성공을 말년까지 안정적으로 이어갈 수 있습니다.`);
                     else if(firstGood && !lastGood) lines.push(`초년에 운의 흐름이 좋아 일찍 두각을 나타내나, 말년에는 수성(守成)하는 자세로 안정을 추구해야 합니다.`);
@@ -449,7 +508,6 @@
                     else lines.push(`운의 굴곡이 있어 평탄치 않을 수 있으나, 이는 귀하를 단련시키는 과정이며 본인의 의지로 충분히 개척 가능합니다.`);
 
                 } else if (period === 'early') {
-                    // [초년기]
                     lines.push(`초년기에는 '${daewoonGan}(${dwEle})', 즉 십성으로 '${tenGod}'의 기운이 지배합니다.`);
                     if(tenGod === "인성") lines.push(`학업운이 들어와 공부에 집중하기 좋고, 부모님이나 선생님의 사랑을 받으며 성장하는 시기입니다.`);
                     else if(tenGod === "식상") lines.push(`호기심이 많고 활동적인 에너지가 넘쳐, 책상 앞보다는 다양한 경험과 예체능 활동에서 재능을 발견합니다.`);
@@ -457,12 +515,10 @@
                     else if(tenGod === "관성") lines.push(`책임감이 강하고 규칙을 잘 지키며, 반장이나 임원을 맡는 등 리더십을 발휘할 기회가 많습니다.`);
                     else lines.push(`자아가 강해져 독립심이 생기고 친구들과의 경쟁을 통해 본인의 존재감을 확인하려는 욕구가 큽니다.`);
                     
-                    // 용신 여부에 따른 조언
                     if(dwEle === lackEle) lines.push(`특히 이 시기는 본인에게 필요한 기운이 들어오므로, 노력한 것보다 더 좋은 성과(학업, 진로)를 얻기 쉽습니다.`);
                     else lines.push(`운의 지원이 다소 약할 수 있으니, 요행을 바라기보다 성실함으로 기초를 다지는 것이 중요합니다.`);
 
                 } else if (period === 'middle') {
-                    // [중년기]
                     lines.push(`중년기(사회 활동기)에는 '${tenGod}' 운이 들어와 삶의 방향을 결정합니다.`);
                     if(tenGod === "재성") lines.push(`재물 활동이 왕성해지는 시기로, 사업이나 투자를 통해 자산을 증식하려는 욕구가 강해지고 기회도 찾아옵니다.`);
                     else if(tenGod === "관성") lines.push(`직장에서의 승진이나 명예를 얻는 운으로, 조직 내에서 권한이 커지고 사회적 지위가 상승합니다.`);
@@ -474,7 +530,6 @@
                     else lines.push(`무리한 확장보다는 현재의 위치를 지키는 것이 유리하며, 다음 기회를 위해 내실을 다져야 합니다.`);
 
                 } else if (period === 'late') {
-                    // [말년기]
                     lines.push(`말년에는 '${tenGod}'의 기운이 들어와 삶을 마무리합니다.`);
                     if(tenGod === "식상") lines.push(`나이가 들어서도 취미 생활이나 소일거리를 즐기며, 활력 넘치고 젊게 사는 노후를 보냅니다.`);
                     else if(tenGod === "재성") lines.push(`경제적 여유가 있어 삶을 즐기고, 자녀들에게 손 벌리지 않는 풍요로운 말년입니다.`);
@@ -516,7 +571,7 @@
 
                 let w = document.createElement('div'); w.className='bar-wrapper';
                 w.innerHTML = `
-                    <span class="score-val" style="bottom:${score}%">${score}</span>
+                    <div class="score-val">${score}</div>
                     <div class="bar" style="height:${score}%"></div>
                     <span class="graph-label">${ageLabels[i]}<br>(${ganZhi})</span>
                 `;

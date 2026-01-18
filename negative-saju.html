@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="/favicon.png" type="image/png">
+    <title>운점 - 나쁜 말만 하는 사주</title>
+    <meta name="description" content="운점 - 나쁜 말만 하는 사주">
+<meta name="keywords" content="운점, 사주, 무료사주, 오늘의운세, 운점운세, 무료궁합, 신년운세, 병오년운세, 정통만세력, 운점만세력, 무료만세력, 만세력확인, 무료사주풀이, 정통사주, 운점정통사주, 도화살진단, 운점도화살진단, 운점평생운세, 운점별자리운세, 운점사주, 운점사주풀이,좋은말만하는사주,나쁜말만하는사주">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="운점 - 나쁜 말만 하는 사주">
+    <meta property="og:description" content="운점 - 나쁜 말만 하는 사주">
+    <meta property="og:url" content="https://unjum.co.kr/negative-saju">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lunar-javascript/1.6.12/lunar.js"></script>
+    <style>
+        @font-face {
+            font-family: 'ThinRounded';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2511-1@1.0/ThinDungGeunMo.woff2') format('woff2');
+            font-weight: normal; font-style: normal; font-display: swap;
+        }
+
+        :root {
+            /* 다크 & 블러드 테마 */
+            --bg-main: #121212;       
+            --bg-container: #1e1e1e;  
+            --bg-input: #2d2d2d;      
+            --border-color: #404040;  
+            --text-main: #e5e5e5;     
+            --text-sub: #a3a3a3;      
+            --accent: #dc2626;        /* 핏빛 빨강 */
+            --accent-hover: #991b1b;  
+            --nav-bg: #1e1e1e;        
+            --nav-border: #dc2626;    
+            --highlight-bg: rgba(220, 38, 38, 0.2);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-main); }
+        ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
+
+        body {
+            font-family: 'ThinRounded', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-size: 19px; 
+            line-height: 1.9; 
+            overflow-x: hidden;
+        }
+
+        /* --- 헤더 --- */
+        header {
+            position: fixed; top: 0; left: 0; width: 100%; height: 80px;
+            background-color: var(--nav-bg); display: flex; justify-content: space-between;
+            align-items: center; padding: 0 40px; z-index: 1000; 
+            border-bottom: 2px solid var(--nav-border);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+        .logo img { height: 46px; width: auto; filter: grayscale(1) brightness(2); } /* 로고 흰색 처리 */
+
+        .top-menu { display: flex; gap: 35px; height: 100%; align-items: center; }
+        .menu-item { position: relative; height: 100%; display: flex; align-items: center; cursor: pointer; }
+        .menu-title { 
+            color: var(--text-main); text-decoration: none; 
+            font-size: 1.25rem; transition: 0.3s; white-space: nowrap; font-weight: bold; 
+        }
+        .menu-item:hover .menu-title { color: var(--accent); text-shadow: 0 0 5px var(--accent); }
+
+        .dropdown-content {
+            display: none; position: absolute; top: 80px; left: 50%; transform: translateX(-50%);
+            background-color: var(--nav-bg); min-width: 180px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border-color); border-radius: 0 0 15px 15px; z-index: 1001;
+            flex-direction: column; padding: 15px 0;
+        }
+        .dropdown-content a { 
+            color: var(--text-sub); padding: 14px 20px; text-decoration: none; 
+            display: block; font-size: 1.05rem; text-align: center;
+        }
+        .dropdown-content a:hover { background-color: var(--bg-input); color: var(--accent); }
+        @media (min-width: 769px) { .menu-item:hover .dropdown-content { display: flex; } }
+
+        .hamburger-btn { display: none; flex-direction: column; justify-content: space-between; width: 34px; height: 24px; cursor: pointer; z-index: 1100; }
+        .hamburger-btn span { display: block; width: 100%; height: 3px; background-color: var(--accent); border-radius: 3px; transition: all 0.3s ease; }
+        
+        .sidebar {
+            position: fixed; top: 80px; left: 0; width: 280px;
+            height: calc(100vh - 80px); background-color: var(--nav-bg);
+            padding: 30px; overflow-y: auto; border-right: 1px solid var(--nav-border);
+            z-index: 100; transition: left 0.3s ease-in-out;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.5);
+        }
+        .category-title { font-size: 1.3rem; color: var(--accent); margin-bottom: 12px; display: block; border-bottom: 2px solid var(--bg-input); padding-bottom: 6px; font-weight: 800; }
+        .sub-menu { list-style: none; padding-left: 10px; }
+        .sub-menu li { margin: 12px 0; }
+        .sub-menu a { color: var(--text-sub); text-decoration: none; font-size: 1.15rem; cursor: pointer; transition: 0.2s; }
+        .sub-menu a:hover { color: var(--accent); font-weight: bold; transform: translateX(5px); display: inline-block;}
+
+        .overlay { display: none; position: fixed; top: 80px; left: 0; width: 100%; height: calc(100vh - 80px); background-color: rgba(0, 0, 0, 0.8); backdrop-filter: blur(3px); z-index: 90; opacity: 0; transition: opacity 0.3s ease; }
+        .overlay.active { display: block; opacity: 1; }
+
+        main { margin-top: 80px; margin-left: 280px; padding: 50px 20px; display: flex; justify-content: center; transition: margin-left 0.3s ease; }
+        
+        .fortune-page { width: 100%; max-width: 950px; text-align: center; }
+        .page-title { 
+            font-size: 2.6rem; margin-bottom: 40px; font-weight: 900; 
+            color: var(--accent); text-shadow: 2px 2px 0px #000;
+        }
+
+        .input-card { 
+            background: var(--bg-container); padding: 40px; border-radius: 25px; 
+            border: 1px solid var(--border-color); text-align: left; 
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3); margin-bottom: 50px; 
+        }
+        .input-row { margin-bottom: 25px; }
+        .input-row label { display: block; margin-bottom: 10px; color: var(--text-main); font-size: 1.2rem; font-weight: bold; }
+        .select-group { display: flex; gap: 10px; width: 100%; }
+        
+        select, input[type="text"] { 
+            flex: 1; padding: 10px 15px; 
+            background-color: var(--bg-input); color: var(--text-main); 
+            border: 1px solid var(--border-color); border-radius: 15px; 
+            font-family: 'ThinRounded'; font-size: 1.15rem; font-weight: bold;
+            height: 60px; outline: none; transition: 0.3s; 
+        }
+        select:focus, input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.3); }
+        
+        .type-toggle { display: flex; gap: 8px; margin-top: 5px; }
+        .type-btn { 
+            flex: 1; padding: 14px; background: var(--bg-input); border: 1px solid var(--border-color); 
+            color: var(--text-sub); border-radius: 12px; cursor: pointer; text-align: center; 
+            font-size: 1.1rem; transition: 0.3s; 
+        }
+        .type-btn.active { 
+            background: var(--accent); color: #fff; border-color: var(--accent); 
+            font-weight: bold; box-shadow: 0 5px 15px rgba(220, 38, 38, 0.3); 
+        }
+        
+        .submit-btn { 
+            width: 100%; padding: 22px; 
+            background: linear-gradient(135deg, #b91c1c, #991b1b); 
+            color: #fff; border: none; border-radius: 15px; 
+            font-size: 1.5rem; font-weight: bold; cursor: pointer; margin-top: 30px; 
+            transition: 0.3s; box-shadow: 0 8px 25px rgba(220, 38, 38, 0.4); 
+        }
+        .submit-btn:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(220, 38, 38, 0.6); }
+
+        #result-area { display: none; animation: slideUp 0.8s ease; text-align: left; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(50px); } to { opacity: 1; transform: translateY(0); } }
+
+        .analysis-section { 
+            margin-bottom: 40px; background: var(--bg-container); padding: 45px; 
+            border-radius: 25px; border: 1px solid var(--border-color); 
+            box-shadow: 0 5px 25px rgba(0,0,0,0.2); position: relative; overflow: hidden; 
+        }
+        .section-header { 
+            font-size: 1.8rem; color: var(--text-main); margin-bottom: 30px; 
+            border-bottom: 3px solid var(--bg-input); padding-bottom: 15px; font-weight:900; 
+        }
+        .section-header span { color: var(--accent); }
+        
+        .manse-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
+        .pillar-box { 
+            background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 18px; 
+            text-align: center; padding: 25px 10px; position: relative; 
+        }
+        .pillar-box.me { border: 3px solid var(--accent); background: #2a1a1a; }
+        .pillar-title { font-size: 1.15rem; color: var(--text-sub); margin-bottom: 12px; font-weight: bold; }
+        .ten-god-tag { 
+            font-size: 1rem; background: #000; padding: 6px 12px; 
+            border-radius: 20px; margin-bottom: 12px; display: inline-block; 
+            color: var(--text-main); font-weight: bold; border: 1px solid var(--border-color);
+        }
+        .hanja { 
+            font-family: serif; font-size: 3.8rem; font-weight: bold; display: block; 
+            margin-bottom: 5px; color: #fff; line-height: 1.2;
+        }
+        .hangul { font-size: 1.2rem; opacity: 0.7; display: block; font-weight: bold;}
+
+        /* 다크모드에서 오행 색상 조정 (가독성) */
+        .wood { color: #4ade80; } .fire { color: #f87171; } .earth { color: #fbbf24; } .metal { color: #94a3b8; } .water { color: #60a5fa; }
+
+        .long-text-box { 
+            font-size: 1.3rem; line-height: 2.1; color: #d4d4d4; word-break: keep-all; 
+            background-color: #121212; padding: 35px; border-radius: 20px; 
+            border: 2px dashed #404040; 
+        }
+        .sub-badge { 
+            display: inline-block; background: var(--accent); color: #fff; 
+            font-size: 1.1rem; padding: 8px 18px; border-radius: 30px; 
+            margin-bottom: 20px; font-weight: bold; 
+            box-shadow: 0 3px 8px rgba(220, 38, 38, 0.3); 
+        }
+        .highlight-txt { 
+            background: linear-gradient(to top, rgba(220, 38, 38, 0.4) 40%, transparent 40%); 
+            font-weight: bold; color: #ff8888; padding: 0 4px; 
+        }
+
+        /* [모바일 전용 스타일 수정] */
+        @media (max-width: 768px) {
+            header { padding: 0 20px; height: 60px; }
+            .logo img { height: 32px; }
+            .top-menu { display: none; }
+            .hamburger-btn { display: flex; }
+            
+            .sidebar { left: -320px; top: 60px; height: calc(100vh - 60px); }
+            .sidebar.open { left: 0; }
+            .overlay { top: 60px; height: calc(100vh - 60px); }
+            
+            body { font-size: 16px; line-height: 1.6; }
+            
+            main { margin-left: 0; margin-top: 60px; padding: 25px 15px; }
+            .fortune-page { width: 100%; }
+            
+            .page-title { font-size: 1.8rem; margin-bottom: 30px; }
+            
+            .input-card { padding: 25px 20px; border-radius: 20px; }
+            .input-row label { font-size: 1rem; }
+            .select-group { flex-direction: column; }
+            select, input[type="text"] { margin-bottom: 8px; height: 50px; font-size: 1rem; }
+            .submit-btn { padding: 18px; font-size: 1.2rem; margin-top: 20px; }
+            
+            .manse-grid { gap: 5px; }
+            .pillar-box { padding: 15px 2px; border-radius: 12px; }
+            .pillar-title { font-size: 0.9rem; margin-bottom: 5px; }
+            .ten-god-tag { font-size: 0.75rem; padding: 4px 8px; margin-bottom: 5px; }
+            .hanja { font-size: 2.2rem; margin-bottom: 0; } 
+            .hangul { font-size: 0.9rem; }
+            
+            .analysis-section { padding: 25px 15px; border-radius: 20px; margin-bottom: 30px; }
+            .section-header { font-size: 1.4rem; margin-bottom: 20px; }
+            .long-text-box { font-size: 1.1rem; padding: 20px; line-height: 1.7; }
+            .sub-badge { font-size: 1rem; padding: 6px 12px; margin-bottom: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="index.html" class="logo"><img src="img_logo1.png" alt="logo"></a>
+        <nav class="top-menu">
+            <div class="menu-item"><span class="menu-title">운세</span>
+                <div class="dropdown-content"><a href="today_fortune.html">오늘의 운세</a><a href="new_year_fortune.html">신년 운세</a><a href="lifetime_fortune.html">평생 운세</a></div>
+            </div>
+            <div class="menu-item"><span class="menu-title" style="color:var(--accent);">사주</span>
+                <div class="dropdown-content"><a href="manse_calendar.html">정통 만세력</a><a href="traditional_saju.html">정통 사주</a><a href="my_saju.html">내 사주 풀이</a>     <a href="positive-saju.html">좋은 말만 하는 사주</a>
+                    <a href="negative-saju.html">나쁜 말만 하는 사주</a></div>
+            </div>
+            <div class="menu-item"><span class="menu-title">연애</span>
+                <div class="dropdown-content"><a href="love-fortune.html">평생 연애운</a><a href="saju-compatibility.html">사주 궁합</a><a href="reunion-saju.html">재회 사주</a></div>
+            </div>
+            <div class="menu-item"><span class="menu-title">도파민</span>
+                <div class="dropdown-content"><a href="charm-score.html">내 사주 매력</a><a href="saju-popularity.html">사주 인기운</a><a href="dohwasal-check.html">도화살 진단기</a><a href="saju-spotlight.html">주목받는 사주</a></div>
+            </div>
+            <div class="menu-item"><span class="menu-title">별자리</span>
+                <div class="dropdown-content"><a href="weekly-zodiac.html">이번주 별자리</a><a href="monthly-zodiac.html">이번달 별자리</a></div>
+            </div>
+        </nav>
+        <div class="hamburger-btn" onclick="toggleSidebar()"><span></span><span></span><span></span></div>
+    </header>
+
+    <div class="overlay" onclick="toggleSidebar()"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="menu-category"><span class="category-title">운세</span><ul class="sub-menu"><li><a href="today_fortune.html">오늘의 운세</a></li><li><a href="new_year_fortune.html">신년 운세</a></li><li><a href="lifetime_fortune.html">평생 운세</a></li></ul></div>
+        <div class="menu-category"><span class="category-title">사주</span><ul class="sub-menu"><li><a href="manse_calendar.html" style="color:var(--accent); font-weight:bold;">정통 만세력</a></li><li><a href="traditional_saju.html">정통 사주</a></li><li><a href="my_saju.html">내 사주 풀이</a></li>      <li><a href="positive-saju.html">좋은 말만 하는 사주</a></li>
+        <li><a href="negative-saju.html">나쁜 말만 하는 사주</a></li></ul></div>
+        <div class="menu-category"><span class="category-title">연애</span><ul class="sub-menu"><li><a href="love-fortune.html">평생 연애운</a></li><li><a href="saju-compatibility.html">사주 궁합</a></li><li><a href="reunion-saju.html">재회 사주</a></li></ul></div>
+        <div class="menu-category"><span class="category-title">도파민</span><ul class="sub-menu"><li><a href="charm-score.html">내 사주의 매력도</a></li><li><a href="saju-popularity.html">사주에 있는 인기운</a></li><li><a href="dohwasal-check.html">도화살 진단기</a></li><li><a href="saju-spotlight.html">주목받는 사주</a></li></ul></div>
+        <div class="menu-category"><span class="category-title">별자리</span><ul class="sub-menu"><li><a href="weekly-zodiac.html">이번주 별자리 운세</a></li><li><a href="monthly-zodiac.html">이번달 별자리 운세</a></li></ul></div>
+    </aside>
+
+    <main>
+        <div class="fortune-page">
+            <h2 class="page-title">☠️ 나쁜 말만 하는 사주</h2>
+            <div class="input-card">
+                <div class="input-row">
+                    <label>이름 / 성별</label>
+                    <input type="text" id="userName" placeholder="이름을 입력하세요" style="width:100%;">
+                    <div class="type-toggle" style="margin-top:10px; width:100%;">
+                        <div id="maleBtn" class="type-btn active" onclick="setGender('m')">남성</div>
+                        <div id="femaleBtn" class="type-btn" onclick="setGender('f')">여성</div>
+                    </div>
+                </div>
+
+                <div class="input-row"><label>생년월일시</label><div class="select-group"><select id="yearSelect"></select><select id="monthSelect"></select><select id="daySelect"></select></div><div class="select-group" style="margin-top:12px;"><select id="hourSelect"><option value="99">시간 모름</option><option value="0">자시 (23:30 ~ 01:29)</option><option value="2">축시 (01:30 ~ 03:29)</option><option value="4">인시 (03:30 ~ 05:29)</option><option value="6">묘시 (05:30 ~ 07:29)</option><option value="8">진시 (07:30 ~ 09:29)</option><option value="10">사시 (09:30 ~ 11:29)</option><option value="12">오시 (11:30 ~ 13:29)</option><option value="14">미시 (13:30 ~ 15:29)</option><option value="16">신시 (15:30 ~ 17:29)</option><option value="18">유시 (17:30 ~ 19:29)</option><option value="20">술시 (19:30 ~ 21:29)</option><option value="22">해시 (21:30 ~ 23:29)</option></select><div class="type-toggle" style="margin-top:0;"><div id="solarBtn" class="type-btn active" onclick="setCalendar('solar')">양력</div><div id="lunarBtn" class="type-btn" onclick="setCalendar('lunar')">음력</div></div></div></div>
+                <button class="submit-btn" onclick="analyzeSaju()">팩폭 확인하고 정신 차리기</button>
+            </div>
+
+            <div id="result-area">
+                <div class="analysis-section"><h3 class="section-header">📜 나의 사주 팔자 (원국)</h3><div class="manse-grid" id="sajuGrid"></div></div>
+                <div class="analysis-section"><h3 class="section-header">🩸 [1. 총운] 당신이 힘든 이유</h3><div class="long-text-box" id="result-total"></div></div>
+                <div class="analysis-section"><h3 class="section-header">👺 [2. 성격] 고쳐야 할 단점</h3><div class="long-text-box" id="result-personality"></div></div>
+                <div class="analysis-section"><h3 class="section-header">💸 [3. 재물] 지갑이 비는 이유</h3><div class="long-text-box" id="result-money"></div></div>
+                <div class="analysis-section"><h3 class="section-header">💼 [4. 직업] 사회생활의 약점</h3><div class="long-text-box" id="result-job"></div></div>
+                <div class="analysis-section"><h3 class="section-header">💔 [5. 연애/결혼] 연애가 꼬이는 이유</h3><div class="long-text-box" id="result-love"></div></div>
+                <div class="analysis-section"><h3 class="section-header">💉 [6. 조언] 나를 위한 쓴소리</h3><div class="long-text-box" id="result-advice"></div></div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.querySelector('.overlay');
+            const hamburger = document.querySelector('.hamburger-btn');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+            hamburger.classList.toggle('active');
+        }
+
+        let gender = 'm';
+        let calendarType = 'solar';
+
+        // 팩트폭력 버전 DB (수위 조절: 악플러 -> 쓴소리 조언)
+        const DB = {
+            total: {
+                "목_봄": "당신은 <span class='highlight-txt'>부러지기 쉬운 뻣뻣한 나무</span> 같습니다. 시작은 창대하지만 끝이 미약한 '용두사미' 기질이 있어, 벌려놓은 일은 많은데 수습이 안 되는 경우가 많습니다.<br><br>자기주장이 너무 강해 주변의 조언을 듣지 않는 경향이 있습니다. 본인은 '소신'이라고 생각하겠지만, 남들이 볼 때는 '융통성 없는 고집'일 뿐입니다. 혼자 크는 나무는 외롭습니다. 숲을 이루려면 남들과 타협하는 법을 배워야 합니다.<br><br>새로운 것에 호기심을 갖는 건 좋지만, 싫증도 빨리 냅니다. 진득하게 하나를 파지 못하면 결국 '이도 저도 아닌' 상태가 될 수 있으니 주의가 필요합니다.",
+                "목_여름": "당신은 <span class='highlight-txt'>자신을 너무 과신하는 경향</span>이 있습니다. 겉모습과 체면을 중요시하느라 실속을 놓치는 경우가 많습니다. 남들에게 보여주기 위해 에너지를 낭비하고 있지는 않은지 돌아보세요.<br><br>감정 표현이 솔직한 건 좋지만, 때로는 그 불같은 성격 때문에 주변 사람들을 피곤하게 만듭니다. 의욕이 앞서서 일을 그르치거나, 기분에 따라 즉흥적으로 결정했다가 후회하는 일이 잦습니다.<br><br>화려한 꽃을 피우는 것에만 집착하다가 뿌리가 마를 수 있습니다. 겉치레보다는 내실을 다지는 데 집중해야 롱런할 수 있습니다.",
+                "목_가을": "당신은 <span class='highlight-txt'>지나치게 예민하고 의심이 많은 편</span>입니다. 매사를 부정적으로 바라보거나 남의 의도를 왜곡해서 생각하는 버릇이 있어 스스로를 고립시키곤 합니다.<br><br>완벽주의 성향 때문에 본인도 피곤하고 주변 사람도 숨 막히게 합니다. 작은 실수도 용납하지 못하고 스스로를 볶아대니 스트레스가 심합니다. 겉으로는 차분해 보이지만 속은 늘 불안과 초조함으로 가득 차 있습니다.<br><br>너무 깐깐하게 굴면 사람이 따르지 않습니다. 때로는 모르는 척 넘어가 주는 여유가 필요합니다. 당신의 그 날카로운 기준이 결국 당신을 찌를 수 있음을 명심하세요.",
+                "목_겨울": "당신은 <span class='highlight-txt'>생각만 하고 실천하지 않는 게으름</span>이 문제입니다. 머릿속으로는 이미 성공하고도 남았지만, 정작 몸은 움직이지 않고 있습니다. '준비 중'이라는 핑계로 세월만 보내고 있지 않나요?<br><br>소극적이고 비관적인 태도 때문에 좋은 기회가 와도 놓치기 일쑤입니다. 남 탓이나 환경 탓을 하며 자기합리화에 빠지기 쉽습니다. 변화를 두려워하고 안주하려고만 하면 발전은 없습니다.<br><br>음지에서 웅크리고 있지 말고 양지로 나오세요. 실패가 두려워 아무것도 안 하는 것이야말로 가장 큰 실패입니다.",
+                "화_봄": "당신은 <span class='highlight-txt'>눈치 없이 나서기를 좋아하는 성향</span>이 있습니다. 자기가 주인공이 되어야 직성이 풀리고, 남의 일에 참견하는 것을 좋아해 '오지랖이 넓다'는 소리를 듣습니다.<br><br>끈기가 부족해 싫증을 빨리 내고, 마무리가 약합니다. 말은 청산유수지만 행동이 따르지 않아 '말만 앞선다'는 평가를 받을 수 있습니다. 주변에 사람은 많지만 정작 힘들 때 도와줄 진정한 친구는 적을 수 있습니다.<br><br>분위기 파악을 잘하고 때와 장소를 가릴 줄 알아야 합니다. 나설 때와 빠질 때를 구분하지 못하면 미움받기 십상입니다.",
+                "화_여름": "당신은 <span class='highlight-txt'>감정 조절이 안 되는 시한폭탄</span> 같습니다. 욱하는 성질을 참지 못해 일을 망치거나 인간관계를 깨뜨리는 경우가 많습니다. '뒤끝 없다'는 말로 본인의 무례함을 정당화하지 마세요.<br><br>독단적이고 자기중심적인 사고방식 때문에 남들과 협력하기가 어렵습니다. 남의 말을 무시하고 제멋대로 하다가 큰 실수를 저지를 수 있습니다. 에너지가 넘치는 건 좋지만, 방향성이 없으면 산만할 뿐입니다.<br><br>너무 뜨거운 불은 주변을 다 태워버립니다. 열정을 다스리지 못하면 결국 재만 남게 된다는 것을 기억하고 차분해지는 연습을 하세요.",
+                "화_가을": "당신은 <span class='highlight-txt'>지나치게 계산적이고 이기적</span>일 때가 있습니다. 모든 것을 이익과 손해로만 따지다 보니 인간미가 없다는 소리를 듣습니다. 결과만 중요시하고 과정이나 사람의 마음은 무시하기 쉽습니다.<br><br>성격이 급해서 당장의 성과에만 집착하다가 오히려 큰 것을 놓칠 수 있습니다. 남을 경쟁자로만 인식하고 이기려 드니 주변에 적이 많아집니다.<br><br>돈과 성공도 중요하지만, 사람을 잃으면 소용없습니다. 때로는 손해 보는 것 같아도 베푸는 것이 나중에 더 크게 돌아온다는 사실을 잊지 마세요.",
+                "화_겨울": "당신은 <span class='highlight-txt'>자격지심과 질투심이 내면을 갉아먹고</span> 있습니다. 남들과 비교하며 스스로를 비하하거나, 반대로 남을 깎아내리려는 마음이 있습니다. 감정 기복이 심해 어느 장단에 맞춰야 할지 모르는 사람입니다.<br><br>겉으로는 착한 척하지만 속으로는 억울해하고 분노를 쌓아두고 있습니다. 거절을 못 해서 일을 떠안고는 뒤에서 불평하는 습관을 고쳐야 합니다.<br><br>남의 시선을 너무 의식하지 말고 본인의 자존감을 키우세요. 촛불은 자신을 태워야 빛이 납니다. 남을 부러워할 시간에 당신의 가치를 높이는 데 집중하세요.",
+                "토_봄": "당신은 <span class='highlight-txt'>융통성이 부족하고 답답한 면</span>이 있습니다. 변화를 싫어하고 현실에 안주하려는 성향 때문에 발전이 더딥니다. 좋은 기회가 와도 우물쭈물하다가 놓치는 경우가 많습니다.<br><br>남의 말에 쉽게 휘둘리고, 거절을 잘 못해서 손해를 보는 '호구' 기질이 있습니다. 겉으로는 좋아 보이지만 속은 고집으로 꽉 차 있어 남모르게 끙끙 앓기도 합니다.<br><br>조금 더 빠릿빠릿하게 움직이고 자기주장을 확실히 할 필요가 있습니다. 너무 둔하게 굴면 급변하는 세상에서 도태될 수 있습니다.",
+                "토_여름": "당신은 <span class='highlight-txt'>고집이 세고 인색한 구석</span>이 있습니다. 자기 것 챙기기에 바빠서 남에게 베푸는 것에 인색합니다. 욕심이 많아 무리하게 일을 벌이다가 탈이 날 수 있습니다.<br><br>소통 능력이 부족해 남의 입장을 헤아리지 못하고 자기 방식만 고집합니다. 이로 인해 주변 사람들과 마찰이 생기거나 고립될 수 있습니다. 겉으로는 묵직해 보이지만 속은 의심이 많습니다.<br><br>움켜쥐고만 있으면 새로운 것이 들어오지 않습니다. 마음을 열고 나누는 법을 배워야 더 큰 복을 받을 수 있습니다.",
+                "토_가을": "당신은 <span class='highlight-txt'>이해타산이 빠르고 기회주의적인 면</span>이 있습니다. 겉으로는 의리 있는 척하지만, 결정적인 순간에는 자신의 이익을 우선시합니다. 남의 일에 간섭하기 좋아하면서 정작 자기 관리는 소홀할 수 있습니다.<br><br>재물에 대한 집착이 강해 돈을 좇지만, 요행을 바라거나 잔머리를 굴리다가 오히려 손해를 볼 수 있습니다. 남을 가르치려 드는 태도는 꼰대처럼 보일 수 있으니 주의하세요.<br><br>진실함이 없으면 인간관계는 오래가지 못합니다. 얄팍한 처세술보다는 진정성 있는 태도가 필요합니다.",
+                "토_겨울": "당신은 <span class='highlight-txt'>속을 알 수 없고 폐쇄적인 성향</span>입니다. 자기만의 세계에 빠져 남들과 소통을 거부하고, 의심이 많아 사람을 잘 믿지 않습니다. 겉으로는 얌전해 보이나 내면에는 엉뚱한 욕망이나 고집이 도사리고 있습니다.<br><br>행동력이 부족하고 게을러서 생각만 하다가 기회를 놓칩니다. 한 번 토라지면 오래가는 뒤끝이 있어 주변 사람을 힘들게 합니다.<br><br>세상 밖으로 나와 소통하세요. 혼자만의 성에 갇혀 있으면 고립될 뿐입니다. 마음을 열고 솔직해지는 연습이 필요합니다.",
+                "금_봄": "당신은 <span class='highlight-txt'>말이 날카로워 남에게 상처를 주는 버릇</span>이 있습니다. '솔직함'을 핑계로 무례하게 굴지는 않는지 돌아보세요. 성격이 급하고 참을성이 없어 일을 그르치기 쉽습니다.<br><br>자기주장이 너무 강해 독불장군처럼 행동하다가 주변의 반발을 살 수 있습니다. 타인의 감정에 공감하는 능력이 부족해 냉정하다는 평가를 받습니다.<br><br>부드러움이 강함을 이긴다는 말을 명심하세요. 말을 예쁘게 하고 상대를 배려하는 마음을 가질 때 당신의 리더십은 빛을 발할 것입니다.",
+                "금_여름": "당신은 <span class='highlight-txt'>겉멋이 들고 허세가 있는 편</span>입니다. 실속보다는 남들에게 보여지는 모습에 치중합니다. 자존심이 너무 세서 자신의 부족함을 인정하지 않으려 하고, 지적받으면 공격적으로 변합니다.<br><br>스트레스에 취약해 감정 기복이 심하고, 예민하게 반응하여 주변 분위기를 얼어붙게 만듭니다. 멘탈이 약해 작은 시련에도 쉽게 좌절할 수 있습니다.<br><br>포장지를 벗기고 내면을 단단하게 채우세요. 겉모습은 시간이 지나면 바래지만, 실력과 인격은 영원히 남습니다.",
+                "금_가을": "당신은 <span class='highlight-txt'>너무 강해서 부러지기 쉬운 성격</span>입니다. 타협을 모르고 승부욕이 지나쳐서 적을 많이 만듭니다. 목표를 달성하기 위해 주변을 희생시키는 냉혹함이 있을 수 있습니다.<br><br>유연성이 부족해 한 번 정한 것은 끝까지 밀고 나가다가 낭패를 보기도 합니다. 너무 원칙만 따지다 보면 사람이 떠나고 고립될 수 있습니다.<br><br>강한 것만이 능사가 아닙니다. 때로는 져주고 물러서는 여유가 필요합니다. 주변 사람들을 챙기고 보듬는 따뜻함을 배우세요.",
+                "금_겨울": "당신은 <span class='highlight-txt'>너무 차갑고 까칠해서 다가가기 힘든 사람</span>입니다. 머리는 좋지만 그 똑똑함으로 남을 무시하거나 비꼬는 경향이 있습니다. 예민하고 결벽증적인 면이 있어 본인도 피곤하고 남도 피곤하게 합니다.<br><br>지나치게 이성적이라 인간미가 부족하고, 공감 능력이 떨어집니다. 혼자 고고한 척하지만 사실은 외로움을 많이 탑니다.<br><br>비판하기보다 칭찬하는 법을 배우세요. 당신의 그 차가운 지성에 따뜻한 감성이 더해진다면 훨씬 매력적인 사람이 될 것입니다.",
+                "수_봄": "당신은 <span class='highlight-txt'>귀가 얇고 맺고 끊음이 불분명</span>합니다. 남의 사정을 봐주다가 정작 본인은 손해를 보는 경우가 많습니다. 감정에 휩쓸려 현실적인 판단을 내리지 못하고 우유부단하게 행동합니다.<br><br>오지랖이 넓어 남의 일에 신경 쓰느라 자기 할 일을 놓치곤 합니다. 거절을 못 하는 성격 때문에 이용당하기 쉬우니 주의해야 합니다.<br><br>남 챙기기 전에 본인부터 챙기세요. 착한 사람 콤플렉스에서 벗어나 냉철하게 판단하고 행동하는 결단력이 필요합니다.",
+                "수_여름": "당신은 <span class='highlight-txt'>변덕이 심하고 진득하지 못한 편</span>입니다. 상황에 따라 이랬다저랬다 태도를 바꾸니 신뢰를 얻기 힘듭니다. 잔머리를 잘 굴리지만 정작 큰 그림은 보지 못하는 근시안적인 면이 있습니다.<br><br>요령을 피우려다 오히려 일을 그르치거나, 책임감을 회피하려는 경향이 있습니다. 가볍게 행동하다가 구설수에 오를 수 있으니 언행을 조심해야 합니다.<br><br>조금 더 진중하고 무게감 있게 행동하세요. 얄팍한 처세술로는 한계가 있습니다. 성실함과 꾸준함만이 당신을 지켜줄 것입니다.",
+                "수_가을": "당신은 <span class='highlight-txt'>생각이 너무 많아 비관에 빠지기 쉽습니다</span>. 혼자만의 망상이나 걱정에 사로잡혀 현실을 제대로 보지 못할 때가 있습니다. 지나치게 따지고 드는 성격이라 주변 사람을 피곤하게 할 수 있습니다.<br><br>아는 척하는 것을 좋아하고 남을 가르치려 드는 경향이 있어 잘난 체한다는 오해를 사기도 합니다. 행동력은 부족하면서 이론만 내세우는 서생 같은 면이 있습니다.<br><br>머릿속의 생각을 비우고 세상 밖으로 나오세요. 너무 깊게 파고들면 오히려 길을 잃습니다. 단순하게 생각하고 행동하는 것이 도움이 됩니다.",
+                "수_겨울": "당신은 <span class='highlight-txt'>속을 알 수 없고 비밀이 너무 많습니다</span>. 겉으로는 웃고 있어도 속내를 드러내지 않아 사람들이 당신을 어려워하거나 의심할 수 있습니다. 욕심이 많아 모든 것을 가지려다 탈이 날 수 있습니다.<br><br>이성 문제나 유흥에 빠지기 쉽고, 목적을 위해서라면 수단을 가리지 않는 냉정함이 있습니다. 자기 꾀에 자기가 넘어갈 수 있으니 주의하세요.<br><br>투명하고 솔직하게 행동하세요. 감추려고 할수록 고립됩니다. 당신의 능력을 올바른 곳에 쓴다면 큰 성취를 이룰 수 있습니다."
+            },
+
+            // [2. 성격] 십천간 - 단점 (수위 조절: 혐성 -> 고칠 점)
+            personality: {
+                "甲": "당신은 <span class='highlight-txt'>자존심이 너무 센 대나무</span> 같습니다. 굽힐 줄 모르고 부러지더라도 내 고집을 피우는 성격입니다. 남의 조언을 간섭으로 여기고 무시하다가 고립될 수 있습니다. 융통성을 기르지 않으면 사회생활이 피곤해집니다.",
+                "乙": "당신은 <span class='highlight-txt'>의존적인 성향</span>이 강합니다. 혼자 해결하려 하기보다 남에게 기대려는 마음이 큽니다. 귀가 얇아 이리저리 휘둘리고, 끈기가 부족해 쉽게 포기하는 버릇을 고쳐야 합니다. 홀로서기가 필요합니다.",
+                "丙": "당신은 <span class='highlight-txt'>나서기를 좋아하고 실속이 없습니다</span>. 겉모습은 화려하지만 내실이 부족할 수 있습니다. 성격이 급해 욱하는 기질이 있고, 비밀을 지키지 못해 입방아에 오를 수 있으니 입을 무겁게 하세요.",
+                "丁": "당신은 <span class='highlight-txt'>집착과 소유욕이 강한 편</span>입니다. 겉으로는 조용해 보이나 속으로는 꽁하고 뒤끝이 깁니다. 한 번 싫어진 사람은 끝까지 미워하는 좁은 마음을 버려야 합니다. 감정 기복을 다스리세요.",
+                "戊": "당신은 <span class='highlight-txt'>둔하고 고집이 센 벽창호</span> 같습니다. 변화를 싫어하고 행동이 굼뜨며, 남의 말을 도통 듣지 않습니다. 미련하게 버티다가 기회를 놓치지 말고, 상황에 맞춰 빠르게 움직이는 법을 배우세요.",
+                "己": "당신은 <span class='highlight-txt'>의심이 많고 계산적</span>입니다. 손해 보지 않으려고 지나치게 따지다 보니 주변에 인색하다는 평을 듣습니다. 소심해서 결정장애가 있고, 자기 속내를 감추고 음흉하게 굴 때가 있습니다.",
+                "庚": "당신은 <span class='highlight-txt'>말과 행동이 너무 거칩니다</span>. 직설적인 화법이 남에게 상처가 된다는 걸 알아야 합니다. 타협을 모르고 강압적으로 밀어붙이다가 적을 만들 수 있습니다. 부드러움을 배우세요.",
+                "辛": "당신은 <span class='highlight-txt'>지나치게 예민하고 까탈스럽습니다</span>. 자기가 제일 잘난 줄 알고 남을 무시하는 경향이 있습니다. 완벽주의를 추구하다 본인 스스로를 볶아대니 늘 신경이 곤두서 있습니다. 둥글게 사는 법을 익히세요.",
+                "壬": "당신은 <span class='highlight-txt'>잔머리를 너무 굴립니다</span>. 요령을 피우려다 신뢰를 잃을 수 있습니다. 생각만 많고 실행력이 부족하며, 이성 문제나 유흥에 빠지기 쉬우니 자기 관리에 힘써야 합니다.",
+                "癸": "당신은 <span class='highlight-txt'>매사를 부정적으로 생각하는 경향</span>이 있습니다. 남 탓을 하거나 피해 의식에 빠지기 쉽습니다. 겉과 속이 다를 수 있으며, 우울한 감정에 쉽게 전염되니 긍정적인 마인드가 필요합니다."
+            },
+            
+            // [3. 재물] - 부정적 해석 (현실적 경고)
+            money: {
+                "rich": "돈은 벌 수 있으나 <span class='highlight-txt'>관리가 안 되어 줄줄 샐 운명</span>입니다. 한탕주의를 노리거나 유흥으로 탕진하기 쉽습니다. 돈이 들어오면 주변의 유혹이 많아지니, 사기나 투자를 조심하지 않으면 번 돈 다 날립니다.",
+                "stable": "큰 부자가 되기보다는 <span class='highlight-txt'>평생 일해야 먹고사는 팔자</span>입니다. 요행을 바라면 안 되고, 정직하게 땀 흘려야만 돈이 모입니다. 융통성이 없어 돈 불리는 재주가 부족하니, 절약하고 저축하는 게 살길입니다.",
+                "honor": "돈보다는 <span class='highlight-txt'>겉치레에 돈을 다 쓰는 실속 없는 타입</span>입니다. 남들 보기에 좋은 명품이나 차에 집착하다가 통장 잔고는 비어있을 수 있습니다. 체면 차리느라 밥값, 술값 내다가 빚만 늘어날 수 있으니 분수에 맞게 사세요.",
+                "general": "경제 관념이 부족해 <span class='highlight-txt'>충동구매가 잦은 편</span>입니다. 기분에 따라 돈을 써버리고 후회하는 일이 반복됩니다. 돈 귀한 줄 모르고 펑펑 쓰다가는 노년에 빈곤해질 수 있으니 지금부터라도 가계부를 쓰세요."
+            },
+
+            // [4. 직업] - 월지 오행 비판 (직장 생활 단점)
+            job: {
+                "목": "시작만 거창하고 <span class='highlight-txt'>마무리가 안 되는 게 문제</span>입니다. 끈기가 부족해 이직이 잦거나 한 분야에 정착하기 힘들 수 있습니다. 고집이 세서 상사나 동료와 마찰이 잦으니 조직 생활에 적응하려면 성격을 죽여야 합니다.",
+                "화": "성격이 급해 <span class='highlight-txt'>실수가 잦고 감정적</span>으로 일 처리를 합니다. 참을성이 없어 조금만 힘들어도 포기하려 합니다. 화려한 것만 쫓다가 실속 없는 일을 하게 될 수 있으니 진득하게 경력을 쌓으세요.",
+                "토": "일 처리가 늦고 <span class='highlight-txt'>답답하다는 평가</span>를 받기 쉽습니다. 변화를 싫어해 새로운 기술이나 트렌드를 따라가지 못할 수 있습니다. 융통성이 없어 꽉 막힌 사람 취급을 받을 수 있으니 센스를 키우세요.",
+                "금": "너무 깐깐하고 <span class='highlight-txt'>지적질을 좋아해 동료들이 기피</span>합니다. 독단적으로 일을 처리하려 하고 협업이 잘 안 됩니다. 원칙만 따지다가 융통성 없다는 소리를 들으니, 둥글게 일하는 법을 배우세요.",
+                "수": "머리는 좋으나 <span class='highlight-txt'>행동력이 부족해 게으릅니다</span>. 잔머리를 굴려 요령을 피우려다 신뢰를 잃을 수 있습니다. 생각이 너무 많아 결정을 못 내리고 우유부단하게 굴다가 기회를 놓칩니다."
+            },
+
+            // [5. 연애] - 지지 12동물 비판 (연애 팩폭)
+            love: {
+                "子": "<span class='highlight-txt'>이성 문제로 속 썩을 일</span>이 많습니다. 한 사람에게 만족하지 못하고 딴눈을 팔거나, 반대로 상대에게 너무 집착할 수 있습니다. 밤늦게 돌아다니는 것을 좋아해 오해를 살 수 있습니다.",
+                "丑": "<span class='highlight-txt'>무뚝뚝하고 재미가 없어</span> 연애가 지루해지기 쉽습니다. 표현을 안 하니 상대방은 답답해 죽습니다. 고집이 세서 절대 지지 않으려 하니 다툼이 잦습니다. 좀 더 다정하게 대해주세요.",
+                "寅": "<span class='highlight-txt'>자기중심적인 연애</span>를 합니다. 상대를 배려하기보다 내 방식대로 끌고 가려 합니다. 욱하는 성질 때문에 상처 주는 말을 하고 후회합니다. 밖으로 나도는 걸 좋아해 연인을 외롭게 할 수 있습니다.",
+                "卯": "<span class='highlight-txt'>변덕이 심하고 예민</span>해서 맞춰주기 힘듭니다. 허영심이 있어 겉모습을 너무 따지거나, 상대에게 바라는 게 많습니다. 싫증을 잘 느껴 연애가 오래가지 못할 수 있습니다.",
+                "辰": "<span class='highlight-txt'>눈이 너무 높고 현실 감각이 부족</span>합니다. 드라마 같은 사랑을 꿈꾸지만 현실은 다릅니다. 배우자를 무시하거나 깔보는 태도가 은연중에 나올 수 있으니 겸손해지세요.",
+                "巳": "<span class='highlight-txt'>의심이 많고 질투가 심합니다</span>. 상대를 구속하려 들고 집착하는 경향이 있습니다. 변덕스러워서 어느 장단에 맞춰야 할지 모릅니다. 이성에게 인기는 많으나 실속 없는 만남일 수 있습니다.",
+                "午": "<span class='highlight-txt'>금방 타올랐다 금방 식는 냄비 근성</span>입니다. 열정적인 건 좋지만 다혈질이라 싸움이 잦습니다. 화나면 앞뒤 안 가리고 폭발하니 상대가 지쳐 떠날 수 있습니다. 자존심 좀 내려놓으세요.",
+                "未": "<span class='highlight-txt'>소심하고 잘 삐지는 성격</span>입니다. 사소한 일에 상처받고 꽁해 있어서 상대를 피곤하게 합니다. 결정장애가 있어 리드하지 못하고 상대에게 미루는 경향이 있습니다.",
+                "申": "<span class='highlight-txt'>한 사람에게 정착하기 힘든 타입</span>입니다. 호기심이 많아 여기저기 눈길을 줍니다. 산만하고 진지하지 못해 가벼운 만남으로 끝날 수 있습니다. 믿음을 주는 것이 중요합니다.",
+                "酉": "<span class='highlight-txt'>지나치게 깐깐하고 잔소리가 심합니다</span>. 상대의 단점을 지적하고 고치려 드니 숨이 막힙니다. 결벽증적인 면이 있어 피곤한 스타일입니다. 완벽한 사람은 없다는 걸 인정하세요.",
+                "戌": "<span class='highlight-txt'>융통성이 없고 보수적</span>입니다. 상대를 의심하고 감시하려는 경향이 있습니다. 한 번 화나면 무섭게 돌변합니다. 너무 진지해서 재미없다는 소리를 들을 수 있습니다.",
+                "亥": "<span class='highlight-txt'>우유부단해서 관계를 확실히 못 합니다</span>. 맺고 끊음이 약해 어장관리라는 오해를 살 수 있습니다. 게을러서 데이트나 기념일을 챙기는 걸 귀찮아할 수 있습니다."
+            },
+
+            // [6. 조언] - 일간별 쓴소리
+            advice: {
+                "甲": "<span class='highlight-txt'>고집 좀 꺾으세요</span>. 부러지기 전에 휘어지는 법을 배워야 합니다. 당신만 옳은 게 아닙니다. 남의 말도 좀 들으세요.",
+                "乙": "<span class='highlight-txt'>혼자서도 잘해야 합니다</span>. 남에게 기대지 말고 자립심을 키우세요. 끈기 있게 하나를 끝까지 해보는 경험이 필요합니다.",
+                "丙": "<span class='highlight-txt'>입을 무겁게 하고 나서지 마세요</span>. 말보다 행동으로 보여주세요. 감정에 휩쓸려 실수하지 않도록 차분해지는 연습을 하세요.",
+                "丁": "<span class='highlight-txt'>뒤끝 작렬하지 마세요</span>. 쿨하게 넘기는 법을 배우세요. 혼자만의 생각에 갇혀 망상하지 말고 밖으로 나와 소통하세요.",
+                "戊": "<span class='highlight-txt'>좀 더 빠릿하게 움직이세요</span>. 미련하게 버티지 말고 변화를 받아들이세요. 눈치를 키우고 상황 파악을 빨리 해야 합니다.",
+                "己": "<span class='highlight-txt'>의심을 거두고 베푸세요</span>. 너무 계산적으로 굴면 사람을 잃습니다. 대범하게 생각하고 결정은 신속하게 내리세요.",
+                "庚": "<span class='highlight-txt'>말을 부드럽게 하세요</span>. 당신의 직설화법은 폭력일 수 있습니다. 강한 것만이 능사가 아닙니다. 상대를 배려하세요.",
+                "辛": "<span class='highlight-txt'>예민하게 굴지 마세요</span>. 세상은 당신 중심으로 돌아가지 않습니다. 까칠함을 내려놓고 둥글게 어울리는 법을 배우세요.",
+                "壬": "<span class='highlight-txt'>잔머리 굴리지 말고 정직하세요</span>. 진실만이 통합니다. 음주가무나 이성 문제로 시간을 낭비하지 마세요.",
+                "癸": "<span class='highlight-txt'>남 탓하지 말고 긍정적으로 생각하세요</span>. 피해 의식에서 벗어나야 합니다. 우울해하지 말고 밝은 에너지를 가지려 노력하세요."
+            }
+        };
+
+        window.onload = function() {
+            const ys = document.getElementById('yearSelect');
+            const ms = document.getElementById('monthSelect');
+            const ds = document.getElementById('daySelect');
+            for(let i=2030; i>=1940; i--) { let opt = document.createElement("option"); opt.value = i; opt.innerText = i + "년"; ys.appendChild(opt); }
+            ys.value = 1995;
+            for(let i=1; i<=12; i++) { let opt = document.createElement("option"); opt.value = i; opt.innerText = i + "월"; ms.appendChild(opt); }
+            for(let i=1; i<=31; i++) { let opt = document.createElement("option"); opt.value = i; opt.innerText = i + "일"; ds.appendChild(opt); }
+        };
+
+        function setGender(g) {
+            gender = g;
+            document.getElementById('maleBtn').classList.toggle('active', g === 'm');
+            document.getElementById('femaleBtn').classList.toggle('active', g === 'f');
+        }
+
+        function setCalendar(type) {
+            calendarType = type;
+            document.getElementById('solarBtn').classList.toggle('active', type === 'solar');
+            document.getElementById('lunarBtn').classList.toggle('active', type === 'lunar');
+        }
+
+        const WUXING = {"甲":"목","乙":"목","丙":"화","丁":"화","戊":"토","己":"토","庚":"금","辛":"금","壬":"수","癸":"수","子":"수","丑":"토","寅":"목","卯":"목","辰":"토","巳":"화","午":"화","未":"토","申":"금","酉":"금","戌":"토","亥":"수"};
+        const YIN_YANG = {"甲":1,"乙":0,"丙":1,"丁":0,"戊":1,"己":0,"庚":1,"辛":0,"壬":1,"癸":0,"子":1,"丑":0,"寅":1,"卯":0,"辰":1,"巳":0,"午":1,"未":0,"申":1,"酉":0,"戌":1,"亥":0};
+        const ZHI_MAIN = {"子":"癸", "丑":"己", "寅":"甲", "卯":"乙", "辰":"戊", "巳":"丙", "午":"丁", "未":"己", "申":"庚", "酉":"辛", "戌":"戊", "亥":"壬"};
+        const COLOR_CLASS = {"목":"wood", "화":"fire", "토":"earth", "금":"metal", "수":"water"};
+
+        function getTenGod(me, target) {
+            if(!target) return "";
+            const wMe = WUXING[me]; const wT = WUXING[target];
+            const pMe = YIN_YANG[me]; const pT = YIN_YANG[target];
+            const same = (pMe === pT);
+            if (wMe === wT) return same ? "비견" : "겁재";
+            if ((wMe==="목"&&wT==="화")||(wMe==="화"&&wT==="토")||(wMe==="토"&&wT==="금")||(wMe==="금"&&wT==="수")||(wMe==="수"&&wT==="목")) return same ? "식신" : "상관";
+            if ((wMe==="목"&&wT==="토")||(wMe==="화"&&wT==="금")||(wMe==="토"&&wT==="수")||(wMe==="금"&&wT==="목")||(wMe==="수"&&wT==="화")) return same ? "편재" : "정재";
+            if ((wT==="목"&&wMe==="토")||(wT==="화"&&wMe==="금")||(wT==="토"&&wMe==="수")||(wT==="금"&&wMe==="목")||(wT==="수"&&wMe==="화")) return same ? "편관" : "정관";
+            if ((wT==="목"&&wMe==="화")||(wT==="화"&&wMe==="토")||(wT==="토"&&wMe==="금")||(wT==="금"&&wMe==="수")||(wT==="수"&&wMe==="목")) return same ? "편인" : "정인";
+            return "";
+        }
+
+        function analyzeSaju() {
+            const name = document.getElementById('userName').value;
+            const y = parseInt(document.getElementById('yearSelect').value);
+            const m = parseInt(document.getElementById('monthSelect').value);
+            const d = parseInt(document.getElementById('daySelect').value);
+            const hVal = document.getElementById('hourSelect').value;
+            
+            if(!name) { alert("이름을 입력해주세요."); return; }
+            const timeUnknown = (hVal === "99");
+            const h = timeUnknown ? 12 : parseInt(hVal);
+
+            let lunarObj;
+            try {
+                if(calendarType === 'solar') lunarObj = Solar.fromYmdHms(y, m, d, h, 0, 0).getLunar();
+                else lunarObj = Lunar.fromYmdHms(y, m, d, h, 0, 0);
+            } catch(e) { alert("날짜가 올바르지 않습니다."); return; }
+
+            const eightChar = lunarObj.getEightChar();
+            const pillars = [
+                { gan: eightChar.getTimeGan(), zhi: eightChar.getTimeZhi(), title: "시주" },
+                { gan: eightChar.getDayGan(), zhi: eightChar.getDayZhi(), title: "일주" },
+                { gan: eightChar.getMonthGan(), zhi: eightChar.getMonthZhi(), title: "월주" },
+                { gan: eightChar.getYearGan(), zhi: eightChar.getYearZhi(), title: "년주" }
+            ];
+            const me = pillars[1].gan;
+            const dayZhi = pillars[1].zhi;
+            const monthZhi = pillars[2].zhi;
+            const meElement = WUXING[me];
+
+            let html = "";
+            pillars.forEach((p, i) => {
+                let isUnknown = (i===0 && timeUnknown);
+                let gan = isUnknown ? "?" : p.gan;
+                let zhi = isUnknown ? "?" : p.zhi;
+                let isMe = (i===1);
+                
+                let ganTen = isMe ? "본원" : getTenGod(me, gan);
+                let zhiTen = isUnknown ? "-" : getTenGod(me, ZHI_MAIN[zhi] || zhi);
+                if(isUnknown) ganTen = "-";
+
+                html += `
+                    <div class="pillar-box ${isMe?'me':''}">
+                        <div class="pillar-title">${p.title}</div>
+                        <span class="ten-god-tag">${ganTen}</span>
+                        <div><span class="hanja ${isUnknown?'':COLOR_CLASS[WUXING[gan]]}">${gan}</span><span class="hangul">${isUnknown?'-':WUXING[gan]}</span></div>
+                        <div style="margin-top:10px;"><span class="hanja ${isUnknown?'':COLOR_CLASS[WUXING[zhi]]}">${zhi}</span><span class="hangul">${isUnknown?'-':WUXING[zhi]}</span></div>
+                    </div>
+                `;
+            });
+            document.getElementById('sajuGrid').innerHTML = html;
+
+            let season = "";
+            if(["寅","卯","辰"].includes(monthZhi)) season = "봄";
+            else if(["巳","午","未"].includes(monthZhi)) season = "여름";
+            else if(["申","酉","戌"].includes(monthZhi)) season = "가을";
+            else season = "겨울";
+
+            const totalKey = `${meElement}_${season}`;
+            let totalText = DB.total[totalKey] ? DB.total[totalKey] : DB.total["default"];
+            let totalHTML = `<span class="sub-badge">힘든 이유: ${meElement} / ${season}생</span><br>${totalText}`;
+            document.getElementById('result-total').innerHTML = totalHTML;
+
+            let perText = DB.personality[me] ? DB.personality[me] : DB.personality["default"];
+            let perHTML = `<span class="sub-badge">고칠 점: ${me} (${meElement})</span><br>${perText}`;
+            document.getElementById('result-personality').innerHTML = perHTML;
+
+            let moneyKey = "general";
+            let dTen = getTenGod(me, ZHI_MAIN[dayZhi]);
+            if(dTen.includes("재")) moneyKey = "rich";
+            else if(dTen.includes("식") || dTen.includes("상")) moneyKey = "stable";
+            else if(dTen.includes("관")) moneyKey = "honor";
+            
+            let moneyHTML = `<span class="sub-badge">소비 습관: ${moneyKey==='rich'?'충동적':moneyKey==='stable'?'생계형':moneyKey==='honor'?'과시형':'무계획'}</span><br>${DB.money[moneyKey]}`;
+            document.getElementById('result-money').innerHTML = moneyHTML;
+
+            let jobKey = WUXING[monthZhi];
+            let jobText = DB.job[jobKey] ? DB.job[jobKey] : DB.job["default"];
+            let jobHTML = `<span class="sub-badge">직장 생활: ${jobKey}기운</span><br>${jobText}`;
+            document.getElementById('result-job').innerHTML = jobHTML;
+
+            let loveText = DB.love[dayZhi] ? DB.love[dayZhi] : DB.love["default"];
+            let loveHTML = `<span class="sub-badge">연애 문제점: ${dayZhi}</span><br>${loveText}`;
+            document.getElementById('result-love').innerHTML = loveHTML;
+
+            let adviceText = DB.advice[me] ? DB.advice[me] : "답이 없습니다.";
+            let adviceHTML = `<span class="sub-badge">쓴소리</span><br>${adviceText}`;
+            document.getElementById('result-advice').innerHTML = adviceHTML;
+
+            document.getElementById('result-area').style.display = 'block';
+            setTimeout(() => {
+                window.scrollTo({ top: document.getElementById('result-area').offsetTop - 90, behavior: 'smooth' });
+            }, 100);
+        }
+    </script>
+</body>
+</html>
