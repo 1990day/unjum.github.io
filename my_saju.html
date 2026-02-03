@@ -17,7 +17,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lunar-javascript/1.6.12/lunar.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
-    
+    <script src="https://js.tosspayments.com/v1/payment"></script>
+
     <style>
         :root {
             --bg-dark: #0f172a;
@@ -43,6 +44,60 @@
             font-size: 16px;
             overflow-x: hidden;
             word-break: keep-all;
+        }
+
+        /* [추가] 준비중 화면 스타일 */
+        #coming-soon-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 99999; /* 최상단 배치 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* 배경 블러 처리 (Frosted Glass Effect) */
+            background-color: rgba(15, 23, 42, 0.6); /* 약간 어두운 반투명 */
+            backdrop-filter: blur(8px); /* 뒤에 있는 요소를 흐리게 */
+            -webkit-backdrop-filter: blur(8px); /* 사파리 지원 */
+        }
+
+        .cs-card {
+            background: #fff;
+            width: 90%; max-width: 400px;
+            padding: 40px 30px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            border: 2px solid var(--gold);
+            animation: popUp 0.5s ease-out;
+        }
+
+        .cs-icon { font-size: 3rem; margin-bottom: 15px; display: block; }
+        .cs-title { 
+            font-family: var(--font-sans); 
+            font-size: 1.5rem; font-weight: 800; 
+            color: var(--bg-dark); margin-bottom: 10px; 
+        }
+        .cs-desc { 
+            font-family: var(--font-sans); 
+            color: #64748b; font-size: 1rem; margin-bottom: 30px; 
+        }
+        .cs-btn {
+            display: inline-block;
+            background-color: var(--bg-dark);
+            color: #fff;
+            text-decoration: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-family: var(--font-sans);
+            transition: 0.3s;
+        }
+        .cs-btn:hover { background-color: var(--gold); color: #000; }
+
+        @keyframes popUp {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
         }
 
         /* 로딩 스크린 */
@@ -290,6 +345,19 @@
 </head>
 <body>
 
+    <div id="coming-soon-overlay">
+        <div class="cs-card">
+            <span class="cs-icon">🚧</span>
+            <div class="cs-title">PREMIUM SERVICE<br>준비 중</div>
+            <p class="cs-desc">
+                더 정확하고 품격 있는 VVIP 서비스를 위해<br>
+                현재 시스템 점검 및 업데이트 중입니다.<br>
+                빠른 시일 내에 오픈하겠습니다.
+            </p>
+            <a href="index.html" class="cs-btn">홈으로 돌아가기</a>
+        </div>
+    </div>
+
     <div id="loading-screen">
         <div class="spinner"></div>
         <div style="font-size:1.3rem; font-weight:800; letter-spacing: 2px; margin-bottom:10px;">VVIP PREMIUM AI</div>
@@ -434,7 +502,7 @@
                     <option value="22">해시 (21:30 ~ 23:29)</option>
                 </select>
             </div>
-            <button class="btn-analyze" onclick="app.analyze()">VVIP 정밀 분석 시작하기</button>
+          <button class="btn-analyze" onclick="startPayment()">VVIP 정밀 분석 결제하기 (3,900원)</button>
         </div>
 
         <div id="result-area">
@@ -994,7 +1062,81 @@ const ui = {
     setCal: function(v) { this.calType=v; document.getElementById('btn-solar').className=v==='solar'?'btn-option selected':'btn-option'; document.getElementById('btn-lunar').className=v==='lunar'?'btn-option selected':'btn-option'; }
 };
 
-window.onload = function() { ui.init(); };
+/* [추가] 토스페이먼츠 결제 로직 
+   * 주의: 'test_ck_...' 부분에 본인의 [클라이언트 키]를 넣으세요.
+*/
+const clientKey = 'test_ck_D5GePWvyJnrK0W0k6q8gLzN97Eoq'; // 토스 개발자센터에서 발급받은 '클라이언트 키' 입력
+var tossPayments = TossPayments(clientKey);
+
+function startPayment() {
+    // 1. 입력값 검증 (이름 없으면 결제 안 함)
+    const name = document.getElementById('user-name').value;
+    if (!name) { alert('성함을 입력해주세요.'); return; }
+
+    // 2. 현재 입력한 정보를 브라우저에 임시 저장 (결제 후 돌아왔을 때 사용)
+    // 페이지가 이동되면 입력값이 사라지므로 저장이 필수입니다.
+    const userInput = {
+        name: name,
+        gender: ui.gen,
+        year: document.getElementById('sel-year').value,
+        month: document.getElementById('sel-month').value,
+        day: document.getElementById('sel-day').value,
+        calType: ui.calType,
+        hour: document.getElementById('sel-hour').value
+    };
+    localStorage.setItem('saju_user_data', JSON.stringify(userInput));
+
+    // 3. 결제창 호출
+    tossPayments.requestPayment('카드', {
+        amount: 3900, // 결제 금액
+        orderId: 'ORDER_' + new Date().getTime(), // 주문 ID (고유해야 함)
+        orderName: 'VVIP 사주 정밀 감정', // 주문명
+        customerName: name, // 주문자명
+        successUrl: window.location.href, // 결제 성공 시 현재 페이지로 돌아옴
+        failUrl: window.location.href, // 결제 실패 시 현재 페이지로 돌아옴
+    });
+}
+
+// [수정] window.onload 전체 교체
+window.onload = function() { 
+    ui.init(); 
+
+    // URL에서 결제 결과 확인
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentKey = urlParams.get('paymentKey');
+    const orderId = urlParams.get('orderId');
+    const amount = urlParams.get('amount');
+
+    // 1. 결제 성공 파라미터가 있다면?
+    if (paymentKey) {
+        // (1) 저장해둔 사용자 입력값 복원
+        const savedData = localStorage.getItem('saju_user_data');
+        if (savedData) {
+            const data = JSON.parse(savedData);
+            
+            // 입력창에 값 다시 채워넣기
+            document.getElementById('user-name').value = data.name;
+            ui.setGender(data.gender);
+            document.getElementById('sel-year').value = data.year;
+            document.getElementById('sel-month').value = data.month;
+            document.getElementById('sel-day').value = data.day;
+            ui.setCal(data.calType);
+            document.getElementById('sel-hour').value = data.hour;
+
+            // (2) 결과 분석 함수 즉시 실행
+            // 사용자가 버튼을 안 눌러도 자동으로 결과가 나옵니다.
+            app.analyze();
+            
+            // (3) 임시 데이터 삭제 (선택사항)
+            // localStorage.removeItem('saju_user_data');
+        }
+    } 
+    // 2. 결제 실패 파라미터가 있다면?
+    else if (urlParams.get('code')) {
+        alert("결제가 취소되었거나 실패했습니다. 다시 시도해주세요.");
+        history.replaceState({}, null, location.pathname); // URL 깔끔하게 정리
+    }
+};
 </script>
 </body>
 </html>
