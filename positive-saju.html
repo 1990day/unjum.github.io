@@ -4,7 +4,8 @@
       <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="google-adsense-account" content="ca-pub-5522499110435321">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5522499110435321"
+     crossorigin="anonymous"></script>
 <link rel="icon" href="/favicon.png" type="image/png">
     <title>운점 - 좋은 말만 하는 사주</title>
     <meta name="description" content="운점 - 좋은 말만 하는 사주">
@@ -50,40 +51,65 @@
         }
 
         /* --- 헤더 --- */
-        header {
-            position: fixed; top: 0; left: 0; width: 100%; height: 80px;
-            background-color: var(--nav-bg); display: flex; justify-content: space-between;
-            align-items: center; padding: 0 40px; z-index: 1000; 
-            border-bottom: 2px solid var(--nav-border);
+       header {
+            position: fixed; top: 0; left: 0; 
+            width: 100%; 
+            height: 70px; /* 기존 80px -> 70px로 수정 */
+            background-color: var(--nav-bg); 
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 40px; 
+            z-index: 1000; 
+            border-bottom: 1px solid var(--nav-border); /* 두께 2px -> 1px로 수정 */
             box-shadow: 0 4px 15px rgba(5, 150, 105, 0.05);
         }
-        .logo img { height: 46px; width: auto; }
 
-        .top-menu { display: flex; gap: 35px; height: 100%; align-items: center; }
+        .logo img { height: 40px; width: auto; } /* 로고 크기 46px -> 40px로 수정 */
+
+        /* PC용 메뉴 */
+        .top-menu { display: flex; gap: 30px; height: 100%; align-items: center; } /* gap 35px -> 30px 수정 */
         .menu-item { position: relative; height: 100%; display: flex; align-items: center; cursor: pointer; }
         .menu-title { 
             color: var(--text-main); text-decoration: none; 
-            font-size: 1.25rem; transition: 0.3s; white-space: nowrap; font-weight: bold; 
+            font-size: 1.1rem; /* 1.25rem -> 1.1rem 수정 */
+            transition: 0.3s; white-space: nowrap; 
+            /* font-weight: bold; 제거 (기준 코드 스타일) */
         }
         .menu-item:hover .menu-title { color: var(--accent); }
 
-        .dropdown-content {
-            display: none; position: absolute; top: 80px; left: 50%; transform: translateX(-50%);
-            background-color: var(--nav-bg); min-width: 180px;
-            box-shadow: 0 8px 20px rgba(5, 150, 105, 0.15);
-            border: 1px solid var(--nav-border); border-radius: 0 0 15px 15px; z-index: 1001;
-            flex-direction: column; padding: 15px 0;
+     .dropdown-content {
+            display: none; position: absolute; 
+            top: 70px; /* 80px -> 70px 수정 */
+            left: 50%; transform: translateX(-50%);
+            background-color: var(--nav-bg); 
+            min-width: 160px; /* 180px -> 160px 수정 */
+            box-shadow: 0 8px 16px rgba(5, 150, 105, 0.15); /* 그림자 유지 */
+            border: 1px solid var(--nav-border); 
+            border-radius: 0 0 10px 10px; /* 반경 15px -> 10px 수정 */
+            z-index: 1001; flex-direction: column; padding: 10px 0; /* 패딩 15px -> 10px 수정 */
         }
         .dropdown-content a { 
-            color: var(--text-sub); padding: 14px 20px; text-decoration: none; 
-            display: block; font-size: 1.05rem; text-align: center;
+            color: var(--text-sub); padding: 12px 16px; /* 패딩 14px 20px -> 12px 16px 수정 */
+            text-decoration: none; display: block; 
+            font-size: 0.95rem; /* 1.05rem -> 0.95rem 수정 */
+            text-align: center; 
         }
         .dropdown-content a:hover { background-color: var(--bg-input); color: var(--accent); }
         @media (min-width: 769px) { .menu-item:hover .dropdown-content { display: flex; } }
 
-        .hamburger-btn { display: none; flex-direction: column; justify-content: space-between; width: 34px; height: 24px; cursor: pointer; z-index: 1100; }
-        .hamburger-btn span { display: block; width: 100%; height: 3px; background-color: var(--accent); border-radius: 3px; transition: all 0.3s ease; }
-        
+      /* 햄버거 버튼 */
+        .hamburger-btn {
+            display: none; flex-direction: column; justify-content: space-between;
+            width: 30px; height: 21px; /* 34px/24px -> 30px/21px 수정 */
+            cursor: pointer; z-index: 1100;
+        }
+        .hamburger-btn span {
+            display: block; width: 100%; height: 3px; 
+            background-color: var(--accent); /* 색상은 민트 테마 */
+            border-radius: 3px; transition: all 0.3s ease;
+        }
+        .hamburger-btn.active span:nth-child(1) { transform: translateY(9px) rotate(45deg); }
+        .hamburger-btn.active span:nth-child(2) { opacity: 0; }
+        .hamburger-btn.active span:nth-child(3) { transform: translateY(-9px) rotate(-45deg); }
         .sidebar {
             position: fixed; top: 80px; left: 0; width: 280px;
             height: calc(100vh - 80px); background-color: var(--nav-bg);
@@ -91,17 +117,52 @@
             z-index: 100; transition: left 0.3s ease-in-out;
             box-shadow: 4px 0 15px rgba(0,0,0,0.03);
         }
-        .category-title { font-size: 1.3rem; color: var(--accent); margin-bottom: 12px; display: block; border-bottom: 2px solid var(--bg-input); padding-bottom: 6px; font-weight: 800; }
-        .sub-menu { list-style: none; padding-left: 10px; }
-        .sub-menu li { margin: 12px 0; }
-        .sub-menu a { color: var(--text-sub); text-decoration: none; font-size: 1.15rem; cursor: pointer; transition: 0.2s; }
-        .sub-menu a:hover { color: var(--accent); font-weight: bold; transform: translateX(5px); display: inline-block;}
+.sidebar {
+            position: fixed; 
+            top: 70px; /* 80px -> 70px 수정 */
+            left: 0; 
+            width: 250px; /* 280px -> 250px 수정 */
+            height: calc(100vh - 70px); 
+            background-color: var(--nav-bg);
+            padding: 20px; /* 30px -> 20px 수정 */
+            overflow-y: auto; border-right: 1px solid var(--nav-border);
+            z-index: 1050; /* z-index 100 -> 1050 수정 */
+            transition: left 0.3s ease-in-out;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.03);
+        }
+        .category-title { 
+            font-size: 1.2rem; /* 1.3rem -> 1.2rem 수정 */
+            color: var(--accent); margin-bottom: 10px; display: block; 
+            border-bottom: 1px solid var(--bg-input); padding-bottom: 5px; 
+            /* font-weight: 800; 제거 */
+        }
+        .sub-menu { list-style: none; padding-left: 10px; margin-bottom: 25px; }
+        .sub-menu li { margin: 8px 0; /* 12px -> 8px 수정 */ }
+        .sub-menu a { 
+            color: var(--text-sub); text-decoration: none; 
+            font-size: 0.95rem; /* 1.15rem -> 0.95rem 수정 */
+            transition: 0.2s; 
+        }
+        .sub-menu a:hover { color: var(--accent); padding-left: 5px; }
 
-        .overlay { display: none; position: fixed; top: 80px; left: 0; width: 100%; height: calc(100vh - 80px); background-color: rgba(255, 255, 255, 0.8); backdrop-filter: blur(3px); z-index: 90; opacity: 0; transition: opacity 0.3s ease; }
+        .overlay { 
+            display: none; position: fixed; 
+            top: 70px; /* 80px -> 70px 수정 */
+            left: 0; width: 100%; 
+            height: calc(100vh - 70px); 
+            background-color: rgba(255, 255, 255, 0.8); backdrop-filter: blur(3px); 
+            z-index: 1040; opacity: 0; transition: opacity 0.3s ease; 
+        }
         .overlay.active { display: block; opacity: 1; }
 
-        main { margin-top: 80px; margin-left: 280px; padding: 50px 20px; display: flex; justify-content: center; transition: margin-left 0.3s ease; }
-        
+       main { 
+            margin-top: 70px; /* 80px -> 70px 수정 */
+            margin-left: 250px; /* 280px -> 250px 수정 */
+            padding: 40px; /* 50px 20px -> 40px 수정 */
+            display: flex; flex-direction: column; align-items: center; /* 기준 코드 스타일 */
+            min-height: calc(100vh - 70px);
+            transition: margin-left 0.3s ease; 
+        }
         .fortune-page { width: 100%; max-width: 950px; text-align: center; }
         .page-title { 
             font-size: 2.6rem; margin-bottom: 40px; font-weight: 900; 
@@ -289,7 +350,7 @@
                 </div>
 
                 <div class="input-row"><label>생년월일시</label><div class="select-group"><select id="yearSelect"></select><select id="monthSelect"></select><select id="daySelect"></select></div><div class="select-group" style="margin-top:12px;"><select id="hourSelect"><option value="99">시간 모름</option><option value="0">자시 (23:30 ~ 01:29)</option><option value="2">축시 (01:30 ~ 03:29)</option><option value="4">인시 (03:30 ~ 05:29)</option><option value="6">묘시 (05:30 ~ 07:29)</option><option value="8">진시 (07:30 ~ 09:29)</option><option value="10">사시 (09:30 ~ 11:29)</option><option value="12">오시 (11:30 ~ 13:29)</option><option value="14">미시 (13:30 ~ 15:29)</option><option value="16">신시 (15:30 ~ 17:29)</option><option value="18">유시 (17:30 ~ 19:29)</option><option value="20">술시 (19:30 ~ 21:29)</option><option value="22">해시 (21:30 ~ 23:29)</option></select><div class="type-toggle" style="margin-top:0;"><div id="solarBtn" class="type-btn active" onclick="setCalendar('solar')">양력</div><div id="lunarBtn" class="type-btn" onclick="setCalendar('lunar')">음력</div></div></div></div>
-                <button class="submit-btn" onclick="analyzeSaju()">나의 축복 확인하기</button>
+                <button class="submit-btn" onclick="analyzeSaju()">사주 확인하기</button>
             </div>
 
             <div id="result-area">
